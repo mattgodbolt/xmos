@@ -59,3 +59,16 @@ zp_ptr_hi = &A9                \ General pointer high byte
 \ Temporary: will become labels when data is split
 alias_end_lo   = &AE53
 alias_end_hi   = &AE54
+
+\ --- OS workspace addresses ---
+keyv_lo        = &020A         \ Keyboard vector low byte
+keyv_hi        = &020B         \ Keyboard vector high byte
+os_mode        = &0230         \ Current screen mode
+os_escape_flag = &026A         \ Escape flag (bit 7 set = escape pressed)
+
+\ --- Hardware registers ---
+crtc_addr      = &FE00         \ 6845 CRTC address register
+crtc_data      = &FE01         \ 6845 CRTC data register
+
+\ --- Default vectors ---
+default_keyv   = &EF39         \ Default KEYV handler address

@@ -1473,52 +1473,133 @@ GUARD &C000
     PLP
 .key_remap_jmp1
     JMP &FFFF                  \ Patched: original KEYV address
+\ Scan handler: remap key codes for OSBYTE &81
+\ Each CPX/LDX pair is patched by KEYON with the configured key codes
 .key_remap_scan
     CPY #&FF
     BNE key_remap_pass2
-    CPX #&9E : BNE kr_check_bd : LDX #&BF
-.kr_check_bd
-    CPX #&BD : BNE kr_check_b7 : LDX #&FE
-.kr_check_b7
-    CPX #&B7 : BNE kr_check_97 : LDX #&B7
-.kr_check_97
-    CPX #&97 : BNE kr_check_b6 : LDX #&97
-.kr_check_b6
-    CPX #&B6 : BNE key_remap_pass2 : LDX #&B6
+.kr_scan_cpx_0
+    CPX #&9E
+    BNE kr_scan_1
+.kr_scan_ldx_0
+    LDX #&BF
+.kr_scan_1
+.kr_scan_cpx_1
+    CPX #&BD
+    BNE kr_scan_2
+.kr_scan_ldx_1
+    LDX #&FE
+.kr_scan_2
+.kr_scan_cpx_2
+    CPX #&B7
+    BNE kr_scan_3
+.kr_scan_ldx_2
+    LDX #&B7
+.kr_scan_3
+.kr_scan_cpx_3
+    CPX #&97
+    BNE kr_scan_4
+.kr_scan_ldx_3
+    LDX #&97
+.kr_scan_4
+.kr_scan_cpx_4
+    CPX #&B6
+    BNE key_remap_pass2
+.kr_scan_ldx_4
+    LDX #&B6
 .key_remap_pass2
     PLP
 .key_remap_jmp2
     JMP &FFFF                  \ Patched: original KEYV address
+
+\ Keyboard handler: remap key codes for OSBYTE &79
 .key_remap_keyboard
     CPX #&80
     BCC key_remap_shifted
-    CPX #&E1 : BNE kr_check_c2 : LDX #&C0
-.kr_check_c2
-    CPX #&C2 : BNE kr_check_c8 : LDX #&81
-.kr_check_c8
-    CPX #&C8 : BNE kr_check_e8 : LDX #&C8
-.kr_check_e8
-    CPX #&E8 : BNE kr_check_c9 : LDX #&E8
-.kr_check_c9
-    CPX #&C9 : BNE kr_pass3 : LDX #&C9
-.kr_pass3
+.kr_kbd_cpx_0
+    CPX #&E1
+    BNE kr_kbd_1
+.kr_kbd_ldx_0
+    LDX #&C0
+.kr_kbd_1
+.kr_kbd_cpx_1
+    CPX #&C2
+    BNE kr_kbd_2
+.kr_kbd_ldx_1
+    LDX #&81
+.kr_kbd_2
+.kr_kbd_cpx_2
+    CPX #&C8
+    BNE kr_kbd_3
+.kr_kbd_ldx_2
+    LDX #&C8
+.kr_kbd_3
+.kr_kbd_cpx_3
+    CPX #&E8
+    BNE kr_kbd_4
+.kr_kbd_ldx_3
+    LDX #&E8
+.kr_kbd_4
+.kr_kbd_cpx_4
+    CPX #&C9
+    BNE kr_kbd_pass
+.kr_kbd_ldx_4
+    LDX #&C9
+.kr_kbd_pass
     PLP
 .key_remap_jmp3
     JMP &FFFF                  \ Patched: original KEYV address
+
+\ Shifted handler: call original KEYV then remap results
 .key_remap_shifted
     PLP
 .key_remap_jsr
     JSR &FFFF                  \ Patched: call original KEYV
     PHP
-    CPX #&40 : BNE kr_shift_01 : LDX #&E1 : STX &EC : LDX #&61
-.kr_shift_01
-    CPX #&01 : BNE kr_shift_48 : LDX #&C2 : STX &EC : LDX #&42
-.kr_shift_48
-    CPX #&48 : BNE kr_shift_68 : LDX #&C8 : STX &EC : LDX #&48
-.kr_shift_68
-    CPX #&68 : BNE kr_shift_49 : LDX #&E8 : STX &EC : LDX #&68
-.kr_shift_49
-    CPX #&49 : BNE kr_shift_done : LDX #&C9 : STX &EC : LDX #&49
+.kr_shift_cpx_0
+    CPX #&40
+    BNE kr_shift_1
+.kr_shift_ldx_0
+    LDX #&E1
+    STX &EC
+.kr_shift_orig_0
+    LDX #&61
+.kr_shift_1
+.kr_shift_cpx_1
+    CPX #&01
+    BNE kr_shift_2
+.kr_shift_ldx_1
+    LDX #&C2
+    STX &EC
+.kr_shift_orig_1
+    LDX #&42
+.kr_shift_2
+.kr_shift_cpx_2
+    CPX #&48
+    BNE kr_shift_3
+.kr_shift_ldx_2
+    LDX #&C8
+    STX &EC
+.kr_shift_orig_2
+    LDX #&48
+.kr_shift_3
+.kr_shift_cpx_3
+    CPX #&68
+    BNE kr_shift_4
+.kr_shift_ldx_3
+    LDX #&E8
+    STX &EC
+.kr_shift_orig_3
+    LDX #&68
+.kr_shift_4
+.kr_shift_cpx_4
+    CPX #&49
+    BNE kr_shift_done
+.kr_shift_ldx_4
+    LDX #&C9
+    STX &EC
+.kr_shift_orig_4
+    LDX #&49
 .kr_shift_done
     PLP
     RTS
@@ -1529,7 +1610,8 @@ GUARD &C000
     EQUB &00                   \ &8C72: saved KEYV high byte
 .keyon_active
     EQUB &00                   \ &8C73: non-zero = KEYON active
-    EQUB &41, &02, &49, &69, &4A  \ &8C74: workspace
+.key_codes                     \ 5-byte table of key scan codes to remap
+    EQUB &41, &02, &49, &69, &4A
 .keyon_already_msg
     STROUT msg_keyon_already
     JMP keyon_rts
@@ -1538,88 +1620,88 @@ GUARD &C000
     BNE keyon_already_msg
     LDA #&01
     STA keyon_active
-    LDA &020a
-    STA &8bea
-    STA &8c10
-    STA &8c36
-    STA &8c3a
+    LDA keyv_lo
+    STA key_remap_jmp1 + 1
+    STA key_remap_jmp2 + 1
+    STA key_remap_jmp3 + 1
+    STA key_remap_jsr + 1
     STA saved_keyv_lo
-    LDA &020b
-    STA &8beb
-    STA &8c11
-    STA &8c37
-    STA &8c3b
+    LDA keyv_hi
+    STA key_remap_jmp1 + 2
+    STA key_remap_jmp2 + 2
+    STA key_remap_jmp3 + 2
+    STA key_remap_jsr + 2
     STA saved_keyv_hi
     SEC
     LDA #&00
-    SBC &8c74
-    STA &8bf5
+    SBC key_codes
+    STA kr_scan_ldx_0 + 1
     SEC
     LDA #&00
-    SBC &8c75
-    STA &8bfb
+    SBC key_codes + 1
+    STA kr_scan_ldx_1 + 1
     SEC
     LDA #&00
-    SBC &8c76
-    STA &8c01
+    SBC key_codes + 2
+    STA kr_scan_ldx_2 + 1
     SEC
     LDA #&00
-    SBC &8c77
-    STA &8c07
+    SBC key_codes + 3
+    STA kr_scan_ldx_3 + 1
     SEC
     LDA #&00
-    SBC &8c78
-    STA &8c0d
+    SBC key_codes + 4
+    STA kr_scan_ldx_4 + 1
     CLC
-    LDA &8c74
+    LDA key_codes
     ADC #&7f
-    STA &8c1b
+    STA kr_kbd_ldx_0 + 1
     CLC
-    LDA &8c75
+    LDA key_codes + 1
     ADC #&7f
-    STA &8c21
+    STA kr_kbd_ldx_1 + 1
     CLC
-    LDA &8c76
+    LDA key_codes + 2
     ADC #&7f
-    STA &8c27
+    STA kr_kbd_ldx_2 + 1
     CLC
-    LDA &8c77
+    LDA key_codes + 3
     ADC #&7f
-    STA &8c2d
+    STA kr_kbd_ldx_3 + 1
     CLC
-    LDA &8c78
+    LDA key_codes + 4
     ADC #&7f
-    STA &8c33
+    STA kr_kbd_ldx_4 + 1
     SEC
-    LDA &8c74
+    LDA key_codes
     SBC #&01
-    STA &8c3e
+    STA kr_shift_cpx_0 + 1
     SEC
-    LDA &8c75
+    LDA key_codes + 1
     SBC #&01
-    STA &8c48
+    STA kr_shift_cpx_1 + 1
     SEC
-    LDA &8c76
+    LDA key_codes + 2
     SBC #&01
-    STA &8c52
+    STA kr_shift_cpx_2 + 1
     SEC
-    LDA &8c77
+    LDA key_codes + 3
     SBC #&01
-    STA &8c5c
+    STA kr_shift_cpx_3 + 1
     SEC
-    LDA &8c78
+    LDA key_codes + 4
     SBC #&01
-    STA &8c66
+    STA kr_shift_cpx_4 + 1
     LDX #&00
 .keyon_copy_handler
-    LDA &8bdf,X
+    LDA key_remap_handler,X
     STA &d100,X
     INX
     BNE keyon_copy_handler
     LDA #&00
-    STA &020a
+    STA keyv_lo
     LDA #&d1
-    STA &020b
+    STA keyv_hi
     RTS
 .cmd_keyon
     JSR keyon_setup
@@ -1755,7 +1837,7 @@ GUARD &C000
     LDA &ab
     ADC #&00
     STA &ab
-    LDA &8c74,X
+    LDA key_codes,X
     PHX
     DEC A
     JSR keyname_lookup
@@ -1777,9 +1859,9 @@ GUARD &C000
     LDA #&00
     STA keyon_active
     LDA saved_keyv_lo
-    STA &020a
+    STA keyv_lo
     LDA saved_keyv_hi
-    STA &020b
+    STA keyv_hi
 .defkeys_start
     LDA #&81
     LDX #&b6
@@ -1838,7 +1920,7 @@ GUARD &C000
     EOR #&ff
     INC A
     PLX
-    STA &8c74,X
+    STA key_codes,X
     DEC A
     PHX
     PHA
