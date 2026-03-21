@@ -54,3 +54,8 @@ rom_number  = &F4              \ Current paged ROM number
 zp_ptr_lo = &A8                \ General pointer low byte
 zp_ptr_hi = &A9                \ General pointer high byte
 
+
+
+\ Temporary: will become labels when data is split
+alias_end_lo   = &AE53
+alias_end_hi   = &AE54
