@@ -404,55 +404,44 @@ GUARD &C000
 
 .cmd_dispatch
 .cmd_dispatch_addr
-    JMP L8DCB                  \ Self-modified: handler address written here
+    JMP cmd_keyoff                  \ Self-modified: handler address written here
+\ ============================================================================
+\ Command table
+\ Format: name (null-terminated), handler address (2 bytes LE), help text (null-terminated)
+\ Terminated by &FF
+\ ============================================================================
 .command_table
-    EQUB &41, &4C, &49, &41, &53, &00, &33, &90, &3C, &61, &6C, &69, &61, &73, &20, &6E  \ &8219: ALIAS.3.<alias n
-    EQUB &61, &6D, &65, &3E, &20, &3C, &61, &6C, &69, &61, &73, &3E, &00, &41, &4C, &49  \ &8229: ame> <alias>.ALI
-    EQUB &41, &53, &45, &53, &00, &41, &91, &53, &68, &6F, &77, &73, &20, &61, &63, &74  \ &8239: ASES.A.Shows act
-    EQUB &69, &76, &65, &20, &61, &6C, &69, &61, &73, &65, &73, &00, &41, &4C, &49, &43  \ &8249: ive aliases.ALIC
-    EQUB &4C, &52, &00, &40, &93, &43, &6C, &65, &61, &72, &73, &20, &61, &6C, &6C, &20  \ &8259: LR.@.Clears all 
-    EQUB &61, &6C, &69, &61, &73, &65, &73, &00, &41, &4C, &49, &4C, &44, &00, &85, &92  \ &8269: aliases.ALILD...
-    EQUB &4C, &6F, &61, &64, &73, &20, &61, &6C, &69, &61, &73, &20, &66, &69, &6C, &65  \ &8279: Loads alias file
-    EQUB &00, &41, &4C, &49, &53, &56, &00, &E1, &92, &53, &61, &76, &65, &73, &20, &61  \ &8289: .ALISV...Saves a
-    EQUB &6C, &69, &61, &73, &20, &66, &69, &6C, &65, &00, &42, &41, &55, &00, &C1, &98  \ &8299: lias file.BAU...
-    EQUB &53, &70, &6C, &69, &74, &73, &20, &74, &6F, &20, &73, &69, &6E, &67, &6C, &65  \ &82A9: Splits to single
-    EQUB &20, &63, &6F, &6D, &6D, &61, &6E, &64, &73, &00, &44, &45, &46, &4B, &45, &59  \ &82B9:  commands.DEFKEY
-    EQUB &53, &00, &78, &8F, &44, &65, &66, &69, &6E, &65, &73, &20, &6E, &65, &77, &20  \ &82C9: S.x.Defines new 
-    EQUB &6B, &65, &79, &73, &00, &44, &49, &53, &00, &05, &97, &3C, &61, &64, &64, &72  \ &82D9: keys.DIS...<addr
-    EQUB &3E, &20, &2D, &20, &64, &69, &73, &61, &73, &73, &65, &6D, &62, &6C, &65, &20  \ &82E9: > - disassemble 
-    EQUB &6D, &65, &6D, &6F, &72, &79, &00, &4B, &45, &59, &4F, &4E, &00, &54, &8D, &45  \ &82F9: memory.KEYON.T.E
-    EQUB &6E, &61, &62, &6C, &65, &73, &20, &72, &65, &64, &65, &66, &69, &6E, &65, &64  \ &8309: nables redefined
-    EQUB &20, &6B, &65, &79, &73, &00, &4B, &45, &59, &4F, &46, &46, &00, &CB, &8D, &44  \ &8319:  keys.KEYOFF...D
-    EQUB &69, &73, &61, &62, &6C, &65, &73, &20, &72, &65, &64, &65, &66, &69, &6E, &65  \ &8329: isables redefine
-    EQUB &64, &20, &6B, &65, &79, &73, &00, &4B, &53, &54, &41, &54, &55, &53, &00, &0F  \ &8339: d keys.KSTATUS..
-    EQUB &8F, &44, &69, &73, &70, &6C, &61, &79, &73, &20, &4B, &45, &59, &4F, &4E, &20  \ &8349: .Displays KEYON 
-    EQUB &73, &74, &61, &74, &75, &73, &00, &4C, &00, &95, &8B, &53, &65, &6C, &65, &63  \ &8359: status.L...Selec
-    EQUB &74, &73, &20, &6D, &6F, &64, &65, &20, &31, &32, &38, &00, &4C, &56, &41, &52  \ &8369: ts mode 128.LVAR
-    EQUB &00, &00, &9C, &53, &68, &6F, &77, &73, &20, &63, &75, &72, &72, &65, &6E, &74  \ &8379: ...Shows current
-    EQUB &20, &76, &61, &72, &69, &61, &62, &6C, &65, &73, &00, &4D, &45, &4D, &00, &0C  \ &8389:  variables.MEM..
-    EQUB &94, &3C, &61, &64, &64, &72, &3E, &20, &2D, &20, &6D, &65, &6D, &6F, &72, &79  \ &8399: .<addr> - memory
-    EQUB &20, &65, &64, &69, &74, &6F, &72, &00, &53, &00, &68, &8A, &53, &61, &76, &65  \ &83A9:  editor.S.h.Save
-    EQUB &73, &20, &42, &41, &53, &49, &43, &20, &77, &69, &74, &68, &20, &69, &6E, &63  \ &83B9: s BASIC with inc
-    EQUB &6F, &72, &65, &20, &6E, &61, &6D, &65, &00, &53, &50, &41, &43, &45, &00, &2F  \ &83C9: ore name.SPACE./
-    EQUB &9A, &49, &6E, &73, &65, &72, &74, &73, &20, &73, &70, &61, &63, &65, &73, &20  \ &83D9: .Inserts spaces 
-    EQUB &69, &6E, &74, &6F, &20, &70, &72, &6F, &67, &72, &61, &6D, &73, &00, &53, &54  \ &83E9: into programs.ST
-    EQUB &4F, &52, &45, &00, &46, &93, &4B, &65, &65, &70, &73, &20, &66, &75, &6E, &63  \ &83F9: ORE.F.Keeps func
-    EQUB &74, &69, &6F, &6E, &20, &6B, &65, &79, &73, &20, &6F, &6E, &20, &62, &72, &65  \ &8409: tion keys on bre
-    EQUB &61, &6B, &00, &58, &4F, &4E, &00, &5E, &84, &45, &6E, &61, &62, &6C, &65, &73  \ &8419: ak.XON.^.Enables
-    EQUB &20, &65, &78, &74, &65, &6E, &64, &65, &64, &20, &69, &6E, &70, &75, &74, &00  \ &8429:  extended input.
-    EQUB &58, &4F, &46, &46, &00, &6C, &84, &44, &69, &73, &61, &62, &6C, &65, &73, &20  \ &8439: XOFF.l.Disables 
-    EQUB &65, &78, &74, &65, &6E, &64, &65, &64, &20, &69, &6E, &70, &75, &74, &00, &FF  \ &8449: extended input..
+    EQUS "ALIAS"    : EQUB 0 : EQUW cmd_alias    : EQUS "<alias name> <alias>" : EQUB 0
+    EQUS "ALIASES"  : EQUB 0 : EQUW cmd_aliases  : EQUS "Shows active aliases" : EQUB 0
+    EQUS "ALICLR"   : EQUB 0 : EQUW cmd_aliclr   : EQUS "Clears all aliases" : EQUB 0
+    EQUS "ALILD"    : EQUB 0 : EQUW cmd_alild    : EQUS "Loads alias file" : EQUB 0
+    EQUS "ALISV"    : EQUB 0 : EQUW cmd_alisv    : EQUS "Saves alias file" : EQUB 0
+    EQUS "BAU"      : EQUB 0 : EQUW cmd_bau      : EQUS "Splits to single commands" : EQUB 0
+    EQUS "DEFKEYS"  : EQUB 0 : EQUW cmd_defkeys  : EQUS "Defines new keys" : EQUB 0
+    EQUS "DIS"      : EQUB 0 : EQUW cmd_dis      : EQUS "<addr> - disassemble memory" : EQUB 0
+    EQUS "KEYON"    : EQUB 0 : EQUW cmd_keyon    : EQUS "Enables redefined keys" : EQUB 0
+    EQUS "KEYOFF"   : EQUB 0 : EQUW cmd_keyoff   : EQUS "Disables redefined keys" : EQUB 0
+    EQUS "KSTATUS"  : EQUB 0 : EQUW cmd_kstatus  : EQUS "Displays KEYON status" : EQUB 0
+    EQUS "L"        : EQUB 0 : EQUW cmd_l        : EQUS "Selects mode 128" : EQUB 0
+    EQUS "LVAR"     : EQUB 0 : EQUW cmd_lvar     : EQUS "Shows current variables" : EQUB 0
+    EQUS "MEM"      : EQUB 0 : EQUW cmd_mem      : EQUS "<addr> - memory editor" : EQUB 0
+    EQUS "S"        : EQUB 0 : EQUW cmd_s        : EQUS "Saves BASIC with incore name" : EQUB 0
+    EQUS "SPACE"    : EQUB 0 : EQUW cmd_space    : EQUS "Inserts spaces into programs" : EQUB 0
+    EQUS "STORE"    : EQUB 0 : EQUW cmd_store    : EQUS "Keeps function keys on break" : EQUB 0
+    EQUS "XON"      : EQUB 0 : EQUW cmd_xon      : EQUS "Enables extended input" : EQUB 0
+    EQUS "XOFF"     : EQUB 0 : EQUW cmd_xoff     : EQUS "Disables extended input" : EQUB 0
+    EQUB &FF                  \ End of command table
 .xmos_keyword
     EQUS "XMOS"
     EQUB 0
-.L845E
+.cmd_xon
     LDA #&ff
     STA &847f
     LDA #&04
     LDX #&01
     LDY #&00
     JMP osbyte
-.L846C
+.cmd_xoff
     LDA #&00
     STA &847f
     LDA #&04
@@ -656,7 +645,7 @@ GUARD &C000
     CLC
     RTS
     EQUB &07  \ &8A67: .
-.L8A68
+.cmd_s
     LDY #&00
 .L8A6A
     LDA &8ae5,Y
@@ -776,7 +765,7 @@ GUARD &C000
     RTS
     EQUB &0D, &50, &72, &6F, &67, &72, &61, &6D, &20, &73, &61, &76, &65, &64, &20, &61  \ &8B7E: .Program saved a
     EQUB &73, &20, &27, &00, &27, &0D, &00  \ &8B8E: s '.'..
-.L8B95
+.cmd_l
     LDX #&a5
     LDY #&8b
     JSR oscli
@@ -896,7 +885,7 @@ GUARD &C000
     LDA #&d1
     STA &020b
     RTS
-.L8D54
+.cmd_keyon
     JSR L8C89
     LDX #&00
 .L8D59
@@ -914,7 +903,7 @@ GUARD &C000
     EQUB &73, &20, &6F, &66, &66, &0D, &00, &0D, &52, &65, &64, &65, &66, &69, &6E, &65  \ &8DA5: s off...Redefine
     EQUB &64, &20, &6B, &65, &79, &73, &20, &6F, &6E, &2C, &20, &61, &6E, &64, &20, &61  \ &8DB5: d keys on, and a
     EQUB &72, &65, &3A, &0D, &0D, &00  \ &8DC5: re:...
-.L8DCB
+.cmd_keyoff
     LDA &8c73
     BEQ L8DE1
     LDA #&00
@@ -998,7 +987,7 @@ GUARD &C000
     EQUB &4A, &75, &6D, &70, &2F, &66, &69, &72, &65, &20, &3A, &20  \ &8F00: Jump/fire : 
 .L8F0C
     JMP L8DE1
-.L8F0F
+.cmd_kstatus
     LDA &8c73
     BEQ L8F0C
     LDX #&00
@@ -1042,7 +1031,7 @@ GUARD &C000
     JMP L8D64
     EQUB &4B, &45, &59, &20, &52, &45, &44, &45, &46, &49, &4E, &45, &52, &0D, &2D, &2D  \ &8F5B: KEY REDEFINER.--
     EQUB &2D, &2D, &2D, &2D, &2D, &2D, &2D, &2D, &2D, &2D, &2D, &0D, &00  \ &8F6B: -----------..
-.L8F78
+.cmd_defkeys
     LDA &8c73
     BEQ L8F8E
     LDA #&00
@@ -1150,7 +1139,7 @@ GUARD &C000
     STY &8a67
     RTS
     EQUB &FF  \ &9032: .
-.L9033
+.cmd_alias
     LDA #&00
     STA &9032
     JSR L901F
@@ -1298,7 +1287,7 @@ GUARD &C000
     LDY &8a67
     STA (&a8),Y
     RTS
-.L9141
+.cmd_aliases
     LDA #&65
     STA &a8
     LDA #&b1
@@ -1475,7 +1464,7 @@ GUARD &C000
     LDA #&15
     JSR osasci
     JMP L91FE
-.L9285
+.cmd_alild
     JSR L901F
     CLC
     TYA
@@ -1514,7 +1503,7 @@ GUARD &C000
     JSR copy_inline_to_stack
     EQUB &D6, &41, &6C, &69, &61, &73, &20, &66, &69, &6C, &65, &20, &6E, &6F, &74, &20  \ &92CB: .Alias file not 
     EQUB &66, &6F, &75, &6E, &64, &00  \ &92DB: found.
-.L92E1
+.cmd_alisv
     JSR L901F
     CLC
     TYA
@@ -1554,11 +1543,11 @@ GUARD &C000
     JSR copy_inline_to_stack
     EQUB &63, &43, &61, &6E, &27, &74, &20, &6F, &70, &65, &6E, &20, &61, &6C, &69, &61  \ &9329: cCan't open alia
     EQUB &73, &20, &66, &69, &6C, &65, &00  \ &9339: s file.
-.L9340
+.cmd_aliclr
     LDA #&ff
     STA &b165
     RTS
-.L9346
+.cmd_store
     EQUB &AD, &F4, &00  \ LDA 0x00f4
     ORA #&80
     STA &fe30
@@ -1655,7 +1644,7 @@ GUARD &C000
     BNE L93C8
 .L940B
     RTS
-.L940C
+.cmd_mem
     JSR L901F
     CMP #&0d
     BEQ L9420
@@ -1949,7 +1938,7 @@ GUARD &C000
     EQUB &8C, &96, &90, &96, &94, &96, &97, &96, &99, &96, &9B, &96, &A2, &96, &A9, &96  \ &96D7: ................
     EQUB &AE, &96, &B3, &96, &B9, &96, &BF, &96, &C2, &96, &C8, &96, &D0, &96, &01, &02  \ &96E7: ................
     EQUB &03, &02, &01, &01, &02, &02, &02, &02, &03, &03, &02, &03, &03, &02  \ &96F7: ..............
-.L9705
+.cmd_dis
     JSR L901F
     CMP #&0d
     BEQ L9711
@@ -2164,7 +2153,7 @@ GUARD &C000
     EQUB &69, &6E, &65, &3A, &20, &20, &20, &20, &20, &20, &00, &0D, &4E, &6F, &77, &20  \ &9899: ine:      ..Now 
     EQUB &73, &70, &61, &63, &69, &6E, &67, &20, &6F, &75, &74, &20, &6C, &69, &6E, &65  \ &98A9: spacing out line
     EQUB &3A, &20, &20, &20, &20, &20, &20, &00  \ &98B9: :      .
-.L98C1
+.cmd_bau
     LDA &0230
     CMP #&0c
     BEQ L98EA
@@ -2349,7 +2338,7 @@ GUARD &C000
     LDY #&89
     JMP osbyte
     EQUB &4B, &45, &59, &39, &52, &45, &4E, &2E, &7C, &46, &7C, &4B, &7C, &4D, &0D  \ &9A20: KEY9REN.|F|K|M.
-.L9A2F
+.cmd_space
     LDA &0230
     CMP #&0c
     BEQ L9A55
@@ -2603,7 +2592,7 @@ GUARD &C000
     PLA
     STA &a8
     RTS
-.L9C00
+.cmd_lvar
     LDA &0230
     CMP #&0c
     BEQ L9C23
