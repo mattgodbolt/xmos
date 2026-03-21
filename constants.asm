@@ -59,3 +59,47 @@ zp_ptr_hi = &A9                \ General pointer high byte
 \ Temporary: will become labels when data is split
 alias_end_lo   = &AE53
 alias_end_hi   = &AE54
+
+\ --- OS workspace addresses ---
+keyv_lo        = &020A         \ Keyboard vector low byte
+keyv_hi        = &020B         \ Keyboard vector high byte
+os_mode        = &0230         \ Current screen mode
+os_escape_flag = &026A         \ Escape flag (bit 7 set = escape pressed)
+os_wrch_dest   = &027D         \ VDU driver destination
+os_width_lo    = &0308         \ Text window left column
+os_width_hi    = &030A         \ Text window right column
+os_disp_addr   = &0255         \ Display start address?
+
+\ --- Hardware registers ---
+crtc_addr      = &FE00         \ 6845 CRTC address register
+crtc_data      = &FE01         \ 6845 CRTC data register
+
+\ --- Default vectors ---
+default_keyv   = &EF39         \ Default KEYV handler address
+
+\ --- STORE buffer pages (in sideways RAM) ---
+store_buf_0 = &A655            \ *STORE buffer for ROM page 0 (&8000-&80FF)
+store_buf_1 = &A755            \ *STORE buffer for ROM page 1 (&8100-&81FF)
+store_buf_2 = &A855            \ *STORE buffer for ROM page 2 (&8200-&82FF)
+store_buf_3 = &A55B            \ *STORE buffer for ROM page 3 (&8300-&83FF)
+
+\ --- More OS page 2 workspace ---
+os_himem_lo    = &020C         \ OS high water mark low byte
+os_himem_hi    = &020D         \ OS high water mark high byte
+os_key_trans   = &023C         \ Key translation table address low
+os_key_trans_hi = &023D        \ Key translation table address high
+os_vdu_x       = &0318         \ VDU text cursor X position
+os_autorepeat  = &0255         \ Keyboard auto-repeat period
+os_fkey_buf    = &0480         \ Function key buffer start
+os_rs423_buf   = &0900         \ RS423 output buffer
+
+\ --- BASIC zero page ---
+basic_flags    = &1F           \ BASIC internal flags byte
+
+\ --- Display memory ---
+mode7_screen   = &7C00         \ Start of MODE 7 screen memory
+
+\ --- Workspace outside ROM ---
+keyon_handler_dest = &D100     \ Destination for key remap handler copy
+alias_clear_flag = &B165       \ Alias clear marker
+alias_exec_buf   = &A955       \ Alias execution buffer

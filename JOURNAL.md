@@ -164,33 +164,86 @@ Linear capstone sweep gets out of sync at:
 Each block must be manually verified. The approach: disassemble with capstone, then
 check for RTS/JMP boundaries and verify the byte stream manually.
 
-### Raw data blocks to disassemble
-These are still raw EQUB hex dumps that need proper 6502 instructions and labels:
-- [ ] **Extended input handler** (&84D1–&85D8, 208 bytes) — the core XON keyboard handler
-- [ ] **Key remapping code** (&8BE0–&8C70) — keyboard intercept / translation
-- [ ] **cmd_keyon / L8C89** (&8C89–&8D63) — KEYON setup, KEYV hook installation
-- [ ] **cmd_kstatus display loop** (&8F2B–&8F77) — print key assignments
-- [ ] **cmd_defkeys** (&8F78–&9032) — interactive key redefinition
-- [ ] **cmd_alias** (&9033–&9140) — alias definition
-- [ ] **cmd_aliases** (&9141–&9184) — display aliases
-- [ ] **check_alias** (&91B8–&9284) — alias lookup and execution
-- [ ] **cmd_alild / cmd_alisv** (&9285–&9345) — alias file load/save
-- [ ] **cmd_store** (&9346–&9378) — store function keys
-- [ ] **L9379** (&9379–&93A7) — alias system init
-- [ ] **cmd_mem** (&940C–&94FF) — memory editor
-- [ ] **cmd_dis** (&9500–&9860) — built-in 6502 disassembler (has opcode tables!)
-- [ ] **cmd_bau / cmd_space** (&98C1–&9A2E) — BASIC utilities
-- [ ] **cmd_lvar** (&9C00–&9EEF) — BASIC variable lister (has keyword tables!)
-- [ ] **Features text** (&9EF0–&A052) — long help text, should be EQUS
-- [ ] **Embedded data** (&A053–&B25F) — BASIC keyword tables, key defs, build artifacts
+### Code disassembly status
+All code blocks are now disassembled into proper 6502 instructions:
+- [x] Extended input handler (&84D1–&89EF, 1310 bytes)
+- [x] Key remapping KEYV interceptor (&8BDF–&8C70)
+- [x] KEYON setup, KEYOFF, KSTATUS, DEFKEYS
+- [x] Alias system (cmd_alias, cmd_aliases, check_alias, cmd_alild, cmd_alisv, cmd_aliclr)
+- [x] cmd_store (partial — has EQUB for ZP absolute workarounds)
+- [x] alias_init
+- [x] cmd_mem, cmd_dis (with opcode format strings as structured data)
+- [x] cmd_bau, cmd_space, cmd_lvar
+- [x] Features text (611 bytes as EQUS)
+- [x] All utility routines (print_inline, compare_string, parse_hex, etc.)
 
-### String data still as raw hex
-- [ ] Convert remaining EQUB string data to EQUS where possible
-- [ ] Label all string references with descriptive names
+### Remaining raw EQUB data (474 lines)
+- **11 lines in code**: ZP absolute workaround EQUB-encoded instructions
+- **463 lines in tail** (&A154–&BFFF): structured data tables, not code
+  - DIS opcode decode table (~1KB)
+  - BASIC keyword tables for LVAR (~500 bytes)
+  - Function key / alias buffers (~1KB of &0D-initialised workspace)
+  - Build artifact strings
+  - Zero/FF padding
 
-### Final passes (after all code is disassembled)
-- [ ] **Macro pass**: identify more repeated patterns for macros
-- [ ] **Label pass**: rename all remaining L#### labels to descriptive names
-- [ ] **Constant pass**: replace all raw hex addresses with named constants
-- [ ] **Zero page pass**: name all ZP locations used by XMOS
+### Completed passes
+- [x] **Macro pass**: STROUT macro for string printing (8 instances)
+- [x] **Label pass**: all 342 L#### labels renamed to descriptive names
+- [x] **Constant pass**: OS workspace, hardware, display memory all named
+- [x] **String pass**: all error messages, help text, key names as EQUS
+- [x] **Scoping pass**: 26 `{ }` blocks with clean local labels
+
+### Remaining work
+- [ ] **More scoping**: ~260 more labels could be scoped (mostly single-reference branch targets)
+- [ ] **Tail data annotation**: opcode table, keyword tables could be structured further
 - [ ] **Comment pass**: add high-level comments explaining each routine's purpose
+- [ ] **ZP workarounds**: 23 &00xx absolute addressing EQUB instructions (fix in improvements phase)
+- [ ] **Second macro pass**: find more repeated patterns after full annotation
+
+## 2026-03-21: Label pass and absolute address elimination
+
+### Approach
+Systematic pass through the entire file:
+1. Renamed all 342 unnamed L#### labels to descriptive names by subsystem
+2. Restructured key remap handler with per-instruction labels for self-modifying code
+3. Replaced ~180 absolute addresses with named labels/constants
+4. Added `{ }` scoping with local labels for self-contained functions
+
+### Key remap handler restructuring
+The KEYV interceptor at &8BDF has self-modifying JMP/JSR instructions whose
+targets are patched by *KEYON. Each modified instruction now has its own label
+(e.g. `kr_scan_ldx_0`, `key_remap_jmp1`) so the patching code can reference
+`label + 1` for the operand byte. This means the handler code can be safely
+edited without recalculating 30+ offset values.
+
+### Constants added
+- OS workspace: keyv_lo/hi, os_mode, os_escape_flag, os_wrch_dest,
+  os_himem_lo/hi, os_key_trans, os_vdu_x, os_fkey_buf, os_autorepeat
+- Hardware: crtc_addr/data, sheila_romsel, default_keyv, mode7_screen
+- BASIC ZP: basic_page_hi, basic_top_lo/hi, basic_flags
+- ROM workspace: 20+ labelled variables throughout the ROM data
+
+### Scoping with { }
+Applied `{ }` scoping to self-contained functions, replacing verbose
+prefixed names (e.g. `xi_del_shift_loop`) with clean local names
+(e.g. `shift_loop`). Functions scoped include:
+- xi_dispatch (character dispatch table)
+- xi_handle_delete, xi_handle_left, xi_handle_right, xi_handle_clear
+- xi_do_clear, token_classify, print_decimal
+- parse_hex_digit, bau token checks
+- Plus 17 scoped blocks from earlier annotation passes
+
+### Remaining absolute addresses (46)
+All are legitimate and cannot be converted:
+- 23× &00xx: ZP absolute encoding (beebasm would optimise to 2-byte ZP form)
+- 7× &FFFF: self-modifying targets patched at runtime
+- 9× &8000-&8300: ROM bank pages for *STORE
+- 4× &0100: stack page for copy_inline_to_stack
+- 2× &831F: compare_string self-modifying code
+- 1× &C000: GUARD directive
+
+### Current state
+- 0 unnamed labels, ~520 named labels
+- 26 `{ }` scoped blocks with clean local names
+- 46 legitimate absolute addresses remaining
+- Assembly byte-identical: `check.sh` passes at every commit
