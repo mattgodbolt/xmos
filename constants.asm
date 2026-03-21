@@ -55,8 +55,8 @@ zp_ptr_lo = &A8                \ General pointer low byte
 zp_ptr_hi = &A9                \ General pointer high byte
 
 \ --- Extended input workspace (in sideways RAM) ---
-\ These are absolute addresses within the ROM image, used as variables
-\ because the BBC Master has sideways RAM, not ROM
+\ XMOS is loaded into a sideways RAM slot (via *SRLOAD), so it can
+\ use addresses within its own image (&8000-&BFFF) as read/write variables.
 xi_cursor_pos = &8480          \ Current cursor position in input line
 xi_line_len   = &8481          \ Current line length
 xi_char       = &8482          \ Last character read / temp char
