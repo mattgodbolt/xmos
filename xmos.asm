@@ -1455,17 +1455,72 @@ GUARD &C000
     LDX #&00
     JMP osbyte
 .cmd_l_oscli
-    EQUS "KEY0|UL.O1|MO.|MMO.128|M|S07000|S70000|W|@|J@|@|@|@|@|@|@"
-    EQUB &0D, &08, &C9, &81, &F0, &08, &C9  \ &8BD5: @|@|@|@|@.......
-    EQUB &79, &F0, &2A, &28, &4C, &FF, &FF, &C0, &FF, &D0, &1E, &E0, &9E, &D0, &02, &A2  \ &8BE5: y.*(L...........
-    EQUB &BF, &E0, &BD, &D0, &02, &A2, &FE, &E0, &B7, &D0, &02, &A2, &B7, &E0, &97, &D0  \ &8BF5: ................
-    EQUB &02, &A2, &97, &E0, &B6, &D0, &02, &A2, &B6, &28, &4C, &FF, &FF, &E0, &80, &90  \ &8C05: .........(L.....
-    EQUB &22, &E0, &E1, &D0, &02, &A2, &C0, &E0, &C2, &D0, &02, &A2, &81, &E0, &C8, &D0  \ &8C15: "...............
-    EQUB &02, &A2, &C8, &E0, &E8, &D0, &02, &A2, &E8, &E0, &C9, &D0, &02, &A2, &C9, &28  \ &8C25: ...............(
-    EQUB &4C, &FF, &FF, &28, &20, &FF, &FF, &08, &E0, &40, &D0, &06, &A2, &E1, &86, &EC  \ &8C35: L..( ....@......
-    EQUB &A2, &61, &E0, &01, &D0, &06, &A2, &C2, &86, &EC, &A2, &42, &E0, &48, &D0, &06  \ &8C45: .a.........B.H..
-    EQUB &A2, &C8, &86, &EC, &A2, &48, &E0, &68, &D0, &06, &A2, &E8, &86, &EC, &A2, &68  \ &8C55: .....H.h.......h
-    EQUB &E0, &49, &D0, &06, &A2, &C9, &86, &EC, &A2, &49, &28, &60  \ &8C65: key remap code
+    EQUS "KEY0|UL.O1|MO.|MMO.128|M|S07000|S70000|W|@|J@|@|@|@|@|@|@", 13
+
+\ ============================================================================
+\ Key remapping interceptor — hooked into KEYV
+\ Called when a key event occurs. Remaps certain key codes.
+\ Self-modifying: JMP &FFFF targets are patched to the original KEYV address.
+\ ============================================================================
+.key_remap_handler
+    PHP
+    CMP #&81
+    BEQ key_remap_scan
+    CMP #&79
+    BEQ key_remap_keyboard
+    PLP
+.key_remap_jmp1
+    JMP &FFFF                  \ Patched: original KEYV address
+.key_remap_scan
+    CPY #&FF
+    BNE key_remap_pass2
+    CPX #&9E : BNE L8BF6 : LDX #&BF
+.L8BF6
+    CPX #&BD : BNE L8BFC : LDX #&FE
+.L8BFC
+    CPX #&B7 : BNE L8C02 : LDX #&B7
+.L8C02
+    CPX #&97 : BNE L8C08 : LDX #&97
+.L8C08
+    CPX #&B6 : BNE key_remap_pass2 : LDX #&B6
+.key_remap_pass2
+    PLP
+.key_remap_jmp2
+    JMP &FFFF                  \ Patched: original KEYV address
+.key_remap_keyboard
+    CPX #&80
+    BCC key_remap_shifted
+    CPX #&E1 : BNE L8C1C : LDX #&C0
+.L8C1C
+    CPX #&C2 : BNE L8C22 : LDX #&81
+.L8C22
+    CPX #&C8 : BNE L8C28 : LDX #&C8
+.L8C28
+    CPX #&E8 : BNE L8C2E : LDX #&E8
+.L8C2E
+    CPX #&C9 : BNE L8C34 : LDX #&C9
+.L8C34
+    PLP
+.key_remap_jmp3
+    JMP &FFFF                  \ Patched: original KEYV address
+.key_remap_shifted
+    PLP
+.key_remap_jsr
+    JSR &FFFF                  \ Patched: call original KEYV
+    PHP
+    CPX #&40 : BNE L8C45 : LDX #&E1 : STX &EC : LDX #&61
+.L8C45
+    CPX #&01 : BNE L8C4F : LDX #&C2 : STX &EC : LDX #&42
+.L8C4F
+    CPX #&48 : BNE L8C59 : LDX #&C8 : STX &EC : LDX #&48
+.L8C59
+    CPX #&68 : BNE L8C63 : LDX #&E8 : STX &EC : LDX #&68
+.L8C63
+    CPX #&49 : BNE L8C6D : LDX #&C9 : STX &EC : LDX #&49
+.L8C6D
+    PLP
+    RTS
+
 .saved_keyv_lo
     EQUB &00                   \ &8C71: saved KEYV low byte
 .saved_keyv_hi
