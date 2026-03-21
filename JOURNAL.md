@@ -150,3 +150,36 @@ These patterns appear multiple times and could be refactored into subroutines:
 - Major structural elements annotated and readable
 - Large swathes of code remain as raw EQUB data (extended input handler, key redefinition, alias management, disassembler, memory editor, etc.)
 - Assembly still byte-identical: `check.sh` passes
+
+## TODO — Remaining annotation work
+
+### Raw data blocks to disassemble
+These are still raw EQUB hex dumps that need proper 6502 instructions and labels:
+- [ ] **Extended input handler** (&84D1–&85D8, 208 bytes) — the core XON keyboard handler
+- [ ] **Key remapping code** (&8BE0–&8C70) — keyboard intercept / translation
+- [ ] **cmd_keyon / L8C89** (&8C89–&8D63) — KEYON setup, KEYV hook installation
+- [ ] **cmd_kstatus display loop** (&8F2B–&8F77) — print key assignments
+- [ ] **cmd_defkeys** (&8F78–&9032) — interactive key redefinition
+- [ ] **cmd_alias** (&9033–&9140) — alias definition
+- [ ] **cmd_aliases** (&9141–&9184) — display aliases
+- [ ] **check_alias** (&91B8–&9284) — alias lookup and execution
+- [ ] **cmd_alild / cmd_alisv** (&9285–&9345) — alias file load/save
+- [ ] **cmd_store** (&9346–&9378) — store function keys
+- [ ] **L9379** (&9379–&93A7) — alias system init
+- [ ] **cmd_mem** (&940C–&94FF) — memory editor
+- [ ] **cmd_dis** (&9500–&9860) — built-in 6502 disassembler (has opcode tables!)
+- [ ] **cmd_bau / cmd_space** (&98C1–&9A2E) — BASIC utilities
+- [ ] **cmd_lvar** (&9C00–&9EEF) — BASIC variable lister (has keyword tables!)
+- [ ] **Features text** (&9EF0–&A052) — long help text, should be EQUS
+- [ ] **Embedded data** (&A053–&B25F) — BASIC keyword tables, key defs, build artifacts
+
+### String data still as raw hex
+- [ ] Convert remaining EQUB string data to EQUS where possible
+- [ ] Label all string references with descriptive names
+
+### Final passes (after all code is disassembled)
+- [ ] **Macro pass**: identify more repeated patterns for macros
+- [ ] **Label pass**: rename all remaining L#### labels to descriptive names
+- [ ] **Constant pass**: replace all raw hex addresses with named constants
+- [ ] **Zero page pass**: name all ZP locations used by XMOS
+- [ ] **Comment pass**: add high-level comments explaining each routine's purpose

@@ -489,88 +489,717 @@ GUARD &C000
 \ keyboard input to provide cursor editing, insert/delete, etc.
 \ ============================================================================
 .extended_input_code
-    EQUB &08, &C9, &00, &F0, &04, &28, &4C, &39, &EF, &68, &86, &AE, &84, &AF, &A9, &DB  \ &84D1: .....(L9.h......
-    EQUB &85, &AB, &A9, &E0, &85, &AA, &A0, &0F, &B1, &AE, &91, &AA, &88, &10, &F9, &A5  \ &84E1: ................
-    EQUB &F4, &8D, &30, &02, &A9, &07, &8D, &30, &FE, &85, &F4, &20, &0C, &85, &08, &AD  \ &84F1: ..0....0... ....
-    EQUB &30, &02, &8D, &30, &FE, &85, &F4, &A9, &00, &28, &60, &AD, &7F, &84, &D0, &07  \ &8501: 0..0.....(`.....
-    EQUB &A6, &AE, &A4, &AF, &4C, &39, &EF, &A9, &00, &8D, &FD, &9D, &A9, &00, &8D, &80  \ &8511: ....L9..........
-    EQUB &84, &8D, &81, &84, &A8, &B1, &AA, &85, &A8, &C8, &B1, &AA, &85, &A9, &20, &E0  \ &8521: .............. .
-    EQUB &FF, &8D, &82, &84, &AD, &6A, &02, &10, &09, &AD, &82, &84, &20, &EE, &FF, &4C  \ &8531: .....j...... ..L
-    EQUB &2F, &85, &AD, &82, &84, &C9, &88, &D0, &03, &4C, &1C, &86, &C9, &89, &D0, &03  \ &8541: /........L......
-    EQUB &4C, &36, &86, &C9, &7F, &D0, &03, &4C, &53, &86, &C9, &0D, &D0, &03, &4C, &9F  \ &8551: L6.....LS.....L.
-    EQUB &86, &C9, &1B, &D0, &03, &4C, &04, &87, &C9, &15, &D0, &03, &4C, &24, &87, &C9  \ &8561: .....L......L$..
-    EQUB &8B, &D0, &03, &4C, &6B, &87, &C9, &8A, &D0, &03, &4C, &D5, &87, &C9, &87, &D0  \ &8571: ...Lk.....L.....
-    EQUB &03, &4C, &54, &88, &C9, &0E, &D0, &03, &20, &EE, &FF, &C9, &0F, &D0, &03, &20  \ &8581: .LT..... ...... 
-    EQUB &EE, &FF, &C9, &09, &D0, &03, &4C, &AB, &88, &C9, &00, &D0, &03, &4C, &55, &87  \ &8591: ......L......LU.
-    EQUB &AD, &82, &84, &C9, &20, &B0, &06, &20, &EE, &FF, &4C, &2F, &85, &A0, &03, &D1  \ &85A1: .... .. ..L/....
-    EQUB &AA, &B0, &03, &4C, &2F, &85, &C8, &D1, &AA, &F0, &05, &90, &03, &4C, &2F, &85  \ &85B1: ...L/........L/.
-    EQUB &AD, &80, &84, &A0, &02, &D1, &AA, &D0, &03, &4C, &2F, &85, &A9, &00, &8D, &D8  \ &85C1: .........L/.....
-    EQUB &85, &20, &D9, &85, &4C, &2F, &85, &00, &38, &AD, &80, &84, &ED, &81, &84, &48  \ &85D1: . ..L/..8......H
-    EQUB &F0, &0F, &AA, &AC, &80, &84, &88, &B1, &A8, &C8, &91, &A8, &88, &88, &CA, &D0  \ &85E1: ................
-    EQUB &F6, &AC, &81, &84, &AD, &82, &84, &20, &EE, &FF, &91, &A8, &EE, &81, &84, &EE  \ &85F1: ....... ........
-    EQUB &80, &84, &68, &F0, &15, &48, &AA, &C8, &B1, &A8, &20, &EE, &FF, &CA, &D0, &F7  \ &8601: ..h..H.... .....
-    EQUB &68, &AA, &A9, &08, &20, &EE, &FF, &CA, &D0, &F8, &60, &AD, &80, &84, &D0, &05  \ &8611: h... .....`.....
-    EQUB &A0, &8C, &4C, &3F, &88, &AD, &81, &84, &F0, &08, &CE, &81, &84, &A9, &08, &20  \ &8621: ..L?........... 
-    EQUB &EE, &FF, &4C, &2F, &85, &AD, &80, &84, &D0, &05, &A0, &8D, &4C, &3F, &88, &AD  \ &8631: ..L/........L?..
-    EQUB &81, &84, &CD, &80, &84, &F0, &08, &EE, &81, &84, &A9, &09, &20, &EE, &FF, &4C  \ &8641: ............ ..L
-    EQUB &2F, &85, &AD, &81, &84, &F0, &44, &38, &AD, &80, &84, &ED, &81, &84, &48, &F0  \ &8651: /.....D8......H.
-    EQUB &0E, &AA, &AC, &81, &84, &B1, &A8, &88, &91, &A8, &C8, &C8, &CA, &D0, &F6, &A9  \ &8661: ................
-    EQUB &7F, &20, &EE, &FF, &CE, &81, &84, &CE, &80, &84, &AC, &81, &84, &68, &F0, &1B  \ &8671: . ...........h..
-    EQUB &48, &AA, &B1, &A8, &20, &EE, &FF, &C8, &CA, &D0, &F7, &A9, &20, &20, &EE, &FF  \ &8681: H... .......  ..
-    EQUB &68, &AA, &E8, &A9, &08, &20, &EE, &FF, &CA, &D0, &F8, &4C, &2F, &85, &AD, &7F  \ &8691: h.... .....L/...
-    EQUB &84, &F0, &09, &A9, &04, &A2, &01, &A0, &00, &20, &F4, &FF, &AD, &30, &02, &C9  \ &86A1: ......... ...0..
-    EQUB &0C, &D0, &29, &AD, &80, &84, &C9, &04, &D0, &22, &A0, &03, &B1, &A8, &D9, &00  \ &86B1: ..)......"......
-    EQUB &87, &D0, &19, &88, &10, &F6, &20, &E7, &FF, &AD, &30, &02, &48, &20, &68, &8A  \ &86C1: ...... ...0.H h.
-    EQUB &A9, &0D, &92, &A8, &A0, &00, &68, &8D, &30, &02, &18, &60, &38, &AD, &80, &84  \ &86D1: ......h.0..`8...
-    EQUB &ED, &81, &84, &F0, &09, &AA, &A9, &09, &20, &EE, &FF, &CA, &D0, &F8, &20, &88  \ &86E1: ........ ..... .
-    EQUB &9D, &AC, &80, &84, &A9, &0D, &91, &A8, &20, &E7, &FF, &18, &A2, &00, &60, &53  \ &86F1: ........ .....`S
-    EQUB &41, &56, &45, &A9, &04, &A2, &01, &A0, &00, &20, &F4, &FF, &38, &AD, &80, &84  \ &8701: AVE...... ..8...
-    EQUB &ED, &81, &84, &F0, &09, &AA, &A9, &09, &20, &EE, &FF, &CA, &D0, &F8, &AC, &80  \ &8711: ........ .......
-    EQUB &84, &38, &60, &20, &2A, &87, &4C, &2F, &85, &AD, &80, &84, &F0, &25, &38, &AD  \ &8721: .8` *.L/.....%8.
-    EQUB &80, &84, &ED, &81, &84, &F0, &09, &AA, &A9, &09, &20, &EE, &FF, &CA, &D0, &F8  \ &8731: .......... .....
-    EQUB &AE, &80, &84, &A9, &7F, &20, &EE, &FF, &CA, &D0, &F8, &A9, &00, &8D, &81, &84  \ &8741: ..... ..........
-    EQUB &8D, &80, &84, &60, &AD, &80, &84, &F0, &03, &4C, &2F, &85, &20, &6C, &84, &20  \ &8751: ...`.....L/. l. 
-    EQUB &E7, &FF, &A0, &00, &A9, &0D, &91, &A8, &18, &60, &A9, &81, &A2, &FF, &A0, &FF  \ &8761: .........`......
-    EQUB &20, &F4, &FF, &E0, &FF, &D0, &1D, &AD, &FD, &9D, &D0, &12, &AD, &D8, &85, &D0  \ &8771:  ...............
-    EQUB &0D, &A9, &FF, &8D, &D8, &85, &AD, &80, &84, &F0, &06, &20, &88, &9D, &EE, &FD  \ &8781: ........... ....
-    EQUB &9D, &4C, &FE, &9D, &AD, &80, &84, &D0, &05, &A0, &8F, &4C, &3F, &88, &38, &AD  \ &8791: .L.........L?.8.
-    EQUB &0A, &03, &ED, &08, &03, &18, &69, &01, &8D, &82, &84, &38, &AD, &81, &84, &ED  \ &87A1: ......i....8....
-    EQUB &82, &84, &90, &0B, &8D, &81, &84, &A9, &0B, &20, &EE, &FF, &4C, &2F, &85, &AE  \ &87B1: ......... ..L/..
-    EQUB &81, &84, &F0, &F8, &A9, &08, &20, &EE, &FF, &CA, &D0, &F8, &A9, &00, &8D, &81  \ &87C1: ...... .........
-    EQUB &84, &4C, &2F, &85, &A9, &81, &A2, &FF, &A0, &FF, &20, &F4, &FF, &E0, &FF, &D0  \ &87D1: .L/....... .....
-    EQUB &18, &AD, &FD, &9D, &D0, &0D, &AD, &D8, &85, &D0, &08, &A9, &FF, &8D, &D8, &85  \ &87E1: ................
-    EQUB &20, &88, &9D, &CE, &FD, &9D, &4C, &FE, &9D, &AD, &80, &84, &D0, &05, &A0, &8E  \ &87F1:  .....L.........
-    EQUB &4C, &3F, &88, &38, &AD, &0A, &03, &ED, &08, &03, &18, &69, &01, &18, &6D, &81  \ &8801: L?.8.......i..m.
-    EQUB &84, &B0, &10, &CD, &80, &84, &B0, &0B, &8D, &81, &84, &A9, &0A, &20, &EE, &FF  \ &8811: ............. ..
-    EQUB &4C, &2F, &85, &38, &AD, &80, &84, &ED, &81, &84, &F0, &09, &AA, &A9, &09, &20  \ &8821: L/.8........... 
-    EQUB &EE, &FF, &CA, &D0, &F8, &AD, &80, &84, &8D, &81, &84, &4C, &2F, &85, &5A, &A9  \ &8831: ...........L/.Z.
-    EQUB &04, &A2, &00, &A0, &00, &20, &F4, &FF, &7A, &A9, &8A, &A2, &00, &20, &F4, &FF  \ &8841: ..... ..z.... ..
-    EQUB &4C, &2F, &85, &AD, &80, &84, &CD, &81, &84, &F0, &3F, &38, &AD, &80, &84, &ED  \ &8851: L/........?8....
-    EQUB &81, &84, &48, &F0, &0F, &AA, &AC, &81, &84, &C8, &B1, &A8, &88, &91, &A8, &C8  \ &8861: ..H.............
-    EQUB &C8, &CA, &D0, &F6, &CE, &80, &84, &AC, &81, &84, &68, &F0, &1D, &AA, &CA, &F0  \ &8871: ..........h.....
-    EQUB &1C, &48, &B1, &A8, &20, &EE, &FF, &C8, &CA, &D0, &F7, &A9, &20, &20, &EE, &FF  \ &8881: .H.. .......  ..
-    EQUB &68, &AA, &A9, &08, &20, &EE, &FF, &CA, &D0, &F8, &4C, &2F, &85, &A9, &09, &20  \ &8891: h... .....L/... 
-    EQUB &EE, &FF, &A9, &7F, &20, &EE, &FF, &4C, &2F, &85, &AD, &80, &84, &F0, &F8, &AD  \ &88A1: .... ..L/.......
-    EQUB &30, &02, &C9, &0C, &D0, &F1, &38, &AD, &80, &84, &ED, &81, &84, &F0, &09, &AA  \ &88B1: 0.....8.........
-    EQUB &A9, &09, &20, &EE, &FF, &CA, &D0, &F8, &AD, &80, &84, &8D, &81, &84, &A0, &00  \ &88C1: .. .............
-    EQUB &8C, &82, &84, &8C, &83, &84, &B1, &A8, &C9, &30, &90, &07, &C9, &3A, &B0, &03  \ &88D1: .........0...:..
-    EQUB &4C, &EC, &88, &C8, &CC, &80, &84, &F0, &BE, &D0, &EB, &0E, &82, &84, &2E, &83  \ &88E1: L...............
-    EQUB &84, &AD, &82, &84, &0A, &85, &AC, &AD, &83, &84, &2A, &85, &AD, &06, &AC, &26  \ &88F1: ..........*....&
-    EQUB &AD, &18, &AD, &82, &84, &65, &AC, &8D, &82, &84, &A5, &AD, &6D, &83, &84, &8D  \ &8901: .....e......m...
-    EQUB &83, &84, &B1, &A8, &38, &E9, &30, &18, &6D, &82, &84, &8D, &82, &84, &AD, &83  \ &8911: ....8.0.m.......
-    EQUB &84, &69, &00, &8D, &83, &84, &C8, &B1, &A8, &C9, &30, &90, &09, &C9, &3A, &B0  \ &8921: .i........0...:.
-    EQUB &05, &CC, &80, &84, &D0, &B5, &AC, &80, &84, &A9, &00, &85, &AC, &A5, &18, &85  \ &8931: ................
-    EQUB &AD, &A0, &01, &B1, &AC, &C9, &FF, &F0, &5C, &CD, &83, &84, &D0, &45, &C8, &B1  \ &8941: ........\....E..
-    EQUB &AC, &CD, &82, &84, &D0, &3D, &C8, &B1, &AC, &38, &E9, &04, &AA, &A9, &00, &8D  \ &8951: .....=...8......
-    EQUB &AE, &89, &A5, &1F, &29, &01, &F0, &0A, &5A, &A9, &20, &8D, &82, &84, &20, &D9  \ &8961: ....)...Z. ... .
-    EQUB &85, &7A, &C8, &B1, &AC, &5A, &8D, &82, &84, &C9, &80, &B0, &31, &C9, &22, &D0  \ &8971: .z...Z......1.".
-    EQUB &08, &AD, &AE, &89, &49, &FF, &8D, &AE, &89, &20, &D9, &85, &7A, &CA, &D0, &E2  \ &8981: ....I.... ..z...
-    EQUB &4C, &2F, &85, &A0, &03, &B1, &AC, &18, &65, &AC, &85, &AC, &A5, &AD, &69, &00  \ &8991: L/......e.....i.
-    EQUB &85, &AD, &4C, &42, &89, &A9, &07, &20, &EE, &FF, &4C, &2F, &85, &00, &AD, &AE  \ &89A1: ..LB... ..L/....
-    EQUB &89, &D0, &D6, &A9, &55, &85, &AE, &A9, &AE, &85, &AF, &A0, &00, &B1, &AE, &C8  \ &89B1: ....U...........
-    EQUB &B1, &AE, &10, &FB, &CD, &82, &84, &D0, &15, &A0, &FF, &C8, &B1, &AE, &30, &0B  \ &89C1: ..............0.
-    EQUB &8D, &82, &84, &5A, &20, &D9, &85, &7A, &4C, &CC, &89, &4C, &8D, &89, &C8, &C8  \ &89D1: ...Z ..zL..L....
-    EQUB &98, &18, &65, &AE, &85, &AE, &A5, &AF, &69, &00, &85, &AF, &4C, &BC, &89  \ &89E1: ..e.....i...L..
+    PHP
+    CMP #&00
+    BEQ L84DA
+    PLP
+    JMP &EF39
+.L84DA
+    PLA
+    STX &00AE
+    STY &00AF
+    LDA #&db
+    STA &00AB
+    LDA #&e0
+    STA &00AA
+    LDY #&0f
+.L84E9
+    LDA (&ae),Y
+    STA (&aa),Y
+    DEY
+    BPL L84E9
+    LDA &00F4
+    STA &0230
+    LDA #&07
+    STA sheila_romsel
+    STA &00F4
+    JSR L850C
+    PHP
+    LDA &0230
+    STA sheila_romsel
+    STA &00F4
+    LDA #&00
+    PLP
+    RTS
+.L850C
+    LDA xon_flag
+    BNE L8518
+    LDX &00AE
+    LDY &00AF
+    JMP &EF39
+.L8518
+    LDA #&00
+    STA &9DFD
+    LDA #&00
+    STA xi_cursor_pos
+    STA xi_line_len
+    TAY
+    LDA (&aa),Y
+    STA &00A8
+    INY
+    LDA (&aa),Y
+    STA &00A9
+.L852F
+    JSR osrdch
+    STA xi_char
+    LDA &026A
+    BPL L8543
+    LDA xi_char
+    JSR oswrch
+    JMP L852F
+.L8543
+    LDA xi_char
+    CMP #&88
+    BNE L854D
+    JMP L861C
+.L854D
+    CMP #&89
+    BNE L8554
+    JMP L8636
+.L8554
+    CMP #&7f
+    BNE L855B
+    JMP L8653
+.L855B
+    CMP #&0d
+    BNE L8562
+    JMP L869F
+.L8562
+    CMP #&1b
+    BNE L8569
+    JMP L8704
+.L8569
+    CMP #&15
+    BNE L8570
+    JMP L8724
+.L8570
+    CMP #&8b
+    BNE L8577
+    JMP L876B
+.L8577
+    CMP #&8a
+    BNE L857E
+    JMP L87D5
+.L857E
+    CMP #&87
+    BNE L8585
+    JMP L8854
+.L8585
+    CMP #&0e
+    BNE L858C
+    JSR oswrch
+.L858C
+    CMP #&0f
+    BNE L8593
+    JSR oswrch
+.L8593
+    CMP #&09
+    BNE L859A
+    JMP L88AB
+.L859A
+    CMP #&00
+    BNE L85A1
+    JMP L8755
+.L85A1
+    LDA xi_char
+    CMP #&20
+    BCS L85AE
+    JSR oswrch
+    JMP L852F
+.L85AE
+    LDY #&03
+    CMP (&aa),Y
+    BCS L85B7
+    JMP L852F
+.L85B7
+    INY
+    CMP (&aa),Y
+    BEQ L85C1
+    BCC L85C1
+    JMP L852F
+.L85C1
+    LDA xi_cursor_pos
+    LDY #&02
+    CMP (&aa),Y
+    BNE L85CD
+    JMP L852F
+.L85CD
+    LDA #&00
+    STA &85D8
+    JSR L85D9
+    JMP L852F
+    EQUB &00                   \ &85D8: insert mode flag (0=insert, FF=overwrite)
+.L85D9
+    SEC
+    LDA xi_cursor_pos
+    SBC xi_line_len
+    PHA
+    BEQ L85F2
+    TAX
+    LDY xi_cursor_pos
+    DEY
+.L85E8
+    LDA (&a8),Y
+    INY
+    STA (&a8),Y
+    DEY
+    DEY
+    DEX
+    BNE L85E8
+.L85F2
+    LDY xi_line_len
+    LDA xi_char
+    JSR oswrch
+    STA (&a8),Y
+    INC xi_line_len
+    INC xi_cursor_pos
+    PLA
+    BEQ L861B
+    PHA
+    TAX
+.L8608
+    INY
+    LDA (&a8),Y
+    JSR oswrch
+    DEX
+    BNE L8608
+    PLA
+    TAX
+.L8613
+    LDA #&08
+    JSR oswrch
+    DEX
+    BNE L8613
+.L861B
+    RTS
+.L861C
+    LDA xi_cursor_pos
+    BNE L8626
+    LDY #&8c
+    JMP L883F
+.L8626
+    LDA xi_line_len
+    BEQ L8633
+    DEC xi_line_len
+    LDA #&08
+    JSR oswrch
+.L8633
+    JMP L852F
+.L8636
+    LDA xi_cursor_pos
+    BNE L8640
+    LDY #&8d
+    JMP L883F
+.L8640
+    LDA xi_line_len
+    CMP xi_cursor_pos
+    BEQ L8650
+    INC xi_line_len
+    LDA #&09
+    JSR oswrch
+.L8650
+    JMP L852F
+.L8653
+    LDA xi_line_len
+    BEQ L869C
+    SEC
+    LDA xi_cursor_pos
+    SBC xi_line_len
+    PHA
+    BEQ L8670
+    TAX
+    LDY xi_line_len
+.L8666
+    LDA (&a8),Y
+    DEY
+    STA (&a8),Y
+    INY
+    INY
+    DEX
+    BNE L8666
+.L8670
+    LDA #&7f
+    JSR oswrch
+    DEC xi_line_len
+    DEC xi_cursor_pos
+    LDY xi_line_len
+    PLA
+    BEQ L869C
+    PHA
+    TAX
+.L8683
+    LDA (&a8),Y
+    JSR oswrch
+    INY
+    DEX
+    BNE L8683
+    LDA #&20
+    JSR oswrch
+    PLA
+    TAX
+    INX
+.L8694
+    LDA #&08
+    JSR oswrch
+    DEX
+    BNE L8694
+.L869C
+    JMP L852F
+.L869F
+    LDA xon_flag
+    BEQ L86AD
+    LDA #&04
+    LDX #&01
+    LDY #&00
+    JSR osbyte
+.L86AD
+    LDA &0230
+    CMP #&0c
+    BNE L86DD
+    LDA xi_cursor_pos
+    CMP #&04
+    BNE L86DD
+    LDY #&03
+.L86BD
+    LDA (&a8),Y
+    CMP &8700,Y
+    BNE L86DD
+    DEY
+    BPL L86BD
+    JSR osnewl
+    LDA &0230
+    PHA
+    JSR &8A68
+    LDA #&0d
+    EQUB &92, &A8  \ STA (&a8)
+    LDY #&00
+    PLA
+    STA &0230
+    CLC
+    RTS
+.L86DD
+    SEC
+    LDA xi_cursor_pos
+    SBC xi_line_len
+    BEQ L86EF
+    TAX
+.L86E7
+    LDA #&09
+    JSR oswrch
+    DEX
+    BNE L86E7
+.L86EF
+    JSR &9D88
+    LDY xi_cursor_pos
+    LDA #&0d
+    STA (&a8),Y
+    JSR osnewl
+    CLC
+    LDX #&00
+    RTS
+.save_keyword
+    EQUS "SAVE"                \ &8700: compared against user input
+.L8704
+    LDA #&04                   \ OSBYTE 4: cursor key status
+    LDX #&01                   \ Enable cursor editing
+    LDY #&00
+    JSR osbyte
+    SEC
+    LDA xi_cursor_pos
+    SBC xi_line_len
+    BEQ L871F
+    TAX
+.L8717
+    LDA #&09
+    JSR oswrch
+    DEX
+    BNE L8717
+.L871F
+    LDY xi_cursor_pos
+    SEC
+    RTS
+.L8724
+    JSR L872A
+    JMP L852F
+.L872A
+    LDA xi_cursor_pos
+    BEQ L8754
+    SEC
+    LDA xi_cursor_pos
+    SBC xi_line_len
+    BEQ L8741
+    TAX
+.L8739
+    LDA #&09
+    JSR oswrch
+    DEX
+    BNE L8739
+.L8741
+    LDX xi_cursor_pos
+.L8744
+    LDA #&7f
+    JSR oswrch
+    DEX
+    BNE L8744
+    LDA #&00
+    STA xi_line_len
+    STA xi_cursor_pos
+.L8754
+    RTS
+.L8755
+    LDA xi_cursor_pos
+    BEQ L875D
+    JMP L852F
+.L875D
+    JSR &846C
+    JSR osnewl
+    LDY #&00
+    LDA #&0d
+    STA (&a8),Y
+    CLC
+    RTS
+.L876B
+    LDA #&81
+    LDX #&ff
+    LDY #&ff
+    JSR osbyte
+    CPX #&ff
+    BNE L8795
+    LDA &9DFD
+    BNE L878F
+    LDA &85D8
+    BNE L878F
+    LDA #&ff
+    STA &85D8
+    LDA xi_cursor_pos
+    BEQ L8792
+    JSR &9D88
+.L878F
+    INC &9DFD
+.L8792
+    JMP &9DFE
+.L8795
+    LDA xi_cursor_pos
+    BNE L879F
+    LDY #&8f
+    JMP L883F
+.L879F
+    SEC
+    LDA &030A
+    SBC &0308
+    CLC
+    ADC #&01
+    STA xi_char
+    SEC
+    LDA xi_line_len
+    SBC xi_char
+    BCC L87C0
+    STA xi_line_len
+    LDA #&0b
+    JSR oswrch
+.L87BD
+    JMP L852F
+.L87C0
+    LDX xi_line_len
+    BEQ L87BD
+.L87C5
+    LDA #&08
+    JSR oswrch
+    DEX
+    BNE L87C5
+    LDA #&00
+    STA xi_line_len
+    JMP L852F
+.L87D5
+    LDA #&81
+    LDX #&ff
+    LDY #&ff
+    JSR osbyte
+    CPX #&ff
+    BNE L87FA
+    LDA &9DFD
+    BNE L87F4
+    LDA &85D8
+    BNE L87F4
+    LDA #&ff
+    STA &85D8
+    JSR &9D88
+.L87F4
+    DEC &9DFD
+    JMP &9DFE
+.L87FA
+    LDA xi_cursor_pos
+    BNE L8804
+    LDY #&8e
+    JMP L883F
+.L8804
+    SEC
+    LDA &030A
+    SBC &0308
+    CLC
+    ADC #&01
+    CLC
+    ADC xi_line_len
+    BCS L8824
+    CMP xi_cursor_pos
+    BCS L8824
+    STA xi_line_len
+    LDA #&0a
+    JSR oswrch
+    JMP L852F
+.L8824
+    SEC
+    LDA xi_cursor_pos
+    SBC xi_line_len
+    BEQ L8836
+    TAX
+.L882E
+    LDA #&09
+    JSR oswrch
+    DEX
+    BNE L882E
+.L8836
+    LDA xi_cursor_pos
+    STA xi_line_len
+    JMP L852F
+.L883F
+    PHY
+    LDA #&04
+    LDX #&00
+    LDY #&00
+    JSR osbyte
+    PLY
+    LDA #&8a
+    LDX #&00
+    JSR osbyte
+    JMP L852F
+.L8854
+    LDA xi_cursor_pos
+    CMP xi_line_len
+    BEQ L889B
+    SEC
+    LDA xi_cursor_pos
+    SBC xi_line_len
+    PHA
+    BEQ L8875
+    TAX
+    LDY xi_line_len
+    INY
+.L886B
+    LDA (&a8),Y
+    DEY
+    STA (&a8),Y
+    INY
+    INY
+    DEX
+    BNE L886B
+.L8875
+    DEC xi_cursor_pos
+    LDY xi_line_len
+    PLA
+    BEQ L889B
+    TAX
+    DEX
+    BEQ L889E
+    PHA
+.L8883
+    LDA (&a8),Y
+    JSR oswrch
+    INY
+    DEX
+    BNE L8883
+    LDA #&20
+    JSR oswrch
+    PLA
+    TAX
+.L8893
+    LDA #&08
+    JSR oswrch
+    DEX
+    BNE L8893
+.L889B
+    JMP L852F
+.L889E
+    LDA #&09
+    JSR oswrch
+    LDA #&7f
+    JSR oswrch
+.L88A8
+    JMP L852F
+.L88AB
+    LDA xi_cursor_pos
+    BEQ L88A8
+    LDA &0230
+    CMP #&0c
+    BNE L88A8
+    SEC
+    LDA xi_cursor_pos
+    SBC xi_line_len
+    BEQ L88C9
+    TAX
+.L88C1
+    LDA #&09
+    JSR oswrch
+    DEX
+    BNE L88C1
+.L88C9
+    LDA xi_cursor_pos
+    STA xi_line_len
+    LDY #&00
+    STY xi_char
+    STY xi_temp
+.L88D7
+    LDA (&a8),Y
+    CMP #&30
+    BCC L88E4
+    CMP #&3a
+    BCS L88E4
+    JMP L88EC
+.L88E4
+    INY
+    CPY xi_cursor_pos
+    BEQ L88A8
+    BNE L88D7
+.L88EC
+    ASL xi_char
+    ROL xi_temp
+    LDA xi_char
+    ASL A
+    STA &00AC
+    LDA xi_temp
+    ROL A
+    STA &00AD
+    ASL &00AC
+    ROL &00AD
+    CLC
+    LDA xi_char
+    ADC &00AC
+    STA xi_char
+    LDA &00AD
+    ADC xi_temp
+    STA xi_temp
+    LDA (&a8),Y
+    SEC
+    SBC #&30
+    CLC
+    ADC xi_char
+    STA xi_char
+    LDA xi_temp
+    ADC #&00
+    STA xi_temp
+    INY
+    LDA (&a8),Y
+    CMP #&30
+    BCC L8937
+    CMP #&3a
+    BCS L8937
+    CPY xi_cursor_pos
+    BNE L88EC
+.L8937
+    LDY xi_cursor_pos
+    LDA #&00
+    STA &00AC
+    LDA &0018
+    STA &00AD
+.L8942
+    LDY #&01
+    LDA (&ac),Y
+    CMP #&ff
+    BEQ L89A6
+    CMP xi_temp
+    BNE L8994
+    INY
+    LDA (&ac),Y
+    CMP xi_char
+    BNE L8994
+    INY
+    LDA (&ac),Y
+    SEC
+    SBC #&04
+    TAX
+    LDA #&00
+    STA &89AE
+    LDA &001F
+    AND #&01
+    BEQ L8973
+    PHY
+    LDA #&20
+    STA xi_char
+    JSR L85D9
+    PLY
+.L8973
+    INY
+    LDA (&ac),Y
+    PHY
+    STA xi_char
+    CMP #&80
+    BCS L89AF
+    CMP #&22
+    BNE L898A
+    LDA &89AE
+    EOR #&ff
+    STA &89AE
+.L898A
+    JSR L85D9
+.L898D
+    PLY
+    DEX
+    BNE L8973
+    JMP L852F
+.L8994
+    LDY #&03
+    LDA (&ac),Y
+    CLC
+    ADC &00AC
+    STA &00AC
+    LDA &00AD
+    ADC #&00
+    STA &00AD
+    JMP L8942
+.L89A6
+    LDA #&07
+    JSR oswrch
+    JMP L852F
+    EQUB &00                   \ &89AE: quote toggle flag
+.L89AF
+    EQUB &AD, &AE, &89         \ LDA &89AE (absolute ZP workaround)
+    BNE L898A
+    LDA #&55
+    STA &AE
+    LDA #&AE
+    STA &AF
+.L89BC
+    LDY #&00
+    LDA (&ae),Y
+.L89C0
+    INY
+    LDA (&ae),Y
+    BPL L89C0
+    CMP xi_char
+    BNE L89DF
+    LDY #&ff
+.L89CC
+    INY
+    LDA (&ae),Y
+    BMI L89DC
+    STA xi_char
+    PHY
+    JSR L85D9
+    PLY
+    JMP L89CC
+.L89DC
+    JMP L898D
+.L89DF
+    INY
+    INY
+    TYA
+    CLC
+    ADC &00AE
+    STA &00AE
+    LDA &00AF
+    ADC #&00
+    STA &00AF
+    JMP L89BC
 \ ============================================================================
 \ print_inline — Print null-terminated string that follows the JSR
 \ The return address on the stack points to the string data.

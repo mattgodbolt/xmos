@@ -53,3 +53,11 @@ rom_number  = &F4              \ Current paged ROM number
 \ &A8-&AF are reserved by MOS for sideways ROM use during commands
 zp_ptr_lo = &A8                \ General pointer low byte
 zp_ptr_hi = &A9                \ General pointer high byte
+
+\ --- Extended input workspace (in sideways RAM) ---
+\ These are absolute addresses within the ROM image, used as variables
+\ because the BBC Master has sideways RAM, not ROM
+xi_cursor_pos = &8480          \ Current cursor position in input line
+xi_line_len   = &8481          \ Current line length
+xi_char       = &8482          \ Last character read / temp char
+xi_temp       = &8483          \ Temp storage for number parsing
