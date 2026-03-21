@@ -34,21 +34,21 @@ against `original.rom`. The build must always match.
 
 ### Assembly source (split by subsystem)
 
-| File | Lines | Description |
-|------|-------|-------------|
-| `xmos.asm` | 445 | Main: ROM header, service dispatch, help, command table, XON/XOFF |
-| `input.asm` | 776 | Extended input: handle_reset, keyboard intercept, cursor editing |
-| `util.asm` | 99 | Utilities: print_inline, copy_inline_to_stack, compare_string |
-| `basic.asm` | 158 | BASIC save: *S (save with incore name), *L (mode setup) |
-| `keys.asm` | 491 | Key system: remap handler, *KEYON/OFF, *KSTATUS, *DEFKEYS |
-| `alias.asm` | 502 | Aliases: *ALIAS, *ALIASES, *ALICLR, *ALILD, *ALISV, *STORE |
-| `mem.asm` | 347 | Memory editor: *MEM command |
-| `dis.asm` | 254 | Disassembler: *DIS command, addressing mode format tables |
-| `bau.asm` | 426 | BASIC utilities: *BAU (split lines), *SPACE (insert spaces) |
-| `lvar.asm` | 419 | Variable lister: *LVAR, token classifier, decimal printer |
-| `data.asm` | 597 | ROM data: features text, opcode table, keyword table, padding |
-| `constants.asm` | | System constants: MOS vectors, hardware registers, zero page |
-| `macros.asm` | | Assembly macros: STROUT, OP, NOOP, KW |
+| File | Description |
+|------|-------------|
+| `xmos.asm` | Main: ROM header, service dispatch, help, command table, XON/XOFF |
+| `input.asm` | Extended input: handle_reset, keyboard intercept, cursor editing |
+| `util.asm` | Utilities: print_inline, copy_inline_to_stack, compare_string |
+| `basic.asm` | BASIC save: *S (save with incore name), *L (mode setup) |
+| `keys.asm` | Key system: remap handler, *KEYON/OFF, *KSTATUS, *DEFKEYS |
+| `alias.asm` | Aliases: *ALIAS, *ALIASES, *ALICLR, *ALILD, *ALISV, *STORE |
+| `mem.asm` | Memory editor: *MEM command |
+| `dis.asm` | Disassembler: *DIS command, addressing mode format tables |
+| `bau.asm` | BASIC utilities: *BAU (split lines), *SPACE (insert spaces) |
+| `lvar.asm` | Variable lister: *LVAR, token classifier, decimal printer |
+| `data.asm` | ROM data: features text, opcode table, keyword table, padding |
+| `constants.asm` | System constants: MOS vectors, hardware registers, zero page |
+| `macros.asm` | Assembly macros: STROUT, OP, NOOP, KW |
 
 ### Other files
 
