@@ -450,10 +450,10 @@ GUARD &C000
     STA &aa
     STA &020c
     JSR L9379
-    LDA &8c73
+    LDA keyon_active
     BEQ L84AC
     LDA #&00
-    STA &8c73
+    STA keyon_active
     JSR L8C89
 .L84AC
     LDA xon_flag
@@ -842,8 +842,14 @@ GUARD &C000
     EQUB &4C, &FF, &FF, &28, &20, &FF, &FF, &08, &E0, &40, &D0, &06, &A2, &E1, &86, &EC  \ &8C35: L..( ....@......
     EQUB &A2, &61, &E0, &01, &D0, &06, &A2, &C2, &86, &EC, &A2, &42, &E0, &48, &D0, &06  \ &8C45: .a.........B.H..
     EQUB &A2, &C8, &86, &EC, &A2, &48, &E0, &68, &D0, &06, &A2, &E8, &86, &EC, &A2, &68  \ &8C55: .....H.h.......h
-    EQUB &E0, &49, &D0, &06, &A2, &C9, &86, &EC, &A2, &49, &28, &60, &00, &00, &00, &41  \ &8C65: .I.......I(`...A
-    EQUB &02, &49, &69, &4A  \ &8C75: .IiJ
+    EQUB &E0, &49, &D0, &06, &A2, &C9, &86, &EC, &A2, &49, &28, &60  \ &8C65: key remap code
+.saved_keyv_lo
+    EQUB &00                   \ &8C71: saved KEYV low byte
+.saved_keyv_hi
+    EQUB &00                   \ &8C72: saved KEYV high byte
+.keyon_active
+    EQUB &00                   \ &8C73: non-zero = KEYON active
+    EQUB &41, &02, &49, &69, &4A  \ &8C74: workspace
 .L8C79
     LDX #&00
 .L8C7B
@@ -855,22 +861,22 @@ GUARD &C000
 .L8C86
     JMP L8D64
 .L8C89
-    LDA &8c73
+    LDA keyon_active
     BNE L8C79
     LDA #&01
-    STA &8c73
+    STA keyon_active
     LDA &020a
     STA &8bea
     STA &8c10
     STA &8c36
     STA &8c3a
-    STA &8c71
+    STA saved_keyv_lo
     LDA &020b
     STA &8beb
     STA &8c11
     STA &8c37
     STA &8c3b
-    STA &8c72
+    STA saved_keyv_hi
     SEC
     LDA #&00
     SBC &8c74
@@ -961,35 +967,50 @@ GUARD &C000
     EQUB &0D : EQUS "Redefined keys off" : EQUB &0D, 0
 .msg_keys_on
     EQUB &0D : EQUS "Redefined keys on, and are:" : EQUB &0D, &0D, 0  \ &8DC5: re:...
+\ ============================================================================
+\ *KEYOFF — Disable redefined keys
+\ ============================================================================
 .cmd_keyoff
-    LDA &8c73
-    BEQ L8DE1
+    LDA keyon_active            \ Already disabled?
+    BEQ keyoff_print_msg
     LDA #&00
-    STA &8c73
-    LDA &8c71
-    STA &020a
-    LDA &8c72
-    STA &020b
-.L8DE1
+    STA keyon_active
+    LDA saved_keyv_lo           \ Restore original KEYV
+    STA &020A
+    LDA saved_keyv_hi
+    STA &020B
+.keyoff_print_msg
+{
     LDX #&00
-.L8DE3
+.loop
     LDA msg_keys_off,X
-    BEQ L8DEE
+    BEQ done
     JSR osasci
     INX
-    BNE L8DE3
-.L8DEE
+    BNE loop
+.done
+}
     JMP L8D64
-    EQUB &00, &54, &41, &42, &20, &20, &20, &20, &20, &20, &01, &43, &41, &50, &53, &20  \ &8DF1: .TAB      .CAPS 
-    EQUB &4C, &4F, &43, &4B, &02, &53, &48, &46, &54, &20, &4C, &4F, &43, &4B, &03, &53  \ &8E01: LOCK.SHFT LOCK.S
-    EQUB &48, &49, &46, &54, &20, &20, &20, &20, &04, &43, &54, &52, &4C, &20, &20, &20  \ &8E11: HIFT    .CTRL   
-    EQUB &20, &20, &1B, &45, &53, &43, &41, &50, &45, &20, &20, &20, &0D, &52, &45, &54  \ &8E21:   .ESCAPE   .RET
-    EQUB &55, &52, &4E, &20, &20, &20, &20, &53, &50, &41, &43, &45, &20, &20, &20, &20  \ &8E31: URN    SPACE    
-    EQUB &7F, &44, &45, &4C, &45, &54, &45, &20, &20, &20, &8B, &43, &4F, &50, &59, &20  \ &8E41: .DELETE   .COPY 
-    EQUB &20, &20, &20, &20, &8C, &4C, &45, &46, &54, &20, &20, &20, &20, &20, &8D, &52  \ &8E51:     .LEFT     .R
-    EQUB &49, &47, &48, &54, &20, &20, &20, &20, &8E, &44, &4F, &57, &4E, &20, &20, &20  \ &8E61: IGHT    .DOWN   
-    EQUB &20, &20, &8F, &55, &50, &20, &20, &20, &20, &20, &20, &20, &E0, &42, &52, &45  \ &8E71:   .UP       .BRE
-    EQUB &41, &4B, &21, &21, &21, &20  \ &8E81: AK!!! 
+
+\ --- Key name lookup table ---
+\ Each entry: key code byte, then 9-char padded name
+\ Used by KSTATUS to display key names
+.key_name_table
+    EQUB &00 : EQUS "TAB      "
+    EQUB &01 : EQUS "CAPS LOCK"
+    EQUB &02 : EQUS "SHFT LOCK"
+    EQUB &03 : EQUS "SHIFT    "
+    EQUB &04 : EQUS "CTRL     "
+    EQUB &1B : EQUS "ESCAPE   "
+    EQUB &0D : EQUS "RETURN   "
+    EQUB &20 : EQUS "SPACE    "
+    EQUB &7F : EQUS "DELETE   "
+    EQUB &8B : EQUS "COPY     "
+    EQUB &8C : EQUS "LEFT     "
+    EQUB &8D : EQUS "RIGHT    "
+    EQUB &8E : EQUS "DOWN     "
+    EQUB &8F : EQUS "UP       "
+    EQUB &E0 : EQUS "BREAK!!! "
 .L8E87
     CMP #&00
     BNE L8E8F
@@ -1044,9 +1065,9 @@ GUARD &C000
     EQUB &70, &20, &3A, &20, &20, &20, &20, &20, &20, &44, &6F, &77, &6E, &20, &3A, &20  \ &8EF0: p :      Down : 
     EQUB &4A, &75, &6D, &70, &2F, &66, &69, &72, &65, &20, &3A, &20  \ &8F00: Jump/fire : 
 .L8F0C
-    JMP L8DE1
+    JMP keyoff_print_msg
 .cmd_kstatus
-    LDA &8c73
+    LDA keyon_active
     BEQ L8F0C
     LDX #&00
 .L8F16
@@ -1090,13 +1111,13 @@ GUARD &C000
     EQUB &4B, &45, &59, &20, &52, &45, &44, &45, &46, &49, &4E, &45, &52, &0D, &2D, &2D  \ &8F5B: KEY REDEFINER.--
     EQUB &2D, &2D, &2D, &2D, &2D, &2D, &2D, &2D, &2D, &2D, &2D, &0D, &00  \ &8F6B: -----------..
 .cmd_defkeys
-    LDA &8c73
+    LDA keyon_active
     BEQ L8F8E
     LDA #&00
-    STA &8c73
-    LDA &8c71
+    STA keyon_active
+    LDA saved_keyv_lo
     STA &020a
-    LDA &8c72
+    LDA saved_keyv_hi
     STA &020b
 .L8F8E
     LDA #&81
