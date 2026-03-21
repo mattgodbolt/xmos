@@ -164,37 +164,41 @@ Linear capstone sweep gets out of sync at:
 Each block must be manually verified. The approach: disassemble with capstone, then
 check for RTS/JMP boundaries and verify the byte stream manually.
 
-### Raw data blocks to disassemble
-These are still raw EQUB hex dumps that need proper 6502 instructions and labels:
-- [ ] **Extended input handler** (&84D1–&85D8, 208 bytes) — the core XON keyboard handler
-- [ ] **Key remapping code** (&8BE0–&8C70) — keyboard intercept / translation
-- [ ] **cmd_keyon / L8C89** (&8C89–&8D63) — KEYON setup, KEYV hook installation
-- [ ] **cmd_kstatus display loop** (&8F2B–&8F77) — print key assignments
-- [ ] **cmd_defkeys** (&8F78–&9032) — interactive key redefinition
-- [ ] **cmd_alias** (&9033–&9140) — alias definition
-- [ ] **cmd_aliases** (&9141–&9184) — display aliases
-- [ ] **check_alias** (&91B8–&9284) — alias lookup and execution
-- [ ] **cmd_alild / cmd_alisv** (&9285–&9345) — alias file load/save
-- [ ] **cmd_store** (&9346–&9378) — store function keys
-- [ ] **L9379** (&9379–&93A7) — alias system init
-- [ ] **cmd_mem** (&940C–&94FF) — memory editor
-- [ ] **cmd_dis** (&9500–&9860) — built-in 6502 disassembler (has opcode tables!)
-- [ ] **cmd_bau / cmd_space** (&98C1–&9A2E) — BASIC utilities
-- [ ] **cmd_lvar** (&9C00–&9EEF) — BASIC variable lister (has keyword tables!)
-- [ ] **Features text** (&9EF0–&A052) — long help text, should be EQUS
-- [ ] **Embedded data** (&A053–&B25F) — BASIC keyword tables, key defs, build artifacts
+### Code disassembly status
+All code blocks are now disassembled into proper 6502 instructions:
+- [x] Extended input handler (&84D1–&89EF, 1310 bytes)
+- [x] Key remapping KEYV interceptor (&8BDF–&8C70)
+- [x] KEYON setup, KEYOFF, KSTATUS, DEFKEYS
+- [x] Alias system (cmd_alias, cmd_aliases, check_alias, cmd_alild, cmd_alisv, cmd_aliclr)
+- [x] cmd_store (partial — has EQUB for ZP absolute workarounds)
+- [x] alias_init
+- [x] cmd_mem, cmd_dis (with opcode format strings as structured data)
+- [x] cmd_bau, cmd_space, cmd_lvar
+- [x] Features text (611 bytes as EQUS)
+- [x] All utility routines (print_inline, compare_string, parse_hex, etc.)
 
-### String data still as raw hex
-- [ ] Convert remaining EQUB string data to EQUS where possible
-- [ ] Label all string references with descriptive names
+### Remaining raw EQUB data (474 lines)
+- **11 lines in code**: ZP absolute workaround EQUB-encoded instructions
+- **463 lines in tail** (&A154–&BFFF): structured data tables, not code
+  - DIS opcode decode table (~1KB)
+  - BASIC keyword tables for LVAR (~500 bytes)
+  - Function key / alias buffers (~1KB of &0D-initialised workspace)
+  - Build artifact strings
+  - Zero/FF padding
 
-### Final passes (after all code is disassembled)
+### Completed passes
 - [x] **Macro pass**: STROUT macro for string printing (8 instances)
 - [x] **Label pass**: all 342 L#### labels renamed to descriptive names
 - [x] **Constant pass**: OS workspace, hardware, display memory all named
-- [ ] **Zero page pass**: &00xx absolute addressing workarounds remain (23 instances)
-- [ ] **Scoping pass**: `{ }` scoping for local labels (in progress, 26 blocks done)
+- [x] **String pass**: all error messages, help text, key names as EQUS
+- [x] **Scoping pass**: 26 `{ }` blocks with clean local labels
+
+### Remaining work
+- [ ] **More scoping**: ~260 more labels could be scoped (mostly single-reference branch targets)
+- [ ] **Tail data annotation**: opcode table, keyword tables could be structured further
 - [ ] **Comment pass**: add high-level comments explaining each routine's purpose
+- [ ] **ZP workarounds**: 23 &00xx absolute addressing EQUB instructions (fix in improvements phase)
+- [ ] **Second macro pass**: find more repeated patterns after full annotation
 
 ## 2026-03-21: Label pass and absolute address elimination
 
