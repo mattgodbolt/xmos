@@ -3,8 +3,7 @@ an extension for the BBC Micro with a number of handy utility `*` commands,
 and extended BASIC editing support.
 
 Use the jsbeeb MCP as necessary to boot and explore the ROM on the original
-disc: `original.ssd`. If more comprehensive disassembly is needed, use Radare2
-(`r2`).
+disc: `original.ssd`.
 
 The disc should contain a ROM that would be loaded into the sideways RAM of a
 BBC Master (originally, both Matt and Rich had BBC Masters when they wrote
