@@ -491,10 +491,10 @@ GUARD &C000
 .extended_input_code
     PHP
     CMP #&00
-    BEQ L84DA
+    BEQ xi_entry
     PLP
     JMP &EF39
-.L84DA
+.xi_entry
     PLA
     STX &00AE
     STY &00AF
@@ -503,17 +503,17 @@ GUARD &C000
     LDA #&e0
     STA &00AA
     LDY #&0f
-.L84E9
+.xi_save_regs_loop
     LDA (&ae),Y
     STA (&aa),Y
     DEY
-    BPL L84E9
+    BPL xi_save_regs_loop
     LDA &00F4
     STA &0230
     LDA #&07
     STA sheila_romsel
     STA &00F4
-    JSR L850C
+    JSR xi_check_xon
     PHP
     LDA &0230
     STA sheila_romsel
@@ -521,13 +521,13 @@ GUARD &C000
     LDA #&00
     PLP
     RTS
-.L850C
+.xi_check_xon
     LDA xon_flag
-    BNE L8518
+    BNE xi_init_state
     LDX &00AE
     LDY &00AF
     JMP &EF39
-.L8518
+.xi_init_state
     LDA #&00
     STA xi_scroll_count
     LDA #&00
@@ -539,115 +539,115 @@ GUARD &C000
     INY
     LDA (&aa),Y
     STA &00A9
-.L852F
+.xi_read_loop
     JSR osrdch
     STA xi_char
     LDA &026A
-    BPL L8543
+    BPL xi_dispatch
     LDA xi_char
     JSR oswrch
-    JMP L852F
-.L8543
+    JMP xi_read_loop
+.xi_dispatch
     LDA xi_char
     CMP #&88
-    BNE L854D
-    JMP L861C
-.L854D
+    BNE xi_check_right
+    JMP xi_handle_left
+.xi_check_right
     CMP #&89
-    BNE L8554
-    JMP L8636
-.L8554
+    BNE xi_check_delete
+    JMP xi_handle_right
+.xi_check_delete
     CMP #&7f
-    BNE L855B
-    JMP L8653
-.L855B
+    BNE xi_check_cr
+    JMP xi_handle_delete
+.xi_check_cr
     CMP #&0d
-    BNE L8562
-    JMP L869F
-.L8562
+    BNE xi_check_escape
+    JMP xi_handle_cr
+.xi_check_escape
     CMP #&1b
-    BNE L8569
-    JMP L8704
-.L8569
+    BNE xi_check_clear
+    JMP xi_cr_restore_keys
+.xi_check_clear
     CMP #&15
-    BNE L8570
-    JMP L8724
-.L8570
+    BNE xi_check_copy
+    JMP xi_handle_clear
+.xi_check_copy
     CMP #&8b
-    BNE L8577
-    JMP L876B
-.L8577
+    BNE xi_check_down
+    JMP xi_handle_copy_up
+.xi_check_down
     CMP #&8a
-    BNE L857E
-    JMP L87D5
-.L857E
+    BNE xi_check_tab
+    JMP xi_handle_copy_down
+.xi_check_tab
     CMP #&87
-    BNE L8585
-    JMP L8854
-.L8585
+    BNE xi_check_ctrl_n
+    JMP xi_handle_tab
+.xi_check_ctrl_n
     CMP #&0e
-    BNE L858C
+    BNE xi_check_ctrl_o
     JSR oswrch
-.L858C
+.xi_check_ctrl_o
     CMP #&0f
-    BNE L8593
+    BNE xi_check_htab
     JSR oswrch
-.L8593
+.xi_check_htab
     CMP #&09
-    BNE L859A
-    JMP L88AB
-.L859A
+    BNE xi_check_null
+    JMP xi_handle_htab
+.xi_check_null
     CMP #&00
-    BNE L85A1
-    JMP L8755
-.L85A1
+    BNE xi_handle_printable
+    JMP xi_handle_null
+.xi_handle_printable
     LDA xi_char
     CMP #&20
-    BCS L85AE
+    BCS xi_check_lo_range
     JSR oswrch
-    JMP L852F
-.L85AE
+    JMP xi_read_loop
+.xi_check_lo_range
     LDY #&03
     CMP (&aa),Y
-    BCS L85B7
-    JMP L852F
-.L85B7
+    BCS xi_check_hi_range
+    JMP xi_read_loop
+.xi_check_hi_range
     INY
     CMP (&aa),Y
-    BEQ L85C1
-    BCC L85C1
-    JMP L852F
-.L85C1
+    BEQ xi_check_buffer_full
+    BCC xi_check_buffer_full
+    JMP xi_read_loop
+.xi_check_buffer_full
     LDA xi_cursor_pos
     LDY #&02
     CMP (&aa),Y
-    BNE L85CD
-    JMP L852F
-.L85CD
+    BNE xi_do_insert_setup
+    JMP xi_read_loop
+.xi_do_insert_setup
     LDA #&00
     STA xi_insert_mode
-    JSR L85D9
-    JMP L852F
+    JSR xi_do_insert
+    JMP xi_read_loop
 .xi_insert_mode
     EQUB &00                   \ &85D8: insert mode flag (0=insert, FF=overwrite)
-.L85D9
+.xi_do_insert
     SEC
     LDA xi_cursor_pos
     SBC xi_line_len
     PHA
-    BEQ L85F2
+    BEQ xi_write_char
     TAX
     LDY xi_cursor_pos
     DEY
-.L85E8
+.xi_shift_right_loop
     LDA (&a8),Y
     INY
     STA (&a8),Y
     DEY
     DEY
     DEX
-    BNE L85E8
-.L85F2
+    BNE xi_shift_right_loop
+.xi_write_char
     LDY xi_line_len
     LDA xi_char
     JSR oswrch
@@ -655,118 +655,118 @@ GUARD &C000
     INC xi_line_len
     INC xi_cursor_pos
     PLA
-    BEQ L861B
+    BEQ xi_insert_done
     PHA
     TAX
-.L8608
+.xi_redraw_after
     INY
     LDA (&a8),Y
     JSR oswrch
     DEX
-    BNE L8608
+    BNE xi_redraw_after
     PLA
     TAX
-.L8613
+.xi_backspace_loop
     LDA #&08
     JSR oswrch
     DEX
-    BNE L8613
-.L861B
+    BNE xi_backspace_loop
+.xi_insert_done
     RTS
-.L861C
+.xi_handle_left
     LDA xi_cursor_pos
-    BNE L8626
+    BNE xi_left_no_scroll
     LDY #&8c
-    JMP L883F
-.L8626
+    JMP xi_reset_cursor_keys
+.xi_left_no_scroll
     LDA xi_line_len
-    BEQ L8633
+    BEQ xi_left_done
     DEC xi_line_len
     LDA #&08
     JSR oswrch
-.L8633
-    JMP L852F
-.L8636
+.xi_left_done
+    JMP xi_read_loop
+.xi_handle_right
     LDA xi_cursor_pos
-    BNE L8640
+    BNE xi_right_no_scroll
     LDY #&8d
-    JMP L883F
-.L8640
+    JMP xi_reset_cursor_keys
+.xi_right_no_scroll
     LDA xi_line_len
     CMP xi_cursor_pos
-    BEQ L8650
+    BEQ xi_right_done
     INC xi_line_len
     LDA #&09
     JSR oswrch
-.L8650
-    JMP L852F
-.L8653
+.xi_right_done
+    JMP xi_read_loop
+.xi_handle_delete
     LDA xi_line_len
-    BEQ L869C
+    BEQ xi_del_done
     SEC
     LDA xi_cursor_pos
     SBC xi_line_len
     PHA
-    BEQ L8670
+    BEQ xi_del_do_delete
     TAX
     LDY xi_line_len
-.L8666
+.xi_del_shift_loop
     LDA (&a8),Y
     DEY
     STA (&a8),Y
     INY
     INY
     DEX
-    BNE L8666
-.L8670
+    BNE xi_del_shift_loop
+.xi_del_do_delete
     LDA #&7f
     JSR oswrch
     DEC xi_line_len
     DEC xi_cursor_pos
     LDY xi_line_len
     PLA
-    BEQ L869C
+    BEQ xi_del_done
     PHA
     TAX
-.L8683
+.xi_del_redraw_loop
     LDA (&a8),Y
     JSR oswrch
     INY
     DEX
-    BNE L8683
+    BNE xi_del_redraw_loop
     LDA #&20
     JSR oswrch
     PLA
     TAX
     INX
-.L8694
+.xi_del_backspace_loop
     LDA #&08
     JSR oswrch
     DEX
-    BNE L8694
-.L869C
-    JMP L852F
-.L869F
+    BNE xi_del_backspace_loop
+.xi_del_done
+    JMP xi_read_loop
+.xi_handle_cr
     LDA xon_flag
-    BEQ L86AD
+    BEQ xi_cr_check_mode
     LDA #&04
     LDX #&01
     LDY #&00
     JSR osbyte
-.L86AD
+.xi_cr_check_mode
     LDA &0230
     CMP #&0c
-    BNE L86DD
+    BNE xi_cr_normal
     LDA xi_cursor_pos
     CMP #&04
-    BNE L86DD
+    BNE xi_cr_normal
     LDY #&03
-.L86BD
+.xi_cr_check_save
     LDA (&a8),Y
     CMP save_keyword,Y
-    BNE L86DD
+    BNE xi_cr_normal
     DEY
-    BPL L86BD
+    BPL xi_cr_check_save
     JSR osnewl
     LDA &0230
     PHA
@@ -778,18 +778,18 @@ GUARD &C000
     STA &0230
     CLC
     RTS
-.L86DD
+.xi_cr_normal
     SEC
     LDA xi_cursor_pos
     SBC xi_line_len
-    BEQ L86EF
+    BEQ xi_cr_finish
     TAX
 .L86E7
     LDA #&09
     JSR oswrch
     DEX
     BNE L86E7
-.L86EF
+.xi_cr_finish
     JSR L9D88
     LDY xi_cursor_pos
     LDA #&0d
@@ -800,7 +800,7 @@ GUARD &C000
     RTS
 .save_keyword
     EQUS "SAVE"                \ &8700: compared against user input
-.L8704
+.xi_cr_restore_keys
     LDA #&04                   \ OSBYTE 4: cursor key status
     LDX #&01                   \ Enable cursor editing
     LDY #&00
@@ -808,50 +808,50 @@ GUARD &C000
     SEC
     LDA xi_cursor_pos
     SBC xi_line_len
-    BEQ L871F
+    BEQ xi_cr_sec_return
     TAX
 .L8717
     LDA #&09
     JSR oswrch
     DEX
     BNE L8717
-.L871F
+.xi_cr_sec_return
     LDY xi_cursor_pos
     SEC
     RTS
-.L8724
-    JSR L872A
-    JMP L852F
-.L872A
+.xi_handle_clear
+    JSR xi_do_clear
+    JMP xi_read_loop
+.xi_do_clear
     LDA xi_cursor_pos
-    BEQ L8754
+    BEQ xi_clear_done
     SEC
     LDA xi_cursor_pos
     SBC xi_line_len
-    BEQ L8741
+    BEQ xi_clear_del_loop
     TAX
-.L8739
+.xi_clear_fwd_loop
     LDA #&09
     JSR oswrch
     DEX
-    BNE L8739
-.L8741
+    BNE xi_clear_fwd_loop
+.xi_clear_del_loop
     LDX xi_cursor_pos
-.L8744
+.xi_clear_del_char
     LDA #&7f
     JSR oswrch
     DEX
-    BNE L8744
+    BNE xi_clear_del_char
     LDA #&00
     STA xi_line_len
     STA xi_cursor_pos
-.L8754
+.xi_clear_done
     RTS
-.L8755
+.xi_handle_null
     LDA xi_cursor_pos
-    BEQ L875D
-    JMP L852F
-.L875D
+    BEQ xi_null_not_empty
+    JMP xi_read_loop
+.xi_null_not_empty
     JSR cmd_xoff
     JSR osnewl
     LDY #&00
@@ -859,32 +859,32 @@ GUARD &C000
     STA (&a8),Y
     CLC
     RTS
-.L876B
+.xi_handle_copy_up
     LDA #&81
     LDX #&ff
     LDY #&ff
     JSR osbyte
     CPX #&ff
-    BNE L8795
+    BNE xi_copy_up_has_key
     LDA xi_scroll_count
-    BNE L878F
+    BNE xi_copy_up_inc
     LDA xi_insert_mode
-    BNE L878F
+    BNE xi_copy_up_inc
     LDA #&ff
     STA xi_insert_mode
     LDA xi_cursor_pos
-    BEQ L8792
+    BEQ xi_copy_up_jmp
     JSR L9D88
-.L878F
+.xi_copy_up_inc
     INC xi_scroll_count
-.L8792
+.xi_copy_up_jmp
     JMP L9DFE
-.L8795
+.xi_copy_up_has_key
     LDA xi_cursor_pos
-    BNE L879F
+    BNE xi_copy_up_calc
     LDY #&8f
-    JMP L883F
-.L879F
+    JMP xi_reset_cursor_keys
+.xi_copy_up_calc
     SEC
     LDA &030A
     SBC &0308
@@ -894,46 +894,46 @@ GUARD &C000
     SEC
     LDA xi_line_len
     SBC xi_char
-    BCC L87C0
+    BCC xi_copy_up_clear
     STA xi_line_len
     LDA #&0b
     JSR oswrch
-.L87BD
-    JMP L852F
-.L87C0
+.xi_copy_up_done
+    JMP xi_read_loop
+.xi_copy_up_clear
     LDX xi_line_len
-    BEQ L87BD
-.L87C5
+    BEQ xi_copy_up_done
+.xi_copy_up_bs_loop
     LDA #&08
     JSR oswrch
     DEX
-    BNE L87C5
+    BNE xi_copy_up_bs_loop
     LDA #&00
     STA xi_line_len
-    JMP L852F
-.L87D5
+    JMP xi_read_loop
+.xi_handle_copy_down
     LDA #&81
     LDX #&ff
     LDY #&ff
     JSR osbyte
     CPX #&ff
-    BNE L87FA
+    BNE xi_copy_down_has_key
     LDA xi_scroll_count
-    BNE L87F4
+    BNE xi_copy_down_dec
     LDA xi_insert_mode
-    BNE L87F4
+    BNE xi_copy_down_dec
     LDA #&ff
     STA xi_insert_mode
     JSR L9D88
-.L87F4
+.xi_copy_down_dec
     DEC xi_scroll_count
     JMP L9DFE
-.L87FA
+.xi_copy_down_has_key
     LDA xi_cursor_pos
-    BNE L8804
+    BNE xi_copy_down_calc
     LDY #&8e
-    JMP L883F
-.L8804
+    JMP xi_reset_cursor_keys
+.xi_copy_down_calc
     SEC
     LDA &030A
     SBC &0308
@@ -941,29 +941,29 @@ GUARD &C000
     ADC #&01
     CLC
     ADC xi_line_len
-    BCS L8824
+    BCS xi_copy_down_truncate
     CMP xi_cursor_pos
-    BCS L8824
+    BCS xi_copy_down_truncate
     STA xi_line_len
     LDA #&0a
     JSR oswrch
-    JMP L852F
-.L8824
+    JMP xi_read_loop
+.xi_copy_down_truncate
     SEC
     LDA xi_cursor_pos
     SBC xi_line_len
-    BEQ L8836
+    BEQ xi_copy_down_set_pos
     TAX
-.L882E
+.xi_copy_down_fwd_loop
     LDA #&09
     JSR oswrch
     DEX
-    BNE L882E
-.L8836
+    BNE xi_copy_down_fwd_loop
+.xi_copy_down_set_pos
     LDA xi_cursor_pos
     STA xi_line_len
-    JMP L852F
-.L883F
+    JMP xi_read_loop
+.xi_reset_cursor_keys
     PHY
     LDA #&04
     LDX #&00
@@ -973,95 +973,95 @@ GUARD &C000
     LDA #&8a
     LDX #&00
     JSR osbyte
-    JMP L852F
-.L8854
+    JMP xi_read_loop
+.xi_handle_tab
     LDA xi_cursor_pos
     CMP xi_line_len
-    BEQ L889B
+    BEQ xi_tab_done
     SEC
     LDA xi_cursor_pos
     SBC xi_line_len
     PHA
-    BEQ L8875
+    BEQ xi_tab_update_pos
     TAX
     LDY xi_line_len
     INY
-.L886B
+.xi_tab_shift_loop
     LDA (&a8),Y
     DEY
     STA (&a8),Y
     INY
     INY
     DEX
-    BNE L886B
-.L8875
+    BNE xi_tab_shift_loop
+.xi_tab_update_pos
     DEC xi_cursor_pos
     LDY xi_line_len
     PLA
-    BEQ L889B
+    BEQ xi_tab_done
     TAX
     DEX
-    BEQ L889E
+    BEQ xi_tab_single
     PHA
-.L8883
+.xi_tab_redraw_loop
     LDA (&a8),Y
     JSR oswrch
     INY
     DEX
-    BNE L8883
+    BNE xi_tab_redraw_loop
     LDA #&20
     JSR oswrch
     PLA
     TAX
-.L8893
+.xi_tab_bs_loop
     LDA #&08
     JSR oswrch
     DEX
-    BNE L8893
-.L889B
-    JMP L852F
-.L889E
+    BNE xi_tab_bs_loop
+.xi_tab_done
+    JMP xi_read_loop
+.xi_tab_single
     LDA #&09
     JSR oswrch
     LDA #&7f
     JSR oswrch
-.L88A8
-    JMP L852F
-.L88AB
+.xi_tab_finished
+    JMP xi_read_loop
+.xi_handle_htab
     LDA xi_cursor_pos
-    BEQ L88A8
+    BEQ xi_tab_finished
     LDA &0230
     CMP #&0c
-    BNE L88A8
+    BNE xi_tab_finished
     SEC
     LDA xi_cursor_pos
     SBC xi_line_len
-    BEQ L88C9
+    BEQ xi_htab_set_pos
     TAX
-.L88C1
+.xi_htab_fwd_loop
     LDA #&09
     JSR oswrch
     DEX
-    BNE L88C1
-.L88C9
+    BNE xi_htab_fwd_loop
+.xi_htab_set_pos
     LDA xi_cursor_pos
     STA xi_line_len
     LDY #&00
     STY xi_char
     STY xi_temp
-.L88D7
+.xi_htab_parse_loop
     LDA (&a8),Y
     CMP #&30
-    BCC L88E4
+    BCC xi_htab_skip_nondigit
     CMP #&3a
-    BCS L88E4
-    JMP L88EC
-.L88E4
+    BCS xi_htab_skip_nondigit
+    JMP xi_htab_mul10
+.xi_htab_skip_nondigit
     INY
     CPY xi_cursor_pos
-    BEQ L88A8
-    BNE L88D7
-.L88EC
+    BEQ xi_tab_finished
+    BNE xi_htab_parse_loop
+.xi_htab_mul10
     ASL xi_char
     ROL xi_temp
     LDA xi_char
@@ -1091,28 +1091,28 @@ GUARD &C000
     INY
     LDA (&a8),Y
     CMP #&30
-    BCC L8937
+    BCC xi_htab_lookup
     CMP #&3a
-    BCS L8937
+    BCS xi_htab_lookup
     CPY xi_cursor_pos
-    BNE L88EC
-.L8937
+    BNE xi_htab_mul10
+.xi_htab_lookup
     LDY xi_cursor_pos
     LDA #&00
     STA &00AC
     LDA &0018
     STA &00AD
-.L8942
+.xi_htab_search_loop
     LDY #&01
     LDA (&ac),Y
     CMP #&ff
-    BEQ L89A6
+    BEQ xi_htab_not_found
     CMP xi_temp
-    BNE L8994
+    BNE xi_htab_advance_ptr
     INY
     LDA (&ac),Y
     CMP xi_char
-    BNE L8994
+    BNE xi_htab_advance_ptr
     INY
     LDA (&ac),Y
     SEC
@@ -1122,32 +1122,32 @@ GUARD &C000
     STA xi_quote_toggle
     LDA &001F
     AND #&01
-    BEQ L8973
+    BEQ xi_htab_found_space
     PHY
     LDA #&20
     STA xi_char
-    JSR L85D9
+    JSR xi_do_insert
     PLY
-.L8973
+.xi_htab_found_space
     INY
     LDA (&ac),Y
     PHY
     STA xi_char
     CMP #&80
-    BCS L89AF
+    BCS xi_htab_check_quote
     CMP #&22
-    BNE L898A
+    BNE xi_htab_output_char
     LDA xi_quote_toggle
     EOR #&ff
     STA xi_quote_toggle
-.L898A
-    JSR L85D9
-.L898D
+.xi_htab_output_char
+    JSR xi_do_insert
+.xi_htab_next_char
     PLY
     DEX
-    BNE L8973
-    JMP L852F
-.L8994
+    BNE xi_htab_found_space
+    JMP xi_read_loop
+.xi_htab_advance_ptr
     LDY #&03
     LDA (&ac),Y
     CLC
@@ -1156,42 +1156,42 @@ GUARD &C000
     LDA &00AD
     ADC #&00
     STA &00AD
-    JMP L8942
-.L89A6
+    JMP xi_htab_search_loop
+.xi_htab_not_found
     LDA #&07
     JSR oswrch
-    JMP L852F
+    JMP xi_read_loop
 .xi_quote_toggle
     EQUB &00                   \ &89AE: quote toggle flag
-.L89AF
+.xi_htab_check_quote
     EQUB &AD, &AE, &89         \ LDA xi_quote_toggle (absolute ZP workaround)
-    BNE L898A
+    BNE xi_htab_output_char
     LDA #&55
     STA &AE
     LDA #&AE
     STA &AF
-.L89BC
+.xi_htab_keyword_loop
     LDY #&00
     LDA (&ae),Y
-.L89C0
+.xi_htab_kw_scan
     INY
     LDA (&ae),Y
-    BPL L89C0
+    BPL xi_htab_kw_scan
     CMP xi_char
-    BNE L89DF
+    BNE xi_htab_kw_advance
     LDY #&ff
-.L89CC
+.xi_htab_kw_match
     INY
     LDA (&ae),Y
-    BMI L89DC
+    BMI xi_htab_kw_done
     STA xi_char
     PHY
-    JSR L85D9
+    JSR xi_do_insert
     PLY
-    JMP L89CC
-.L89DC
-    JMP L898D
-.L89DF
+    JMP xi_htab_kw_match
+.xi_htab_kw_done
+    JMP xi_htab_next_char
+.xi_htab_kw_advance
     INY
     INY
     TYA
@@ -1201,7 +1201,7 @@ GUARD &C000
     LDA &00AF
     ADC #&00
     STA &00AF
-    JMP L89BC
+    JMP xi_htab_keyword_loop
 \ ============================================================================
 \ print_inline — Print null-terminated string that follows the JSR
 \ The return address on the stack points to the string data.
@@ -3680,11 +3680,11 @@ GUARD &C000
     LDX xi_scroll_count
     BNE L9E4A
 .L9E28
-    JSR L872A
+    JSR xi_do_clear
     EQUB &B2, &AE  \ LDA (&ae)
     CMP #&0d
     BNE L9E34
-    JMP L852F
+    JMP xi_read_loop
 .L9E34
     LDY #&ff
 .L9E36
@@ -3693,10 +3693,10 @@ GUARD &C000
     STA xi_char
     CMP #&0d
     BNE L9E43
-    JMP L852F
+    JMP xi_read_loop
 .L9E43
     PHY
-    JSR L85D9
+    JSR xi_do_insert
     PLY
     BRA L9E36
 .L9E4A
