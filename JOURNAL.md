@@ -189,8 +189,57 @@ These are still raw EQUB hex dumps that need proper 6502 instructions and labels
 - [ ] Label all string references with descriptive names
 
 ### Final passes (after all code is disassembled)
-- [ ] **Macro pass**: identify more repeated patterns for macros
-- [ ] **Label pass**: rename all remaining L#### labels to descriptive names
-- [ ] **Constant pass**: replace all raw hex addresses with named constants
-- [ ] **Zero page pass**: name all ZP locations used by XMOS
+- [x] **Macro pass**: STROUT macro for string printing (8 instances)
+- [x] **Label pass**: all 342 L#### labels renamed to descriptive names
+- [x] **Constant pass**: OS workspace, hardware, display memory all named
+- [ ] **Zero page pass**: &00xx absolute addressing workarounds remain (23 instances)
+- [ ] **Scoping pass**: `{ }` scoping for local labels (in progress, 26 blocks done)
 - [ ] **Comment pass**: add high-level comments explaining each routine's purpose
+
+## 2026-03-21: Label pass and absolute address elimination
+
+### Approach
+Systematic pass through the entire file:
+1. Renamed all 342 unnamed L#### labels to descriptive names by subsystem
+2. Restructured key remap handler with per-instruction labels for self-modifying code
+3. Replaced ~180 absolute addresses with named labels/constants
+4. Added `{ }` scoping with local labels for self-contained functions
+
+### Key remap handler restructuring
+The KEYV interceptor at &8BDF has self-modifying JMP/JSR instructions whose
+targets are patched by *KEYON. Each modified instruction now has its own label
+(e.g. `kr_scan_ldx_0`, `key_remap_jmp1`) so the patching code can reference
+`label + 1` for the operand byte. This means the handler code can be safely
+edited without recalculating 30+ offset values.
+
+### Constants added
+- OS workspace: keyv_lo/hi, os_mode, os_escape_flag, os_wrch_dest,
+  os_himem_lo/hi, os_key_trans, os_vdu_x, os_fkey_buf, os_autorepeat
+- Hardware: crtc_addr/data, sheila_romsel, default_keyv, mode7_screen
+- BASIC ZP: basic_page_hi, basic_top_lo/hi, basic_flags
+- ROM workspace: 20+ labelled variables throughout the ROM data
+
+### Scoping with { }
+Applied `{ }` scoping to self-contained functions, replacing verbose
+prefixed names (e.g. `xi_del_shift_loop`) with clean local names
+(e.g. `shift_loop`). Functions scoped include:
+- xi_dispatch (character dispatch table)
+- xi_handle_delete, xi_handle_left, xi_handle_right, xi_handle_clear
+- xi_do_clear, token_classify, print_decimal
+- parse_hex_digit, bau token checks
+- Plus 17 scoped blocks from earlier annotation passes
+
+### Remaining absolute addresses (46)
+All are legitimate and cannot be converted:
+- 23× &00xx: ZP absolute encoding (beebasm would optimise to 2-byte ZP form)
+- 7× &FFFF: self-modifying targets patched at runtime
+- 9× &8000-&8300: ROM bank pages for *STORE
+- 4× &0100: stack page for copy_inline_to_stack
+- 2× &831F: compare_string self-modifying code
+- 1× &C000: GUARD directive
+
+### Current state
+- 0 unnamed labels, ~520 named labels
+- 26 `{ }` scoped blocks with clean local names
+- 46 legitimate absolute addresses remaining
+- Assembly byte-identical: `check.sh` passes at every commit
