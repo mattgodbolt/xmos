@@ -434,21 +434,47 @@ GUARD &C000
 .xmos_keyword
     EQUS "XMOS"
     EQUB 0
+\ ============================================================================
+\ *XON — Enable extended input
+\ ============================================================================
 .cmd_xon
-    LDA #&ff
-    STA &847f
-    LDA #&04
-    LDX #&01
+    LDA #&FF
+    STA xon_flag
+    LDA #&04                   \ OSBYTE 4: set cursor key status
+    LDX #&01                   \ X=1: cursor editing mode
     LDY #&00
     JMP osbyte
+
+\ ============================================================================
+\ *XOFF — Disable extended input
+\ ============================================================================
 .cmd_xoff
     LDA #&00
-    STA &847f
-    LDA #&04
-    LDX #&00
+    STA xon_flag
+    LDA #&04                   \ OSBYTE 4: set cursor key status
+    LDX #&00                   \ X=0: normal cursor keys
     LDY #&00
     JMP osbyte
-    EQUB &A9, &07, &4C, &EE, &FF, &FF, &1A, &1A, &0D, &08  \ &847A: ..L.......
+
+\ --- Small utility: ring the bell ---
+.beep
+    LDA #&07                   \ BEL character
+    JMP oswrch
+\ --- Workspace variables (within ROM, self-modified) ---
+.xon_flag
+    EQUB &FF                   \ non-zero = XON active
+.cursor_col
+    EQUB &1A                   \ cursor column (extended input state)
+.cursor_max_col
+    EQUB &1A                   \ max column
+.cursor_cr
+    EQUB &0D                   \ CR character
+.cursor_bs
+    EQUB &08                   \ backspace character
+
+\ ============================================================================
+\ Post-reset handler (service call &27)
+\ ============================================================================
 .handle_reset
     PHA
     PHX
@@ -468,7 +494,7 @@ GUARD &C000
     STA &8c73
     JSR L8C89
 .L84AC
-    LDA &847f
+    LDA xon_flag
     BEQ L84C1
     LDA #&04
     LDX #&01
