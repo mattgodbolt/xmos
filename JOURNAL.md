@@ -106,8 +106,35 @@ Once we move from "byte-identical reproduction" to "making improvements", the EQ
 - `LDA (&A8)` and `BIT #&xx` can use native beebasm 65C02 syntax
 - The inline string data after JSR &89F0/&8A0F calls could be EQUS strings
 
-### Current state
+### Current state (initial disassembly)
 - `xmos.asm`: 3303 lines, 2202 instructions disassembled, 314 labels
 - `check.sh` confirms byte-identical match with original ROM
 - Data regions (strings, tables, padding) remain as EQUB
 - Code regions are proper 65C02 assembly with labels
+
+## 2026-03-21: Hand annotation pass
+
+### Approach change
+Switched from automated disassembly to hand annotation. The disassembler (`disassemble.py`) produced the baseline; from here we manually improve `xmos.asm` by reading and understanding the code.
+
+### Annotations completed
+- **ROM header**: proper EQUS strings, computed copyright offset, named constants
+- **Service entry**: named dispatch labels (svc_command, svc_help, svc_post_reset, svc_claim_static)
+- **Help handler** (`*HELP`, `*HELP XMOS`, `*HELP FEATURES`, `*HELP <command>`): fully annotated with `{ }` scoped local labels, EQUS string data
+- **Command dispatcher**: walks the command table, self-modifying JMP for dispatch
+- **Command table**: converted from raw hex to `EQUS "name" : EQUW handler : EQUS "help"` format
+- **XON/XOFF**: simple flag + OSBYTE 4 calls
+- **Utility routines**: `print_inline`, `copy_inline_to_stack`, `compare_string` — all documented with entry/exit conditions
+- **Error messages**: all 11 BRK error strings converted to readable EQUS format
+- **All 19 command handlers**: renamed from L#### to descriptive cmd_* names
+
+### Discoveries
+- `copy_inline_to_stack` implements a clever BRK-based error raising mechanism: copies inline data to &0100, prepends a BRK opcode, then JMPs there. The first byte of the inline data is the error number, followed by the error message string.
+- `compare_string` is self-modifying: it patches two absolute addresses in its own code to point at the string being compared against. Supports case-insensitive matching and BBC Micro-style command abbreviation with '.'.
+- The `xon_flag` at &847F and other workspace variables are stored within the ROM itself (sideways RAM on the BBC Master), making the code position-dependent.
+- There's a `beep` routine hidden in what looked like workspace data: `LDA #7 : JMP oswrch`.
+
+### Current state (annotated)
+- Major structural elements annotated and readable
+- Large swathes of code remain as raw EQUB data (extended input handler, key redefinition, alias management, disassembler, memory editor, etc.)
+- Assembly still byte-identical: `check.sh` passes
