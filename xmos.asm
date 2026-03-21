@@ -1060,15 +1060,22 @@ GUARD &C000
     DEX
     BNE L8EC6
     RTS
-    EQUB &20, &20, &20, &20, &20, &4C, &65, &66, &74, &20, &3A, &20, &20, &20, &20, &20  \ &8ED0:      Left :     
-    EQUB &52, &69, &67, &68, &74, &20, &3A, &20, &20, &20, &20, &20, &20, &20, &20, &55  \ &8EE0: Right :        U
-    EQUB &70, &20, &3A, &20, &20, &20, &20, &20, &20, &44, &6F, &77, &6E, &20, &3A, &20  \ &8EF0: p :      Down : 
-    EQUB &4A, &75, &6D, &70, &2F, &66, &69, &72, &65, &20, &3A, &20  \ &8F00: Jump/fire : 
-.L8F0C
-    JMP keyoff_print_msg
+\ --- DEFKEYS joystick direction labels (12 chars each) ---
+.defkeys_direction_labels
+    EQUS "     Left : "  \ 12 bytes each
+    EQUS "    Right : "
+    EQUS "       Up : "
+    EQUS "     Down : "
+    EQUS "Jump/fire : "
+
+\ ============================================================================
+\ *KSTATUS — Display current key redefinition status
+\ ============================================================================
+.kstatus_not_active
+    JMP keyoff_print_msg        \ Print "Redefined keys off" message
 .cmd_kstatus
     LDA keyon_active
-    BEQ L8F0C
+    BEQ kstatus_not_active
     LDX #&00
 .L8F16
     LDA msg_keys_on,X
@@ -1108,8 +1115,11 @@ GUARD &C000
     BNE L8F2B
     JSR osnewl
     JMP L8D64
-    EQUB &4B, &45, &59, &20, &52, &45, &44, &45, &46, &49, &4E, &45, &52, &0D, &2D, &2D  \ &8F5B: KEY REDEFINER.--
-    EQUB &2D, &2D, &2D, &2D, &2D, &2D, &2D, &2D, &2D, &2D, &2D, &0D, &00  \ &8F6B: -----------..
+.msg_key_redefiner
+    EQUS "KEY REDEFINER"
+    EQUB &0D
+    EQUS "-------------"
+    EQUB &0D, 0
 .cmd_defkeys
     LDA keyon_active
     BEQ L8F8E
@@ -2222,10 +2232,10 @@ GUARD &C000
     PLX
 .L9888
     RTS
-    EQUB &0D, &4E, &6F, &77, &20, &73, &70, &6C, &69, &74, &74, &69, &6E, &67, &20, &6C  \ &9889: .Now splitting l
-    EQUB &69, &6E, &65, &3A, &20, &20, &20, &20, &20, &20, &00, &0D, &4E, &6F, &77, &20  \ &9899: ine:      ..Now 
-    EQUB &73, &70, &61, &63, &69, &6E, &67, &20, &6F, &75, &74, &20, &6C, &69, &6E, &65  \ &98A9: spacing out line
-    EQUB &3A, &20, &20, &20, &20, &20, &20, &00  \ &98B9: :      .
+.msg_now_splitting
+    EQUB &0D : EQUS "Now splitting line:      " : EQUB 0
+.msg_now_spacing
+    EQUB &0D : EQUS "Now spacing out line:      " : EQUB 0
 .cmd_bau
     LDA &0230
     CMP #&0c
@@ -2409,7 +2419,9 @@ GUARD &C000
     LDX #&00
     LDY #&89
     JMP osbyte
-    EQUB &4B, &45, &59, &39, &52, &45, &4E, &2E, &7C, &46, &7C, &4B, &7C, &4D, &0D  \ &9A20: KEY9REN.|F|K|M.
+.cmd_space_key9
+    EQUS "KEY9REN.|F|K|M"     \ *KEY9 definition for renumber
+    EQUB &0D
 .cmd_space
     LDA &0230
     CMP #&0c
