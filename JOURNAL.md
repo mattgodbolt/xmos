@@ -153,6 +153,17 @@ These patterns appear multiple times and could be refactored into subroutines:
 
 ## TODO — Remaining annotation work
 
+### Lessons learned: why bulk disassembly fails
+Linear capstone sweep gets out of sync at:
+- **Embedded variables**: single bytes between subroutines (e.g. &9DFD between two RTS/JMP blocks)
+  where capstone treats the data byte as part of the next instruction
+- **Self-modifying code**: `JMP &FFFF` where the address gets patched at runtime, or
+  `STA addr+1` patterns
+- **Data islands**: strings embedded in code ("SAVE" at &8700)
+
+Each block must be manually verified. The approach: disassemble with capstone, then
+check for RTS/JMP boundaries and verify the byte stream manually.
+
 ### Raw data blocks to disassemble
 These are still raw EQUB hex dumps that need proper 6502 instructions and labels:
 - [ ] **Extended input handler** (&84D1–&85D8, 208 bytes) — the core XON keyboard handler
