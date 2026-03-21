@@ -6,45 +6,7 @@
 
 CPU 1  \ 65C02
 
-\ --- MOS entry points ---
-oscli  = &FFF7
-osbyte = &FFF4
-osword = &FFF1
-oswrch = &FFEE
-osnewl = &FFE7
-osasci = &FFE3
-osrdch = &FFE0
-osfile = &FFDD
-osargs = &FFDA
-osbget = &FFD7
-osbput = &FFD4
-osgbpb = &FFD1
-osfind = &FFCE
-gsread = &FFC5
-gsinit = &FFC2
-oseven = &FFBF
-osrdrm = &FFB9
-
-\ --- Hardware registers ---
-sheila_romsel = &FE30           \ ROM select latch
-
-\ --- Service call numbers ---
-svc_command    = &04            \ Unrecognised * command
-svc_help       = &09            \ *HELP request
-svc_claim_static = &22          \ Claim static workspace
-svc_post_reset = &27            \ Post-reset (soft break)
-
-\ --- OS workspace ---
-rom_workspace_table = &0DF0     \ Per-ROM private workspace (&0DF0,X indexed by ROM)
-
-\ --- Zero page workspace ---
-\ &A8-&A9 are OS-reserved temporary workspace for * commands
-zp_ptr_lo = &A8                 \ General pointer low byte
-zp_ptr_hi = &A9                 \ General pointer high byte
-
-\ --- ROM header flags ---
-romtype_service = &80           \ Has service entry
-romtype_6502    = &02           \ 6502 CPU type
+INCLUDE "constants.asm"
 
 ORG &8000
 GUARD &C000
@@ -411,25 +373,25 @@ GUARD &C000
 \ Terminated by &FF
 \ ============================================================================
 .command_table
-    EQUS "ALIAS"    : EQUB 0 : EQUW cmd_alias    : EQUS "<alias name> <alias>" : EQUB 0
-    EQUS "ALIASES"  : EQUB 0 : EQUW cmd_aliases  : EQUS "Shows active aliases" : EQUB 0
-    EQUS "ALICLR"   : EQUB 0 : EQUW cmd_aliclr   : EQUS "Clears all aliases" : EQUB 0
-    EQUS "ALILD"    : EQUB 0 : EQUW cmd_alild    : EQUS "Loads alias file" : EQUB 0
-    EQUS "ALISV"    : EQUB 0 : EQUW cmd_alisv    : EQUS "Saves alias file" : EQUB 0
-    EQUS "BAU"      : EQUB 0 : EQUW cmd_bau      : EQUS "Splits to single commands" : EQUB 0
-    EQUS "DEFKEYS"  : EQUB 0 : EQUW cmd_defkeys  : EQUS "Defines new keys" : EQUB 0
-    EQUS "DIS"      : EQUB 0 : EQUW cmd_dis      : EQUS "<addr> - disassemble memory" : EQUB 0
-    EQUS "KEYON"    : EQUB 0 : EQUW cmd_keyon    : EQUS "Enables redefined keys" : EQUB 0
-    EQUS "KEYOFF"   : EQUB 0 : EQUW cmd_keyoff   : EQUS "Disables redefined keys" : EQUB 0
-    EQUS "KSTATUS"  : EQUB 0 : EQUW cmd_kstatus  : EQUS "Displays KEYON status" : EQUB 0
-    EQUS "L"        : EQUB 0 : EQUW cmd_l        : EQUS "Selects mode 128" : EQUB 0
-    EQUS "LVAR"     : EQUB 0 : EQUW cmd_lvar     : EQUS "Shows current variables" : EQUB 0
-    EQUS "MEM"      : EQUB 0 : EQUW cmd_mem      : EQUS "<addr> - memory editor" : EQUB 0
-    EQUS "S"        : EQUB 0 : EQUW cmd_s        : EQUS "Saves BASIC with incore name" : EQUB 0
-    EQUS "SPACE"    : EQUB 0 : EQUW cmd_space    : EQUS "Inserts spaces into programs" : EQUB 0
-    EQUS "STORE"    : EQUB 0 : EQUW cmd_store    : EQUS "Keeps function keys on break" : EQUB 0
-    EQUS "XON"      : EQUB 0 : EQUW cmd_xon      : EQUS "Enables extended input" : EQUB 0
-    EQUS "XOFF"     : EQUB 0 : EQUW cmd_xoff     : EQUS "Disables extended input" : EQUB 0
+    EQUS "ALIAS", 0    : EQUW cmd_alias    : EQUS "<alias name> <alias>", 0
+    EQUS "ALIASES", 0  : EQUW cmd_aliases  : EQUS "Shows active aliases", 0
+    EQUS "ALICLR", 0   : EQUW cmd_aliclr   : EQUS "Clears all aliases", 0
+    EQUS "ALILD", 0    : EQUW cmd_alild    : EQUS "Loads alias file", 0
+    EQUS "ALISV", 0    : EQUW cmd_alisv    : EQUS "Saves alias file", 0
+    EQUS "BAU", 0      : EQUW cmd_bau      : EQUS "Splits to single commands", 0
+    EQUS "DEFKEYS", 0  : EQUW cmd_defkeys  : EQUS "Defines new keys", 0
+    EQUS "DIS", 0      : EQUW cmd_dis      : EQUS "<addr> - disassemble memory", 0
+    EQUS "KEYON", 0    : EQUW cmd_keyon    : EQUS "Enables redefined keys", 0
+    EQUS "KEYOFF", 0   : EQUW cmd_keyoff   : EQUS "Disables redefined keys", 0
+    EQUS "KSTATUS", 0  : EQUW cmd_kstatus  : EQUS "Displays KEYON status", 0
+    EQUS "L", 0        : EQUW cmd_l        : EQUS "Selects mode 128", 0
+    EQUS "LVAR", 0     : EQUW cmd_lvar     : EQUS "Shows current variables", 0
+    EQUS "MEM", 0      : EQUW cmd_mem      : EQUS "<addr> - memory editor", 0
+    EQUS "S", 0        : EQUW cmd_s        : EQUS "Saves BASIC with incore name", 0
+    EQUS "SPACE", 0    : EQUW cmd_space    : EQUS "Inserts spaces into programs", 0
+    EQUS "STORE", 0    : EQUW cmd_store    : EQUS "Keeps function keys on break", 0
+    EQUS "XON", 0      : EQUW cmd_xon      : EQUS "Enables extended input", 0
+    EQUS "XOFF", 0     : EQUW cmd_xoff     : EQUS "Disables extended input", 0
     EQUB &FF                  \ End of command table
 .xmos_keyword
     EQUS "XMOS"
@@ -488,10 +450,10 @@ GUARD &C000
     STA &aa
     STA &020c
     JSR L9379
-    LDA &8c73
+    LDA keyon_active
     BEQ L84AC
     LDA #&00
-    STA &8c73
+    STA keyon_active
     JSR L8C89
 .L84AC
     LDA xon_flag
@@ -697,136 +659,181 @@ GUARD &C000
     RTS
 .compare_string_y
     EQUB &07                   \ Saved Y position after last match
+\ ============================================================================
+\ *S — Save BASIC program using its incore (embedded) filename
+\ Looks for a line like: 10 REM > Filename
+\ ============================================================================
 .cmd_s
+{
     LDY #&00
-.L8A6A
-    LDA &8ae5,Y
-    STA &8ad3,Y
+.copy_template                  \ Copy OSFILE parameter block template
+    LDA osfile_template,Y
+    STA osfile_block,Y
     INY
     CPY #&12
-    BNE L8A6A
-    JSR L8AF7
-    LDA &b2
+    BNE copy_template
+}
+    JSR find_incore_name        \ Find and validate the incore filename
+    LDA &b2                     \ Save BASIC string pointer
     PHA
     LDA &b3
     PHA
-    LDA &18
-    STA &8ad6
-    STA &8ade
-    LDA &12
-    STA &8ae1
-    LDA &13
-    STA &8ae2
-    LDA #&00
-    LDX #&d3
-    LDY #&8a
+    LDA &18                     \ PAGE = start of BASIC program
+    STA osfile_block + 3        \ Load address high byte
+    STA osfile_block + 11       \ Start address high byte
+    LDA &12                     \ TOP low byte
+    STA osfile_block + 14       \ End address low byte
+    LDA &13                     \ TOP high byte
+    STA osfile_block + 15       \ End address high byte
+    LDA #&00                    \ OSFILE A=0: save file
+    LDX #LO(osfile_block)
+    LDY #HI(osfile_block)
     JSR osfile
-    LDX #&00
-.L8A9B
-    LDA &8b7e,X
-    BEQ L8AA6
+{
+    LDX #&00                    \ Print "Program saved as '"
+.print_loop
+    LDA saved_msg,X
+    BEQ done
     JSR osasci
     INX
-    BNE L8A9B
-.L8AA6
-    PLA
+    BNE print_loop
+.done
+}
+    PLA                         \ Restore BASIC string pointer
     STA &b3
     PLA
     STA &b2
-    LDY #&ff
-.L8AAE
+{
+    LDY #&FF                    \ Skip leading spaces in filename
+.skip_spaces
     INY
     LDA (&b2),Y
     CMP #&20
-    BEQ L8AAE
-.L8AB5
+    BEQ skip_spaces
+.print_name                     \ Print the filename
     LDA (&b2),Y
     CMP #&20
-    BEQ L8AC5
-    CMP #&0d
-    BEQ L8AC5
+    BEQ name_done
+    CMP #&0D
+    BEQ name_done
     JSR osasci
     INY
-    BNE L8AB5
-.L8AC5
-    LDX #&00
-.L8AC7
-    LDA &8b92,X
-    BEQ L8AD2
+    BNE print_name
+.name_done
+}
+{
+    LDX #&00                    \ Print closing quote + newline
+.print_loop
+    LDA saved_msg_end,X
+    BEQ done
     JSR osasci
     INX
-    BNE L8AC7
-.L8AD2
+    BNE print_loop
+.done
+}
     RTS
-    EQUB &07, &30, &00, &30, &FF, &FF, &2B, &80, &FF, &FF, &AC, &05, &00, &00, &00, &00  \ &8AD3: .0.0..+.........
-    EQUB &00, &00, &00, &00, &00, &00, &FF, &FF, &2B, &80, &FF, &FF, &00, &00, &FF, &FF  \ &8AE3: ........+.......
-    EQUB &00, &00, &FF, &FF  \ &8AF3: ....
-.L8AF7
-    LDA &18
+
+\ --- OSFILE parameter block (18 bytes, copied from template then modified) ---
+.osfile_block
+    EQUB &07, &30              \ +0: Filename pointer (overwritten)
+    EQUB &00, &30              \ +2: Load address low/high (high overwritten with PAGE)
+    EQUB &FF, &FF              \ +4: Load address top word (&FFFF = host)
+    EQUB &2B, &80              \ +6: Exec address low/high
+    EQUB &FF, &FF              \ +8: Exec address top word (&FFFF = host)
+    EQUB &AC, &05              \ +10: Start address (overwritten)
+    EQUB &00, &00              \ +12: Start address top
+    EQUB &00, &00              \ +14: End address (overwritten with TOP)
+    EQUB &00, &00              \ +16: End address top
+.osfile_template                \ Template copied into osfile_block on each call
+    EQUB &00, &00, &00, &00   \ Filename/load addr (zeroed)
+    EQUB &FF, &FF, &2B, &80   \ Load addr top + exec addr
+    EQUB &FF, &FF, &00, &00   \ Exec addr top + start addr
+    EQUB &FF, &FF, &00, &00   \ Start addr top + end addr
+    EQUB &FF, &FF              \ End addr top
+
+\ ============================================================================
+\ find_incore_name — Validate BASIC program and find "> filename" in first line
+\ Sets &B2/&B3 to point at the filename
+\ ============================================================================
+.find_incore_name
+    LDA &18                     \ PAGE high byte
     STA &b3
-    LDA #&01
+    LDA #&01                   \ Check byte at PAGE+1 (program present?)
     STA &b2
     LDY #&00
     LDA (&b2),Y
-    CMP #&ff
+    CMP #&FF                   \ &FF = no program
     BEQ error_no_basic
-    LDA &18
+    LDA &18                     \ Point to PAGE+0
     STA &b3
     LDA #&00
     STA &b2
-    LDY #&03
+    LDY #&03                   \ Offset 3 = line length in first line
     LDA (&b2),Y
-    TAY
+    TAY                         \ Y = end of first line
     LDA (&b2),Y
-    CMP #&0d
+    CMP #&0D                   \ Should end with CR
     BNE error_bad_program
-    LDY #&03
-.L8B1C
+    LDY #&03                   \ Search first line for '>' marker
+{
+.skip_spaces
     INY
     LDA (&b2),Y
     CMP #&20
-    BEQ L8B1C
+    BEQ skip_spaces
+}
     LDA (&b2),Y
-    CMP #&f4
+    CMP #&F4                   \ &F4 = REM token (look for REM > filename)
     BNE error_no_incore_name
-.L8B29
+{
+.find_marker                    \ Find '>' character
     INY
     LDA (&b2),Y
-    CMP #&3e
-    BEQ L8B72
-    CMP #&0d
+    CMP #&3E                   \ '>'
+    BEQ set_filename_and_return
+    CMP #&0D                   \ End of line without finding '>'
     BEQ error_no_incore_name
-    BNE L8B29
+    BNE find_marker
+}
 .error_no_incore_name
     JSR copy_inline_to_stack    \ BRK error: "No incore filename"
-    EQUB &43 : EQUS "No incore filename" : EQUB 0
+    EQUS &43, "No incore filename", 0
 .error_no_basic
     JSR copy_inline_to_stack    \ BRK error: "No BASIC program"
-    EQUB &44 : EQUS "No BASIC program" : EQUB 0
+    EQUS &44, "No BASIC program", 0
 .error_bad_program
     JSR copy_inline_to_stack    \ BRK error: "Bad program"
-    EQUB &01 : EQUS "Bad program" : EQUB 0
-.L8B72
-    INY
-    STY &8ad3
+    EQUS &01, "Bad program", 0
+.set_filename_and_return
+    INY                         \ Skip past '>'
+    STY osfile_block            \ Set filename offset in parameter block
     STY &b2
     LDA &b3
-    STA &8ad4
+    STA osfile_block + 1        \ Set filename pointer high byte
     RTS
-    EQUB &0D, &50, &72, &6F, &67, &72, &61, &6D, &20, &73, &61, &76, &65, &64, &20, &61  \ &8B7E: .Program saved a
-    EQUB &73, &20, &27, &00, &27, &0D, &00  \ &8B8E: s '.'..
+
+.saved_msg
+    EQUB &0D
+    EQUS "Program saved as '"
+    EQUB 0
+.saved_msg_end
+    EQUS "'"
+    EQUB &0D, 0
+
+\ ============================================================================
+\ *L — Select MODE 128 and set up key definitions
+\ ============================================================================
 .cmd_l
-    LDX #&a5
-    LDY #&8b
-    JSR oscli
-    LDA #&8a
+    LDX #LO(cmd_l_oscli)
+    LDY #HI(cmd_l_oscli)
+    JSR oscli                   \ Execute the *KEY command string
+    LDA #&8A                   \ OSBYTE &8A: read/write ROM pointer table
     LDY #&80
     LDX #&00
     JMP osbyte
-    EQUB &4B, &45, &59, &30, &7C, &55, &4C, &2E, &4F, &31, &7C, &4D, &4F, &2E, &7C, &4D  \ &8BA5: KEY0|UL.O1|MO.|M
-    EQUB &4D, &4F, &2E, &31, &32, &38, &7C, &4D, &7C, &53, &30, &37, &30, &30, &30, &7C  \ &8BB5: MO.128|M|S07000|
-    EQUB &53, &37, &30, &30, &30, &30, &7C, &57, &7C, &40, &7C, &4A, &40, &7C, &40, &7C  \ &8BC5: S70000|W|@|J@|@|
-    EQUB &40, &7C, &40, &7C, &40, &7C, &40, &7C, &40, &0D, &08, &C9, &81, &F0, &08, &C9  \ &8BD5: @|@|@|@|@.......
+.cmd_l_oscli
+    EQUS "KEY0|UL.O1|MO.|MMO.128|M|S07000|S70000|W|@|J@|@|@|@|@|@|@"
+    EQUB &0D, &08, &C9, &81, &F0, &08, &C9  \ &8BD5: @|@|@|@|@.......
     EQUB &79, &F0, &2A, &28, &4C, &FF, &FF, &C0, &FF, &D0, &1E, &E0, &9E, &D0, &02, &A2  \ &8BE5: y.*(L...........
     EQUB &BF, &E0, &BD, &D0, &02, &A2, &FE, &E0, &B7, &D0, &02, &A2, &B7, &E0, &97, &D0  \ &8BF5: ................
     EQUB &02, &A2, &97, &E0, &B6, &D0, &02, &A2, &B6, &28, &4C, &FF, &FF, &E0, &80, &90  \ &8C05: .........(L.....
@@ -835,12 +842,18 @@ GUARD &C000
     EQUB &4C, &FF, &FF, &28, &20, &FF, &FF, &08, &E0, &40, &D0, &06, &A2, &E1, &86, &EC  \ &8C35: L..( ....@......
     EQUB &A2, &61, &E0, &01, &D0, &06, &A2, &C2, &86, &EC, &A2, &42, &E0, &48, &D0, &06  \ &8C45: .a.........B.H..
     EQUB &A2, &C8, &86, &EC, &A2, &48, &E0, &68, &D0, &06, &A2, &E8, &86, &EC, &A2, &68  \ &8C55: .....H.h.......h
-    EQUB &E0, &49, &D0, &06, &A2, &C9, &86, &EC, &A2, &49, &28, &60, &00, &00, &00, &41  \ &8C65: .I.......I(`...A
-    EQUB &02, &49, &69, &4A  \ &8C75: .IiJ
+    EQUB &E0, &49, &D0, &06, &A2, &C9, &86, &EC, &A2, &49, &28, &60  \ &8C65: key remap code
+.saved_keyv_lo
+    EQUB &00                   \ &8C71: saved KEYV low byte
+.saved_keyv_hi
+    EQUB &00                   \ &8C72: saved KEYV high byte
+.keyon_active
+    EQUB &00                   \ &8C73: non-zero = KEYON active
+    EQUB &41, &02, &49, &69, &4A  \ &8C74: workspace
 .L8C79
     LDX #&00
 .L8C7B
-    LDA &8d7a,X
+    LDA msg_keyon_already,X
     BEQ L8C86
     JSR osasci
     INX
@@ -848,22 +861,22 @@ GUARD &C000
 .L8C86
     JMP L8D64
 .L8C89
-    LDA &8c73
+    LDA keyon_active
     BNE L8C79
     LDA #&01
-    STA &8c73
+    STA keyon_active
     LDA &020a
     STA &8bea
     STA &8c10
     STA &8c36
     STA &8c3a
-    STA &8c71
+    STA saved_keyv_lo
     LDA &020b
     STA &8beb
     STA &8c11
     STA &8c37
     STA &8c3b
-    STA &8c72
+    STA saved_keyv_hi
     SEC
     LDA #&00
     SBC &8c74
@@ -939,49 +952,65 @@ GUARD &C000
     JSR L8C89
     LDX #&00
 .L8D59
-    LDA &8d65,X
+    LDA msg_keys_redefined,X
     BEQ L8D64
     JSR osasci
     INX
     BNE L8D59
 .L8D64
     RTS
-    EQUB &0D, &4B, &65, &79, &73, &20, &6E, &6F, &77, &20, &72, &65, &64, &65, &66, &69  \ &8D65: .Keys now redefi
-    EQUB &6E, &65, &64, &0D, &00, &0D, &27, &4B, &45, &59, &4F, &4E, &27, &20, &61, &6C  \ &8D75: ned...'KEYON' al
-    EQUB &72, &65, &61, &64, &79, &20, &65, &78, &65, &63, &75, &74, &65, &64, &21, &0D  \ &8D85: ready executed!.
-    EQUB &07, &00, &0D, &52, &65, &64, &65, &66, &69, &6E, &65, &64, &20, &6B, &65, &79  \ &8D95: ...Redefined key
-    EQUB &73, &20, &6F, &66, &66, &0D, &00, &0D, &52, &65, &64, &65, &66, &69, &6E, &65  \ &8DA5: s off...Redefine
-    EQUB &64, &20, &6B, &65, &79, &73, &20, &6F, &6E, &2C, &20, &61, &6E, &64, &20, &61  \ &8DB5: d keys on, and a
-    EQUB &72, &65, &3A, &0D, &0D, &00  \ &8DC5: re:...
+.msg_keys_redefined
+    EQUS 13, "Keys now redefined", 13, 0
+.msg_keyon_already
+    EQUS 13, "'KEYON' already executed!", 13, 7, 0
+.msg_keys_off
+    EQUS 13, "Redefined keys off", 13, 0
+.msg_keys_on
+    EQUS 13, "Redefined keys on, and are:", 13, 13, 0  \ &8DC5: re:...
+\ ============================================================================
+\ *KEYOFF — Disable redefined keys
+\ ============================================================================
 .cmd_keyoff
-    LDA &8c73
-    BEQ L8DE1
+    LDA keyon_active            \ Already disabled?
+    BEQ keyoff_print_msg
     LDA #&00
-    STA &8c73
-    LDA &8c71
-    STA &020a
-    LDA &8c72
-    STA &020b
-.L8DE1
+    STA keyon_active
+    LDA saved_keyv_lo           \ Restore original KEYV
+    STA &020A
+    LDA saved_keyv_hi
+    STA &020B
+.keyoff_print_msg
+{
     LDX #&00
-.L8DE3
-    LDA &8d97,X
-    BEQ L8DEE
+.loop
+    LDA msg_keys_off,X
+    BEQ done
     JSR osasci
     INX
-    BNE L8DE3
-.L8DEE
+    BNE loop
+.done
+}
     JMP L8D64
-    EQUB &00, &54, &41, &42, &20, &20, &20, &20, &20, &20, &01, &43, &41, &50, &53, &20  \ &8DF1: .TAB      .CAPS 
-    EQUB &4C, &4F, &43, &4B, &02, &53, &48, &46, &54, &20, &4C, &4F, &43, &4B, &03, &53  \ &8E01: LOCK.SHFT LOCK.S
-    EQUB &48, &49, &46, &54, &20, &20, &20, &20, &04, &43, &54, &52, &4C, &20, &20, &20  \ &8E11: HIFT    .CTRL   
-    EQUB &20, &20, &1B, &45, &53, &43, &41, &50, &45, &20, &20, &20, &0D, &52, &45, &54  \ &8E21:   .ESCAPE   .RET
-    EQUB &55, &52, &4E, &20, &20, &20, &20, &53, &50, &41, &43, &45, &20, &20, &20, &20  \ &8E31: URN    SPACE    
-    EQUB &7F, &44, &45, &4C, &45, &54, &45, &20, &20, &20, &8B, &43, &4F, &50, &59, &20  \ &8E41: .DELETE   .COPY 
-    EQUB &20, &20, &20, &20, &8C, &4C, &45, &46, &54, &20, &20, &20, &20, &20, &8D, &52  \ &8E51:     .LEFT     .R
-    EQUB &49, &47, &48, &54, &20, &20, &20, &20, &8E, &44, &4F, &57, &4E, &20, &20, &20  \ &8E61: IGHT    .DOWN   
-    EQUB &20, &20, &8F, &55, &50, &20, &20, &20, &20, &20, &20, &20, &E0, &42, &52, &45  \ &8E71:   .UP       .BRE
-    EQUB &41, &4B, &21, &21, &21, &20  \ &8E81: AK!!! 
+
+\ --- Key name lookup table ---
+\ Each entry: key code byte, then 9-char padded name
+\ Used by KSTATUS to display key names
+.key_name_table
+    EQUB &00 : EQUS "TAB      "
+    EQUB &01 : EQUS "CAPS LOCK"
+    EQUB &02 : EQUS "SHFT LOCK"
+    EQUB &03 : EQUS "SHIFT    "
+    EQUB &04 : EQUS "CTRL     "
+    EQUB &1B : EQUS "ESCAPE   "
+    EQUS 13, "RETURN   "
+    EQUB &20 : EQUS "SPACE    "
+    EQUB &7F : EQUS "DELETE   "
+    EQUB &8B : EQUS "COPY     "
+    EQUB &8C : EQUS "LEFT     "
+    EQUB &8D : EQUS "RIGHT    "
+    EQUB &8E : EQUS "DOWN     "
+    EQUB &8F : EQUS "UP       "
+    EQUB &E0 : EQUS "BREAK!!! "
 .L8E87
     CMP #&00
     BNE L8E8F
@@ -1031,18 +1060,25 @@ GUARD &C000
     DEX
     BNE L8EC6
     RTS
-    EQUB &20, &20, &20, &20, &20, &4C, &65, &66, &74, &20, &3A, &20, &20, &20, &20, &20  \ &8ED0:      Left :     
-    EQUB &52, &69, &67, &68, &74, &20, &3A, &20, &20, &20, &20, &20, &20, &20, &20, &55  \ &8EE0: Right :        U
-    EQUB &70, &20, &3A, &20, &20, &20, &20, &20, &20, &44, &6F, &77, &6E, &20, &3A, &20  \ &8EF0: p :      Down : 
-    EQUB &4A, &75, &6D, &70, &2F, &66, &69, &72, &65, &20, &3A, &20  \ &8F00: Jump/fire : 
-.L8F0C
-    JMP L8DE1
+\ --- DEFKEYS joystick direction labels (12 chars each) ---
+.defkeys_direction_labels
+    EQUS "     Left : "  \ 12 bytes each
+    EQUS "    Right : "
+    EQUS "       Up : "
+    EQUS "     Down : "
+    EQUS "Jump/fire : "
+
+\ ============================================================================
+\ *KSTATUS — Display current key redefinition status
+\ ============================================================================
+.kstatus_not_active
+    JMP keyoff_print_msg        \ Print "Redefined keys off" message
 .cmd_kstatus
-    LDA &8c73
-    BEQ L8F0C
+    LDA keyon_active
+    BEQ kstatus_not_active
     LDX #&00
 .L8F16
-    LDA &8dac,X
+    LDA msg_keys_on,X
     BEQ L8F21
     JSR osasci
     INX
@@ -1079,16 +1115,19 @@ GUARD &C000
     BNE L8F2B
     JSR osnewl
     JMP L8D64
-    EQUB &4B, &45, &59, &20, &52, &45, &44, &45, &46, &49, &4E, &45, &52, &0D, &2D, &2D  \ &8F5B: KEY REDEFINER.--
-    EQUB &2D, &2D, &2D, &2D, &2D, &2D, &2D, &2D, &2D, &2D, &2D, &0D, &00  \ &8F6B: -----------..
+.msg_key_redefiner
+    EQUS "KEY REDEFINER"
+    EQUB &0D
+    EQUS "-------------"
+    EQUB &0D, 0
 .cmd_defkeys
-    LDA &8c73
+    LDA keyon_active
     BEQ L8F8E
     LDA #&00
-    STA &8c73
-    LDA &8c71
+    STA keyon_active
+    LDA saved_keyv_lo
     STA &020a
-    LDA &8c72
+    LDA saved_keyv_hi
     STA &020b
 .L8F8E
     LDA #&81
@@ -1280,7 +1319,7 @@ GUARD &C000
     CMP #&be
     BCC L90E6
     JSR copy_inline_to_stack    \ BRK error: "No room for alias"
-    EQUB &48 : EQUS "No room for alias" : EQUB 0
+    EQUS &48, "No room for alias", 0
 .L90E6
     CLC
     LDA &f2
@@ -1384,7 +1423,7 @@ GUARD &C000
     RTS
 .L9190
     JSR copy_inline_to_stack    \ BRK error: "Syntax : ALIAS <alias name> <alias>"
-    EQUB &48 : EQUS "Syntax : ALIAS <alias name> <alias>" : EQUB 0
+    EQUS &48, "Syntax : ALIAS <alias name> <alias>", 0
 .check_alias
     LDA #&65
     STA &a8
@@ -1548,7 +1587,7 @@ GUARD &C000
     JMP osfind
 .L92C8
     JSR copy_inline_to_stack    \ BRK error: "Alias file not found"
-    EQUB &D6 : EQUS "Alias file not found" : EQUB 0
+    EQUS &D6, "Alias file not found", 0
 .cmd_alisv
     JSR L901F
     CLC
@@ -1587,7 +1626,7 @@ GUARD &C000
     JMP osfind
 .L9326
     JSR copy_inline_to_stack    \ BRK error: "Can't open alias file"
-    EQUB &63 : EQUS "Can't open alias file" : EQUB 0
+    EQUS &63, "Can't open alias file", 0
 .cmd_aliclr
     LDA #&ff
     STA &b165
@@ -1668,7 +1707,7 @@ GUARD &C000
     JSR L93A8
     BCC L93ED
     JSR copy_inline_to_stack    \ BRK error: "Invalid hex digit"
-    EQUB &EB : EQUS "Invalid hex digit" : EQUB 0
+    EQUS &EB, "Invalid hex digit", 0
 .L93ED
     ASL &ae
     ROL &af
@@ -2193,16 +2232,16 @@ GUARD &C000
     PLX
 .L9888
     RTS
-    EQUB &0D, &4E, &6F, &77, &20, &73, &70, &6C, &69, &74, &74, &69, &6E, &67, &20, &6C  \ &9889: .Now splitting l
-    EQUB &69, &6E, &65, &3A, &20, &20, &20, &20, &20, &20, &00, &0D, &4E, &6F, &77, &20  \ &9899: ine:      ..Now 
-    EQUB &73, &70, &61, &63, &69, &6E, &67, &20, &6F, &75, &74, &20, &6C, &69, &6E, &65  \ &98A9: spacing out line
-    EQUB &3A, &20, &20, &20, &20, &20, &20, &00  \ &98B9: :      .
+.msg_now_splitting
+    EQUS 13, "Now splitting line:      " : EQUB 0
+.msg_now_spacing
+    EQUS 13, "Now spacing out line:      " : EQUB 0
 .cmd_bau
     LDA &0230
     CMP #&0c
     BEQ L98EA
     JSR copy_inline_to_stack    \ BRK error: "BAU must be called from BASIC"
-    EQUB &5C : EQUS "BAU must be called from BASIC" : EQUB 0
+    EQUS &5C, "BAU must be called from BASIC", 0
 .L98EA
     LDX #&00
 .L98EC
@@ -2380,13 +2419,15 @@ GUARD &C000
     LDX #&00
     LDY #&89
     JMP osbyte
-    EQUB &4B, &45, &59, &39, &52, &45, &4E, &2E, &7C, &46, &7C, &4B, &7C, &4D, &0D  \ &9A20: KEY9REN.|F|K|M.
+.cmd_space_key9
+    EQUS "KEY9REN.|F|K|M"     \ *KEY9 definition for renumber
+    EQUB &0D
 .cmd_space
     LDA &0230
     CMP #&0c
     BEQ L9A55
     JSR copy_inline_to_stack    \ BRK error: "Must be called from BASIC!"
-    EQUB &5C : EQUS "Must be called from BASIC!" : EQUB 0
+    EQUS &5C, "Must be called from BASIC!", 0
 .L9A55
     LDA &18
     STA &a9
@@ -2639,7 +2680,7 @@ GUARD &C000
     CMP #&0c
     BEQ L9C23
     JSR copy_inline_to_stack    \ BRK error: "VAR works only in BASIC"
-    EQUB &4C : EQUS "VAR works only in BASIC" : EQUB 0
+    EQUS &4C, "VAR works only in BASIC", 0
 .L9C23
     LDX #&00
 .L9C25
