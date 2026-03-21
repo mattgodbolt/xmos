@@ -2528,12 +2528,56 @@ GUARD &C000
     ADC #&00
     STA &a9
     RTS
-    EQUB &A9, &81, &A2, &FF, &A0, &FF, &20, &F4, &FF, &E0, &FF, &D0, &0E, &38, &A5, &A8  \ &9561: ...... ......8..
-    EQUB &E9, &B0, &85, &A8, &A5, &A9, &E9, &00, &85, &A9, &60, &38, &A5, &A8, &E9, &08  \ &9571: ..........`8....
-    EQUB &85, &A8, &A5, &A9, &E9, &00, &85, &A9, &60, &A9, &81, &A2, &FF, &A0, &FF, &20  \ &9581: ........`...... 
-    EQUB &F4, &FF, &E0, &FF, &D0, &0E, &18, &A5, &A8, &69, &B0, &85, &A8, &A5, &A9, &69  \ &9591: .........i.....i
-    EQUB &00, &85, &A9, &60, &18, &A5, &A8, &69, &08, &85, &A8, &A5, &A9, &69, &00, &85  \ &95A1: ...`...i.....i..
-    EQUB &A9, &60, &AD, &27, &7C, &49, &09, &8D, &27, &7C, &60  \ &95B1: .`.'|I..'|`
+    LDA #&81
+    LDX #&ff
+    LDY #&ff
+    JSR osbyte
+    CPX #&ff
+    BNE L957C
+    SEC
+    LDA &A8
+    SBC #&b0
+    STA &A8
+    LDA &A9
+    SBC #&00
+    STA &A9
+    RTS
+.L957C
+    SEC
+    LDA &A8
+    SBC #&08
+    STA &A8
+    LDA &A9
+    SBC #&00
+    STA &A9
+    RTS
+    LDA #&81
+    LDX #&ff
+    LDY #&ff
+    JSR osbyte
+    CPX #&ff
+    BNE L95A5
+    CLC
+    LDA &A8
+    ADC #&b0
+    STA &A8
+    LDA &A9
+    ADC #&00
+    STA &A9
+    RTS
+.L95A5
+    CLC
+    LDA &A8
+    ADC #&08
+    STA &A8
+    LDA &A9
+    ADC #&00
+    STA &A9
+    RTS
+    LDA &7C27
+    EOR #&09
+    STA &7C27
+    RTS
 .L95BC
     LDA #&16
     STA &9649
@@ -3483,22 +3527,137 @@ GUARD &C000
     JMP L9CB7
 .L9D85
     JMP L9A78
-    EQUB &A9, &54, &85, &AC, &A9, &AE, &85, &AD, &EE, &55, &A1, &AD, &55, &A1, &D0, &05  \ &9D88: .T.......U..U...
-    EQUB &A9, &FF, &8D, &55, &A1, &EE, &80, &84, &38, &A5, &AC, &ED, &80, &84, &85, &AE  \ &9D98: ...U....8.......
-    EQUB &A5, &AD, &E9, &00, &85, &AF, &CE, &80, &84, &A9, &0D, &8D, &53, &AE, &A9, &FF  \ &9DA8: ............S...
-    EQUB &8D, &54, &AE, &B2, &AE, &92, &AC, &38, &A5, &AC, &E9, &01, &85, &AC, &A5, &AD  \ &9DB8: .T.....8........
-    EQUB &E9, &00, &85, &AD, &38, &A5, &AE, &E9, &01, &85, &AE, &A5, &AF, &E9, &00, &85  \ &9DC8: ....8...........
-    EQUB &AF, &A5, &AE, &C9, &54, &D0, &DC, &A5, &AF, &C9, &AA, &D0, &D6, &AC, &80, &84  \ &9DD8: ....T...........
-    EQUB &F0, &0D, &A0, &00, &B1, &A8, &99, &55, &AA, &C8, &CC, &80, &84, &D0, &F5, &A9  \ &9DE8: .......U........
-    EQUB &0D, &99, &55, &AA, &60, &A6, &A9, &0D, &8D, &54, &AE, &AD, &FD, &9D, &C9, &FF  \ &9DF8: ..U.`....T......
-    EQUB &D0, &05, &A9, &00, &8D, &FD, &9D, &CD, &55, &A1, &90, &07, &AD, &55, &A1, &3A  \ &9E08: ........U....U.:
-    EQUB &8D, &FD, &9D, &A9, &55, &85, &AE, &A9, &AA, &85, &AF, &AE, &FD, &9D, &D0, &22  \ &9E18: ....U.........."
-    EQUB &20, &2A, &87, &B2, &AE, &C9, &0D, &D0, &03, &4C, &2F, &85, &A0, &FF, &C8, &B1  \ &9E28:  *.......L/.....
-    EQUB &AE, &8D, &82, &84, &C9, &0D, &D0, &03, &4C, &2F, &85, &5A, &20, &D9, &85, &7A  \ &9E38: ........L/.Z ..z
-    EQUB &80, &EC, &A0, &00, &B1, &AE, &C9, &0D, &F0, &0B, &C8, &D0, &F7, &A9, &00, &8D  \ &9E48: ................
-    EQUB &FD, &9D, &4C, &FE, &9D, &C8, &98, &18, &65, &AE, &85, &AE, &A5, &AF, &69, &00  \ &9E58: ..L.....e.....i.
-    EQUB &85, &AF, &CA, &F0, &BB, &C9, &AE, &90, &D9, &A5, &AE, &C9, &55, &90, &D3, &A9  \ &9E68: ............U...
-    EQUB &00, &8D, &FD, &9D, &4C, &FE, &9D  \ &9E78: ....L..
+    LDA #&54
+    STA &AC
+    LDA #&ae
+    STA &AD
+    INC &A155
+    LDA &A155
+    BNE L9D9D
+    LDA #&ff
+    STA &A155
+.L9D9D
+    INC &8480
+    SEC
+    LDA &AC
+    SBC &8480
+    STA &AE
+    LDA &AD
+    SBC #&00
+    STA &AF
+    DEC &8480
+    LDA #&0d
+    STA &AE53
+    LDA #&ff
+    STA &AE54
+.L9DBB
+    EQUB &B2, &AE  \ LDA (&ae)
+    EQUB &92, &AC  \ STA (&ac)
+    SEC
+    LDA &AC
+    SBC #&01
+    STA &AC
+    LDA &AD
+    SBC #&00
+    STA &AD
+    SEC
+    LDA &AE
+    SBC #&01
+    STA &AE
+    LDA &AF
+    SBC #&00
+    STA &AF
+    LDA &AE
+    CMP #&54
+    BNE L9DBB
+    LDA &AF
+    CMP #&aa
+    BNE L9DBB
+    LDY &8480
+    BEQ L9DF7
+    LDY #&00
+.L9DEC
+    LDA (&a8),Y
+    STA &aa55,Y
+    INY
+    CPY &8480
+    BNE L9DEC
+.L9DF7
+    LDA #&0d
+    STA &AA55,Y
+    RTS
+    EQUB &A6                   \ &9DFD: scroll counter variable
+.L9DFE
+    LDA #&0D
+    STA &AE54
+    LDA &9DFD
+    CMP #&FF
+    BNE L9E0F
+    LDA #&00
+    STA &9DFD
+.L9E0F
+    CMP &A155
+    BCC L9E1B
+    LDA &A155
+    DEC A
+    STA &9DFD
+.L9E1B
+    LDA #&55
+    STA &AE
+    LDA #&aa
+    STA &AF
+    LDX &9DFD
+    BNE L9E4A
+.L9E28
+    JSR &872A
+    EQUB &B2, &AE  \ LDA (&ae)
+    CMP #&0d
+    BNE L9E34
+    JMP &852F
+.L9E34
+    LDY #&ff
+.L9E36
+    INY
+    LDA (&ae),Y
+    STA &8482
+    CMP #&0d
+    BNE L9E43
+    JMP &852F
+.L9E43
+    PHY
+    JSR &85D9
+    PLY
+    BRA L9E36
+.L9E4A
+    LDY #&00
+.L9E4C
+    LDA (&ae),Y
+    CMP #&0d
+    BEQ L9E5D
+    INY
+    BNE L9E4C
+    LDA #&00
+    STA &9DFD
+    JMP L9DFE
+.L9E5D
+    INY
+    TYA
+    CLC
+    ADC &AE
+    STA &AE
+    LDA &AF
+    ADC #&00
+    STA &AF
+    DEX
+    BEQ L9E28
+    CMP #&ae
+    BCC L9E4A
+    LDA &AE
+    CMP #&55
+    BCC L9E4A
+    LDA #&00
+    STA &9DFD
+    JMP L9DFE
 .L9E7F
     CMP #&45
     BNE L9E8A
