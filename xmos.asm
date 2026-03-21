@@ -183,7 +183,7 @@ GUARD &C000
     JSR compare_string
     BCC help_try_command
     PLY
-    \ Matched "FEATURES" — print features text from &9EF0
+    \ Matched "FEATURES" — print features text
     LDA #LO(features_text)
     STA zp_ptr_lo
     LDA #HI(features_text)
@@ -631,7 +631,7 @@ GUARD &C000
     JSR xi_do_insert
     JMP xi_read_loop
 .xi_insert_mode
-    EQUB &00                   \ &85D8: insert mode flag (0=insert, FF=overwrite)
+    EQUB &00
 .xi_do_insert
     SEC
     LDA xi_cursor_pos
@@ -807,7 +807,7 @@ GUARD &C000
     LDX #&00
     RTS
 .save_keyword
-    EQUS "SAVE"                \ &8700: compared against user input
+    EQUS "SAVE"
 .xi_cr_restore_keys
     LDA #&04                   \ OSBYTE 4: cursor key status
     LDX #&01                   \ Enable cursor editing
@@ -1172,7 +1172,7 @@ GUARD &C000
     JSR oswrch
     JMP xi_read_loop
 .xi_quote_toggle
-    EQUB &00                   \ &89AE: quote toggle flag
+    EQUB &00
 .xi_htab_check_quote
     EQUB &AD, &AE, &89         \ LDA xi_quote_toggle (absolute ZP workaround)
     BNE xi_htab_output_char
@@ -1242,7 +1242,7 @@ GUARD &C000
     RTS                         \ "Return" to instruction after the string
 
 \ ============================================================================
-\ copy_inline_to_stack — Copy inline string to &0100 (stack page) and execute
+\ copy_inline_to_stack — Copy inline string to stack page and execute
 \ Used for self-modifying command strings that run from the stack.
 \ ============================================================================
 .copy_inline_to_stack
@@ -1615,11 +1615,11 @@ GUARD &C000
     RTS
 
 .saved_keyv_lo
-    EQUB &00                   \ &8C71: saved KEYV low byte
+    EQUB &00
 .saved_keyv_hi
-    EQUB &00                   \ &8C72: saved KEYV high byte
+    EQUB &00
 .keyon_active
-    EQUB &00                   \ &8C73: non-zero = KEYON active
+    EQUB &00
 .key_codes                     \ 5-byte table of key scan codes to remap
     EQUB &41, &02, &49, &69, &4A
 .keyon_already_msg
@@ -1725,7 +1725,7 @@ GUARD &C000
 .msg_keys_off
     EQUS 13, "Redefined keys off", 13, 0
 .msg_keys_on
-    EQUS 13, "Redefined keys on, and are:", 13, 13, 0  \ &8DC5: re:...
+    EQUS 13, "Redefined keys on, and are:", 13, 13, 0
 \ ============================================================================
 \ *KEYOFF — Disable redefined keys
 \ ============================================================================
@@ -1964,7 +1964,7 @@ GUARD &C000
     STY compare_string_y
     RTS
 .alias_semicolon_flag
-    EQUB &FF  \ &9032: .
+    EQUB &FF
 .cmd_alias
     LDA #&00
     STA alias_semicolon_flag
@@ -2773,7 +2773,7 @@ GUARD &C000
     STA mode7_screen + &1E9,Y
     RTS
 .dis_temp
-    EQUB &00  \ &9649: .
+    EQUB &00
 .dis_print_hex_byte
     STA dis_print_lo_nibble + 1
     LSR A
@@ -3766,7 +3766,7 @@ GUARD &C000
     STA alias_buffer,Y
     RTS
 .xi_scroll_count
-    EQUB &A6                   \ &9DFD: scroll counter variable
+    EQUB &A6
 .xi_supp_restore
     LDA #&0D
     STA alias_end_hi
@@ -4484,7 +4484,6 @@ GUARD &C000
     KW "LOMEM", &D2, &00
     KW "HIMEM", &D3, &00
     KW "Missing", &FF, &4F
-    \ 129 keyword entries, table ends at &B168
     EQUB &00, &16, &53, &41, &56, &45, &7C, &4D, &43, &48, &2E, &22, &43, &6F, &72, &65
     EQUB &22, &7C, &4D, &0D, &42, &52, &45, &41, &4B, &00, &1E, &2A, &4B, &45, &59, &31
     EQUS "0 %0||M|M*STORE|M"
