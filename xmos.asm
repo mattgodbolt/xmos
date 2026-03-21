@@ -697,106 +697,142 @@ GUARD &C000
     RTS
 .compare_string_y
     EQUB &07                   \ Saved Y position after last match
+\ ============================================================================
+\ *S — Save BASIC program using its incore (embedded) filename
+\ Looks for a line like: 10 REM > Filename
+\ ============================================================================
 .cmd_s
+{
     LDY #&00
-.L8A6A
-    LDA &8ae5,Y
-    STA &8ad3,Y
+.copy_template                  \ Copy OSFILE parameter block template
+    LDA osfile_template,Y
+    STA osfile_block,Y
     INY
     CPY #&12
-    BNE L8A6A
-    JSR L8AF7
-    LDA &b2
+    BNE copy_template
+}
+    JSR find_incore_name        \ Find and validate the incore filename
+    LDA &b2                     \ Save BASIC string pointer
     PHA
     LDA &b3
     PHA
-    LDA &18
-    STA &8ad6
-    STA &8ade
-    LDA &12
-    STA &8ae1
-    LDA &13
-    STA &8ae2
-    LDA #&00
-    LDX #&d3
-    LDY #&8a
+    LDA &18                     \ PAGE = start of BASIC program
+    STA osfile_block + 3        \ Load address high byte
+    STA osfile_block + 11       \ Start address high byte
+    LDA &12                     \ TOP low byte
+    STA osfile_block + 14       \ End address low byte
+    LDA &13                     \ TOP high byte
+    STA osfile_block + 15       \ End address high byte
+    LDA #&00                    \ OSFILE A=0: save file
+    LDX #LO(osfile_block)
+    LDY #HI(osfile_block)
     JSR osfile
-    LDX #&00
-.L8A9B
-    LDA &8b7e,X
-    BEQ L8AA6
+{
+    LDX #&00                    \ Print "Program saved as '"
+.print_loop
+    LDA saved_msg,X
+    BEQ done
     JSR osasci
     INX
-    BNE L8A9B
-.L8AA6
-    PLA
+    BNE print_loop
+.done
+}
+    PLA                         \ Restore BASIC string pointer
     STA &b3
     PLA
     STA &b2
-    LDY #&ff
-.L8AAE
+{
+    LDY #&FF                    \ Skip leading spaces in filename
+.skip_spaces
     INY
     LDA (&b2),Y
     CMP #&20
-    BEQ L8AAE
-.L8AB5
+    BEQ skip_spaces
+.print_name                     \ Print the filename
     LDA (&b2),Y
     CMP #&20
-    BEQ L8AC5
-    CMP #&0d
-    BEQ L8AC5
+    BEQ name_done
+    CMP #&0D
+    BEQ name_done
     JSR osasci
     INY
-    BNE L8AB5
-.L8AC5
-    LDX #&00
-.L8AC7
-    LDA &8b92,X
-    BEQ L8AD2
+    BNE print_name
+.name_done
+}
+{
+    LDX #&00                    \ Print closing quote + newline
+.print_loop
+    LDA saved_msg_end,X
+    BEQ done
     JSR osasci
     INX
-    BNE L8AC7
-.L8AD2
+    BNE print_loop
+.done
+}
     RTS
-    EQUB &07, &30, &00, &30, &FF, &FF, &2B, &80, &FF, &FF, &AC, &05, &00, &00, &00, &00  \ &8AD3: .0.0..+.........
-    EQUB &00, &00, &00, &00, &00, &00, &FF, &FF, &2B, &80, &FF, &FF, &00, &00, &FF, &FF  \ &8AE3: ........+.......
-    EQUB &00, &00, &FF, &FF  \ &8AF3: ....
-.L8AF7
-    LDA &18
+
+\ --- OSFILE parameter block (18 bytes, copied from template then modified) ---
+.osfile_block
+    EQUB &07, &30              \ +0: Filename pointer (overwritten)
+    EQUB &00, &30              \ +2: Load address low/high (high overwritten with PAGE)
+    EQUB &FF, &FF              \ +4: Load address top word (&FFFF = host)
+    EQUB &2B, &80              \ +6: Exec address low/high
+    EQUB &FF, &FF              \ +8: Exec address top word (&FFFF = host)
+    EQUB &AC, &05              \ +10: Start address (overwritten)
+    EQUB &00, &00              \ +12: Start address top
+    EQUB &00, &00              \ +14: End address (overwritten with TOP)
+    EQUB &00, &00              \ +16: End address top
+.osfile_template                \ Template copied into osfile_block on each call
+    EQUB &00, &00, &00, &00   \ Filename/load addr (zeroed)
+    EQUB &FF, &FF, &2B, &80   \ Load addr top + exec addr
+    EQUB &FF, &FF, &00, &00   \ Exec addr top + start addr
+    EQUB &FF, &FF, &00, &00   \ Start addr top + end addr
+    EQUB &FF, &FF              \ End addr top
+
+\ ============================================================================
+\ find_incore_name — Validate BASIC program and find "> filename" in first line
+\ Sets &B2/&B3 to point at the filename
+\ ============================================================================
+.find_incore_name
+    LDA &18                     \ PAGE high byte
     STA &b3
-    LDA #&01
+    LDA #&01                   \ Check byte at PAGE+1 (program present?)
     STA &b2
     LDY #&00
     LDA (&b2),Y
-    CMP #&ff
+    CMP #&FF                   \ &FF = no program
     BEQ error_no_basic
-    LDA &18
+    LDA &18                     \ Point to PAGE+0
     STA &b3
     LDA #&00
     STA &b2
-    LDY #&03
+    LDY #&03                   \ Offset 3 = line length in first line
     LDA (&b2),Y
-    TAY
+    TAY                         \ Y = end of first line
     LDA (&b2),Y
-    CMP #&0d
+    CMP #&0D                   \ Should end with CR
     BNE error_bad_program
-    LDY #&03
-.L8B1C
+    LDY #&03                   \ Search first line for '>' marker
+{
+.skip_spaces
     INY
     LDA (&b2),Y
     CMP #&20
-    BEQ L8B1C
+    BEQ skip_spaces
+}
     LDA (&b2),Y
-    CMP #&f4
+    CMP #&F4                   \ &F4 = REM token (look for REM > filename)
     BNE error_no_incore_name
-.L8B29
+{
+.find_marker                    \ Find '>' character
     INY
     LDA (&b2),Y
-    CMP #&3e
-    BEQ L8B72
-    CMP #&0d
+    CMP #&3E                   \ '>'
+    BEQ set_filename_and_return
+    CMP #&0D                   \ End of line without finding '>'
     BEQ error_no_incore_name
-    BNE L8B29
+    BNE find_marker
+}
 .error_no_incore_name
     JSR copy_inline_to_stack    \ BRK error: "No incore filename"
     EQUB &43 : EQUS "No incore filename" : EQUB 0
@@ -806,27 +842,36 @@ GUARD &C000
 .error_bad_program
     JSR copy_inline_to_stack    \ BRK error: "Bad program"
     EQUB &01 : EQUS "Bad program" : EQUB 0
-.L8B72
-    INY
-    STY &8ad3
+.set_filename_and_return
+    INY                         \ Skip past '>'
+    STY osfile_block            \ Set filename offset in parameter block
     STY &b2
     LDA &b3
-    STA &8ad4
+    STA osfile_block + 1        \ Set filename pointer high byte
     RTS
-    EQUB &0D, &50, &72, &6F, &67, &72, &61, &6D, &20, &73, &61, &76, &65, &64, &20, &61  \ &8B7E: .Program saved a
-    EQUB &73, &20, &27, &00, &27, &0D, &00  \ &8B8E: s '.'..
+
+.saved_msg
+    EQUB &0D
+    EQUS "Program saved as '"
+    EQUB 0
+.saved_msg_end
+    EQUS "'"
+    EQUB &0D, 0
+
+\ ============================================================================
+\ *L — Select MODE 128 and set up key definitions
+\ ============================================================================
 .cmd_l
-    LDX #&a5
-    LDY #&8b
-    JSR oscli
-    LDA #&8a
+    LDX #LO(cmd_l_oscli)
+    LDY #HI(cmd_l_oscli)
+    JSR oscli                   \ Execute the *KEY command string
+    LDA #&8A                   \ OSBYTE &8A: read/write ROM pointer table
     LDY #&80
     LDX #&00
     JMP osbyte
-    EQUB &4B, &45, &59, &30, &7C, &55, &4C, &2E, &4F, &31, &7C, &4D, &4F, &2E, &7C, &4D  \ &8BA5: KEY0|UL.O1|MO.|M
-    EQUB &4D, &4F, &2E, &31, &32, &38, &7C, &4D, &7C, &53, &30, &37, &30, &30, &30, &7C  \ &8BB5: MO.128|M|S07000|
-    EQUB &53, &37, &30, &30, &30, &30, &7C, &57, &7C, &40, &7C, &4A, &40, &7C, &40, &7C  \ &8BC5: S70000|W|@|J@|@|
-    EQUB &40, &7C, &40, &7C, &40, &7C, &40, &7C, &40, &0D, &08, &C9, &81, &F0, &08, &C9  \ &8BD5: @|@|@|@|@.......
+.cmd_l_oscli
+    EQUS "KEY0|UL.O1|MO.|MMO.128|M|S07000|S70000|W|@|J@|@|@|@|@|@|@"
+    EQUB &0D, &08, &C9, &81, &F0, &08, &C9  \ &8BD5: @|@|@|@|@.......
     EQUB &79, &F0, &2A, &28, &4C, &FF, &FF, &C0, &FF, &D0, &1E, &E0, &9E, &D0, &02, &A2  \ &8BE5: y.*(L...........
     EQUB &BF, &E0, &BD, &D0, &02, &A2, &FE, &E0, &B7, &D0, &02, &A2, &B7, &E0, &97, &D0  \ &8BF5: ................
     EQUB &02, &A2, &97, &E0, &B6, &D0, &02, &A2, &B6, &28, &4C, &FF, &FF, &E0, &80, &90  \ &8C05: .........(L.....
