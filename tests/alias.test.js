@@ -61,6 +61,37 @@ describe("*ALIAS / *ALIASES / *ALICLR", () => {
         expect(output).not.toContain("FOO = *CAT");
     });
 
+    it("%0 should substitute the first argument", async () => {
+        const machine = await bootWithXmos();
+        await runCommand(machine, "*ALIAS LD *LOAD %0");
+        const output = await runCommand(machine, "*LD MyFile");
+        expect(output).toContain("*LOAD MyFile");
+    });
+
+    it("multiple parameters %0 %1 should substitute positionally", async () => {
+        const machine = await bootWithXmos();
+        await runCommand(machine, "*ALIAS CP *COPY %0 %1");
+        const output = await runCommand(machine, "*CP FileA FileB");
+        expect(output).toContain("*COPY FileA FileB");
+    });
+
+    it("%% should produce a literal percent sign", async () => {
+        const machine = await bootWithXmos();
+        await runCommand(machine, "*ALIAS PCT 100%%");
+        const output = await runCommand(machine, "*PCT");
+        expect(output).toContain("100%");
+    });
+
+    it("missing parameter should expand to nothing", async () => {
+        const machine = await bootWithXmos();
+        await runCommand(machine, "*ALIAS LD *LOAD %0");
+        // No argument given — %0 should expand to empty
+        const output = await runCommand(machine, "*LD");
+        expect(output).toContain("*LOAD");
+        // Should not contain any stray parameter text
+        expect(output).not.toContain("%");
+    });
+
     it("alias names should be case-insensitive", async () => {
         const machine = await bootWithXmos();
         // Type lowercase — but the BBC with CAPS LOCK off still
@@ -69,5 +100,27 @@ describe("*ALIAS / *ALIASES / *ALICLR", () => {
         await runCommand(machine, "*ALIAS FOO *CAT");
         const output = await runCommand(machine, "*foo");
         expect(output).toContain("*CAT");
+    });
+});
+
+describe("*ALISV / *ALILD — save and load alias files", () => {
+    it("should save and reload aliases", async () => {
+        const machine = await bootWithXmos();
+        await runCommand(machine, "*ALIAS FOO *CAT");
+        await runCommand(machine, "*ALIAS BAR *DIR");
+
+        // Save to file
+        await runCommand(machine, "*ALISV Aliases", 20_000_000);
+
+        // Clear and verify they're gone
+        await runCommand(machine, "*ALICLR");
+        const cleared = await runCommand(machine, "*ALIASES");
+        expect(cleared).toBe(">");
+
+        // Reload and verify they're back
+        await runCommand(machine, "*ALILD Aliases", 20_000_000);
+        const reloaded = await runCommand(machine, "*ALIASES");
+        expect(reloaded).toContain("FOO = *CAT");
+        expect(reloaded).toContain("BAR = *DIR");
     });
 });
