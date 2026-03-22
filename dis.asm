@@ -73,7 +73,7 @@
     JSR dis_print_hex_word
     LDA zp_src_lo
     JSR dis_print_hex_word
-    LDA #&20
+    LDA #' '
     JSR oswrch
     LDY #&00
     STY &ad
@@ -96,7 +96,7 @@
     INY
     CPY #&03
     BNE dis_print_opcode
-    LDA #&20
+    LDA #' '
     JSR oswrch
 \ Fetch the addressing mode index from the 4th byte of the opcode table entry,
 \ then look up the corresponding format string pointer from dis_addr_mode_ptrs.
@@ -118,15 +118,15 @@
     INY
     LDA (zp_tmp_lo),Y
     BEQ dis_print_addr
-    CMP #&68                    \ 'h' — print high byte of operand
+    CMP #'h'                    \ 'h' — print high byte of operand
     BNE dis_check_lo
     JMP dis_check_up
 .dis_check_lo
-    CMP #&6c                    \ 'l' — print low byte of operand
+    CMP #'l'                    \ 'l' — print low byte of operand
     BNE dis_check_branch
     JMP dis_check_down
 .dis_check_branch
-    CMP #&62                    \ 'b' — resolve and print branch target
+    CMP #'b'                    \ 'b' — resolve and print branch target
     BNE dis_print_char
     JMP dis_check_right
 .dis_print_char
@@ -149,7 +149,7 @@
     PHX
     JSR dis_print_hex_word
     PLX
-    LDA #&20
+    LDA #' '
     JSR oswrch
     INY
     DEX
@@ -160,7 +160,7 @@
     LDA #&85
     JSR oswrch
     LDA os_vdu_x
-    CMP #&21
+    CMP #'!'
     BNE dis_print_ascii
     PLX
     PHX
@@ -170,7 +170,7 @@
     AND #&7f
     CMP #' '
     BCS dis_check_del
-    LDA #&2e
+    LDA #'.'
 .dis_check_del
     CMP #&7f
     BNE dis_output_char

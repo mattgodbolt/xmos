@@ -126,9 +126,9 @@
     JMP alias_clear_entry
 \ Convert alias name to uppercase (a-z -> A-Z)
 .alias_upper_case
-    CMP #&61
+    CMP #'a'
     BCC alias_store_char
-    CMP #&7b
+    CMP #'{'
     BCS alias_store_char
     AND #&df
 .alias_store_char
@@ -184,11 +184,11 @@
     CMP #&00
     BNE alias_list_name
     INY
-    LDA #&20
+    LDA #' '
     JSR osasci
-    LDA #&3d
+    LDA #'='
     JSR osasci
-    LDA #&20
+    LDA #' '
     JSR osasci
 .alias_list_value
     INY
@@ -281,7 +281,7 @@
     JMP alisv_open
 \ Check for % substitution markers in the expansion text
 .alias_check_percent
-    CMP #&25
+    CMP #'%'
     BEQ alias_copy_literal
     JMP alias_exec_expand
 \ Handle % escape: %% = literal %, %U = VDU codes, %0-%9 = positional parameter
@@ -289,7 +289,7 @@
     LDA (zp_ptr_lo),Y
     INY
     STY alias_file_handle
-    CMP #&25
+    CMP #'%'
     BEQ alias_exec_expand
     DEX
     CMP #&55
@@ -298,7 +298,7 @@
 \ %0-%9: Find the Nth space-delimited parameter from the original command line
 .alias_get_param_num
     SEC
-    SBC #&30
+    SBC #'0'
     PHX
     TAX
     LDY compare_string_y
@@ -365,7 +365,7 @@
     LDA &f3
     ADC #&00
     TAY
-    LDA #&40
+    LDA #'@'
     JSR osfind
     CMP #&00
     BEQ alild_not_found
@@ -499,12 +499,12 @@
 \ parse_hex_digit — Parse a single hex digit (0-9, A-F) from A.
 \ Returns the 4-bit value in A with carry clear, or carry set on error.
 .parse_hex_digit
-    CMP #&30
+    CMP #'0'
     BCC parse_hex_bad
-    CMP #&47
+    CMP #'G'
     BCS parse_hex_bad
     SEC
-    SBC #&30
+    SBC #'0'
     CMP #&0a
     BCC parse_hex_ok
     CMP #&11

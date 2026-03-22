@@ -27,7 +27,7 @@
     TXA
     LSR A                       \ bucket index / 2
     CLC
-    ADC #&40                    \ convert to ASCII letter ('A' onwards)
+    ADC #'@'                    \ convert to ASCII letter ('A' onwards)
     JSR oswrch
     LDY #&01
 .lvar_skip_name
@@ -105,7 +105,7 @@
     BNE lvar_check_dot
     JMP lvar_end_of_line
 .lvar_check_dot
-    CMP #&2e                    \ "." — assembler label definition
+    CMP #'.'                    \ "." — assembler label definition
     BNE lvar_check_string
 .lvar_scan_name
     INY                         \ skip label name until space or colon
@@ -116,7 +116,7 @@
 .lvar_check_space
     CMP #' '
     BEQ lvar_next_token
-    CMP #&3a
+    CMP #':'
     BNE lvar_scan_name
 .lvar_next_token
     INY
@@ -138,21 +138,21 @@
 .lvar_lookup_token
     JSR token_classify
     BCS lvar_print_token        \ carry set = known token, skip its operand
-    CMP #&3a                    \ ":" statement separator
+    CMP #':'                    \ ":" statement separator
     BNE lvar_check_close
     INY
     BRA lvar_parse_token
 .lvar_check_close
-    CMP #&5d                    \ "]" — end of assembler block
+    CMP #']'                    \ "]" — end of assembler block
     BNE lvar_check_backslash
     JMP lvar_done
 .lvar_check_backslash
-    CMP #&5c                    \ "\" — assembler comment, skip to end of stmt
+    CMP #'\'                    \ "\" — assembler comment, skip to end of stmt
     BNE lvar_set_indent
 .lvar_skip_backslash
     INY
     LDA (zp_ptr_lo),Y
-    CMP #&3a
+    CMP #':'
     BEQ lvar_skip_and_continue
     CMP #&0d
     BNE lvar_skip_backslash
@@ -168,13 +168,13 @@
 .lvar_print_token
     INY
     LDA (zp_ptr_lo),Y
-    CMP #&5d
+    CMP #']'
     BEQ lvar_done
     CMP #&0d
     BEQ lvar_end_of_line
     DEC lvar_indent
     BNE lvar_print_token        \ keep skipping until indent reaches 0
-    CMP #&3a
+    CMP #':'
     BEQ lvar_parse_token
     CMP #' '
     BEQ lvar_print_char         \ already has a space, just continue
@@ -193,7 +193,7 @@
     LDA &01
     ADC #&00
     STA &01
-    LDA #&20
+    LDA #' '
     INY
     STA (zp_ptr_lo),Y
 .lvar_print_char
@@ -201,7 +201,7 @@
     LDA (zp_ptr_lo),Y
     CMP #&0d
     BEQ lvar_end_of_line
-    CMP #&3a
+    CMP #':'
     BNE lvar_print_char
     INY
     JMP lvar_parse_token
@@ -423,7 +423,7 @@
     DEX
     BNE print_dec_shift
     CLC
-    ADC #&30                    \ convert digit to ASCII
+    ADC #'0'                    \ convert digit to ASCII
     PHA                         \ push digit (most significant first)
     INY
     LDA dec_value_lo
@@ -432,7 +432,7 @@
 .print_dec_done
     CPY #&05                    \ pad to 5 characters with leading spaces
     BEQ print_dec_output
-    LDA #&20
+    LDA #' '
     PHA
     INY
     BNE print_dec_done

@@ -29,7 +29,7 @@
     LDA (zp_ptr_lo),Y
     STA os_rs423_buf
     DEY
-    CMP #&2e                    \ "." — assembler directive, skip entire line
+    CMP #'.'                    \ "." — assembler directive, skip entire line
     BNE bau_skip_token
 \ Assembler-directive line: scan for colon (split point) or space runs
 .bau_scan_loop
@@ -186,7 +186,7 @@
     JSR osnewl
     LDA #&15                    \ VDU 21 — disable display output
     JSR oswrch
-    LDX #&20
+    LDX #' '
     LDY #&9a
     JSR oscli                   \ execute *KEY9 (RENUMBER) to fix line numbers
     LDA #&8a
@@ -232,7 +232,7 @@
     BNE space_check_bracket
     JMP space_next_line
 .space_check_bracket
-    CMP #&5b
+    CMP #'['
     BNE space_check_quote
     JMP lvar_display_value
 .space_check_quote
@@ -299,7 +299,7 @@
     BNE space_check_rem
     INY
     LDA (zp_ptr_lo),Y
-    CMP #&28
+    CMP #'('
     BNE space_insert_lomem
     JMP space_scan_loop
 .space_insert_lomem
@@ -342,7 +342,7 @@
     LDA &01
     ADC #&00
     STA &01
-    LDA #&20
+    LDA #' '
     INY
     STA (zp_ptr_lo),Y          \ write space byte
     DEY
@@ -405,7 +405,7 @@
     LDA &01
     ADC #&00
     STA &01
-    LDA #&20
+    LDA #' '
     INY
     STA (zp_ptr_lo),Y
     INY

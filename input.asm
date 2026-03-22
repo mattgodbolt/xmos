@@ -175,7 +175,7 @@
 \ and the buffer isn't full, then insert it at the cursor position.
 .xi_handle_printable
     LDA xi_char
-    CMP #&20
+    CMP #' '
     BCS xi_check_lo_range
     JSR oswrch
     JMP xi_read_loop
@@ -664,9 +664,9 @@
     STY xi_temp
 .xi_htab_parse_loop
     LDA (zp_ptr_lo),Y
-    CMP #&30
+    CMP #'0'
     BCC xi_htab_skip_nondigit
-    CMP #&3a
+    CMP #':'
     BCS xi_htab_skip_nondigit
     JMP xi_htab_mul10
 .xi_htab_skip_nondigit
@@ -695,7 +695,7 @@
     STA xi_temp
     LDA (zp_ptr_lo),Y
     SEC
-    SBC #&30
+    SBC #'0'
     CLC
     ADC xi_char
     STA xi_char
@@ -704,9 +704,9 @@
     STA xi_temp
     INY
     LDA (zp_ptr_lo),Y
-    CMP #&30
+    CMP #'0'
     BCC xi_htab_lookup
-    CMP #&3a
+    CMP #':'
     BCS xi_htab_lookup
     CPY xi_cursor_pos
     BNE xi_htab_mul10

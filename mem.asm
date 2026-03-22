@@ -35,7 +35,7 @@
     JSR oswrch
     LDA #&0a
     STA crtc_addr
-    LDA #&20
+    LDA #' '
     STA crtc_data
     LDX #&27
 .mem_copy_header
@@ -295,7 +295,7 @@
     AND #&7f
     CMP #' '
     BCS dis_store_byte
-    LDA #&2e
+    LDA #'.'
 .dis_store_byte
     STA (&ac),Y
     INY
@@ -328,9 +328,9 @@
     ASL A
     ADC mem_column
     TAY
-    LDA #&5d
+    LDA #']'
     STA mode7_screen + &1E6,Y
-    LDA #&5b
+    LDA #'['
     STA mode7_screen + &1E9,Y
     RTS
 .dis_temp
@@ -364,7 +364,7 @@
     TAX : LDA hex_digits,X
     JSR oswrch
 .dis_hex_word_lda
-    LDA #&62
+    LDA #'b'
     AND #&0f
     TAX
     LDA hex_digits,X
