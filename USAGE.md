@@ -66,18 +66,25 @@ format. Produces no output if no aliases are defined.
 
 ### Key Redefinition
 
-**`*DEFKEYS`** — Enter interactive mode to redefine the five
-joystick-style keys (Left, Right, Up, Down, Jump/Fire). Follow the
-on-screen prompts to press the desired key for each direction.
+Remaps cursor keys and a fire button to different physical keys,
+primarily for games. Instead of using the cursor keys as a joystick,
+you can map Left/Right/Up/Down/Fire to a more comfortable cluster
+of keys on the keyboard.
 
-**`*KEYON`** — Enable the redefined key mappings. Prints
-`Keys now redefined`.
+**`*DEFKEYS`** — Enter interactive mode to choose which physical key
+maps to each of the five directions (Left, Right, Up, Down,
+Jump/Fire). Follow the on-screen prompts to press the desired key
+for each.
 
-**`*KEYOFF`** — Disable redefined keys and restore normal keyboard
-behaviour. Prints `Redefined keys off`.
+**`*KEYON`** — Activate the remapped keys by intercepting the
+keyboard vector (KEYV). Prints `Keys now redefined`. If already
+active, prints `'KEYON' already executed!`.
 
-**`*KSTATUS`** — Show current key redefinition status. If keys are
-off, prints `Redefined keys off`. If on, lists all five mappings:
+**`*KEYOFF`** — Deactivate the remapping and restore normal cursor
+keys. Prints `Redefined keys off`.
+
+**`*KSTATUS`** — Show whether remapping is active and the current
+key assignments:
 
 ```
 Redefined keys on, and are:
@@ -87,6 +94,8 @@ Redefined keys on, and are:
      Down : /
 Jump/fire : RETURN
 ```
+
+The defaults map to a left-hand cluster on the BBC keyboard.
 
 ### BASIC Utilities
 
