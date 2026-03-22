@@ -5,20 +5,20 @@
     CMP #&0d
     BEQ mem_setup_display
     JSR parse_hex_word
-    LDA &ae
+    LDA zp_src_lo
     STA mem_edit_lo
-    LDA &af
+    LDA zp_src_hi
     STA mem_edit_hi
 .mem_setup_display
     LDA mem_edit_lo
-    STA &a8
+    STA zp_ptr_lo
     LDA mem_edit_hi
-    STA &a9
-    LDA &a8
+    STA zp_ptr_hi
+    LDA zp_ptr_lo
     AND #&07
     STA mem_column
     EOR &a8
-    STA &a8
+    STA zp_ptr_lo
     LDA #&16
     JSR oswrch
     LDA #&07
@@ -40,9 +40,9 @@
     LDA #&02
     STA os_disp_addr
     LDA #&50
-    STA &ac
+    STA zp_tmp_lo
     LDA #&7c
-    STA &ad
+    STA zp_tmp_hi
     LDX #&16
 .mem_draw_row
     LDA #&83
@@ -55,9 +55,9 @@
     LDY #&1f
     STA (&ac),Y
     CLC
-    LDA &ac
+    LDA zp_tmp_lo
     ADC #&28
-    STA &ac
+    STA zp_tmp_lo
     BCC mem_next_row
     INC &ad
 .mem_next_row
@@ -65,12 +65,12 @@
     BNE mem_draw_row
 .mem_adjust_ptr
     SEC
-    LDA &a8
+    LDA zp_ptr_lo
     SBC #&50
-    STA &ae
-    LDA &a9
+    STA zp_src_lo
+    LDA zp_ptr_hi
     SBC #&00
-    STA &af
+    STA zp_src_hi
     JSR dis_setup
     LDA #&81
     LDX #&02
@@ -92,7 +92,7 @@
     BEQ mem_handle_hex
     PLA
     LDY mem_column
-    STA (&a8),Y
+    STA (zp_ptr_lo),Y
     JSR mem_cursor_down
     JMP mem_adjust_ptr
 .mem_handle_hex
@@ -101,10 +101,10 @@
     BCS mem_adjust_ptr
     STA alias_file_handle
     LDY mem_column
-    LDA (&a8),Y
+    LDA (zp_ptr_lo),Y
     ASL A : ASL A : ASL A : ASL A  \ shift to high nibble
     ORA alias_file_handle
-    STA (&a8),Y
+    STA (zp_ptr_lo),Y
     JMP mem_adjust_ptr
 .mem_dispatch
     TXA
@@ -155,12 +155,12 @@
     LDA #&00
     STA mem_column
     CLC
-    LDA &a8
+    LDA zp_ptr_lo
     ADC #&08
-    STA &a8
-    LDA &a9
+    STA zp_ptr_lo
+    LDA zp_ptr_hi
     ADC #&00
-    STA &a9
+    STA zp_ptr_hi
     RTS
 .mem_page_up
     LDA #&81
@@ -219,18 +219,18 @@
     LDA #&16
     STA dis_temp
     LDA #&51
-    STA &ac
+    STA zp_tmp_lo
     LDA #&7c
-    STA &ad
+    STA zp_tmp_hi
 .dis_line_loop
-    LDA &af
+    LDA zp_src_hi
     JSR dis_print_hex_byte
-    LDA &ae
+    LDA zp_src_lo
     JSR dis_print_hex_byte
     CLC
-    LDA &ac
+    LDA zp_tmp_lo
     ADC #&02
-    STA &ac
+    STA zp_tmp_lo
     BCC dis_hex_dump
     INC &ad
 .dis_hex_dump
@@ -246,9 +246,9 @@
     CPY #&08
     BNE dis_hex_byte_loop
     CLC
-    LDA &ac
+    LDA zp_tmp_lo
     ADC #&01
-    STA &ac
+    STA zp_tmp_lo
     BCC dis_ascii_dump
     INC &ad
 .dis_ascii_dump
@@ -256,7 +256,7 @@
 .dis_ascii_loop
     LDA (&ae),Y
     AND #&7f
-    CMP #&20
+    CMP #' '
     BCS dis_store_byte
     LDA #&2e
 .dis_store_byte
@@ -265,16 +265,16 @@
     CPY #&08
     BNE dis_ascii_loop
     CLC
-    LDA &ac
+    LDA zp_tmp_lo
     ADC #&09
-    STA &ac
+    STA zp_tmp_lo
     BCC dis_advance_ptr
     INC &ad
 .dis_advance_ptr
     CLC
-    LDA &ae
+    LDA zp_src_lo
     ADC #&08
-    STA &ae
+    STA zp_src_lo
     BCC dis_next_line
     INC &af
 .dis_next_line
