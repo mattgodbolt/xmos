@@ -55,6 +55,17 @@ describe("*HELP FEATURES", () => {
     });
 });
 
+describe("*HELP with unknown argument", () => {
+    it("should produce no XMOS output for an unrecognised topic", async () => {
+        const machine = await bootWithXmos();
+        const output = await runCommand(machine, "*HELP NONSENSE");
+
+        // XMOS doesn't match "NONSENSE" — no XMOS help printed
+        expect(output).not.toContain("MOS Extension");
+        expect(output).not.toContain("ALIAS");
+    });
+});
+
 describe("abbreviated commands", () => {
     it("*H. XMOS should work as *HELP XMOS", async () => {
         const machine = await bootWithXmos();

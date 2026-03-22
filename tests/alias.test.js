@@ -51,4 +51,23 @@ describe("*ALIAS / *ALIASES / *ALICLR", () => {
         const output = await runCommand(machine, "*ALIAS FOO");
         expect(output).toContain("Syntax : ALIAS <alias name> <alias>");
     });
+
+    it("redefining an alias should replace the old one", async () => {
+        const machine = await bootWithXmos();
+        await runCommand(machine, "*ALIAS FOO *CAT");
+        await runCommand(machine, "*ALIAS FOO *DIR");
+        const output = await runCommand(machine, "*ALIASES");
+        expect(output).toContain("FOO = *DIR");
+        expect(output).not.toContain("FOO = *CAT");
+    });
+
+    it("alias names should be case-insensitive", async () => {
+        const machine = await bootWithXmos();
+        // Type lowercase — but the BBC with CAPS LOCK off still
+        // stores what we type. The compare_string match is
+        // case-insensitive, so *foo should match alias FOO.
+        await runCommand(machine, "*ALIAS FOO *CAT");
+        const output = await runCommand(machine, "*foo");
+        expect(output).toContain("*CAT");
+    });
 });

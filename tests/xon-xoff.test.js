@@ -97,6 +97,21 @@ describe("*KEYON / *KEYOFF / *KSTATUS", () => {
         expect(output).toBe("Redefined keys off>");
     });
 
+    it("*KEYON twice should warn already executed", async () => {
+        const machine = await bootWithXmos();
+        await runCommand(machine, "*KEYON");
+        const output = await runCommand(machine, "*KEYON");
+        expect(output).toContain("already executed");
+    });
+
+    it("*KSTATUS after *KEYON then *KEYOFF should report off", async () => {
+        const machine = await bootWithXmos();
+        await runCommand(machine, "*KEYON");
+        await runCommand(machine, "*KEYOFF");
+        const output = await runCommand(machine, "*KSTATUS");
+        expect(output).toBe("Redefined keys off>");
+    });
+
     it("*KSTATUS after *KEYON should list key definitions", async () => {
         const machine = await bootWithXmos();
         await runCommand(machine, "*KEYON");
