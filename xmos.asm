@@ -298,25 +298,26 @@ GUARD &C000
 \ Terminated by &FF
 \ ============================================================================
 .command_table
-    EQUS "ALIAS", 0 : EQUW cmd_alias : EQUS "<alias name> <alias>", 0
+\ beebasm-fmt: align-cols
+    EQUS "ALIAS", 0   : EQUW cmd_alias   : EQUS "<alias name> <alias>", 0
     EQUS "ALIASES", 0 : EQUW cmd_aliases : EQUS "Shows active aliases", 0
-    EQUS "ALICLR", 0 : EQUW cmd_aliclr : EQUS "Clears all aliases", 0
-    EQUS "ALILD", 0 : EQUW cmd_alild : EQUS "Loads alias file", 0
-    EQUS "ALISV", 0 : EQUW cmd_alisv : EQUS "Saves alias file", 0
-    EQUS "BAU", 0 : EQUW cmd_bau : EQUS "Splits to single commands", 0
+    EQUS "ALICLR", 0  : EQUW cmd_aliclr  : EQUS "Clears all aliases", 0
+    EQUS "ALILD", 0   : EQUW cmd_alild   : EQUS "Loads alias file", 0
+    EQUS "ALISV", 0   : EQUW cmd_alisv   : EQUS "Saves alias file", 0
+    EQUS "BAU", 0     : EQUW cmd_bau     : EQUS "Splits to single commands", 0
     EQUS "DEFKEYS", 0 : EQUW cmd_defkeys : EQUS "Defines new keys", 0
-    EQUS "DIS", 0 : EQUW cmd_dis : EQUS "<addr> - disassemble memory", 0
-    EQUS "KEYON", 0 : EQUW cmd_keyon : EQUS "Enables redefined keys", 0
-    EQUS "KEYOFF", 0 : EQUW cmd_keyoff : EQUS "Disables redefined keys", 0
+    EQUS "DIS", 0     : EQUW cmd_dis     : EQUS "<addr> - disassemble memory", 0
+    EQUS "KEYON", 0   : EQUW cmd_keyon   : EQUS "Enables redefined keys", 0
+    EQUS "KEYOFF", 0  : EQUW cmd_keyoff  : EQUS "Disables redefined keys", 0
     EQUS "KSTATUS", 0 : EQUW cmd_kstatus : EQUS "Displays KEYON status", 0
-    EQUS "L", 0 : EQUW cmd_l : EQUS "Selects mode 128", 0
-    EQUS "LVAR", 0 : EQUW cmd_lvar : EQUS "Shows current variables", 0
-    EQUS "MEM", 0 : EQUW cmd_mem : EQUS "<addr> - memory editor", 0
-    EQUS "S", 0 : EQUW cmd_s : EQUS "Saves BASIC with incore name", 0
-    EQUS "SPACE", 0 : EQUW cmd_space : EQUS "Inserts spaces into programs", 0
-    EQUS "STORE", 0 : EQUW cmd_store : EQUS "Keeps function keys on break", 0
-    EQUS "XON", 0 : EQUW cmd_xon : EQUS "Enables extended input", 0
-    EQUS "XOFF", 0 : EQUW cmd_xoff : EQUS "Disables extended input", 0
+    EQUS "L", 0       : EQUW cmd_l       : EQUS "Selects mode 128", 0
+    EQUS "LVAR", 0    : EQUW cmd_lvar    : EQUS "Shows current variables", 0
+    EQUS "MEM", 0     : EQUW cmd_mem     : EQUS "<addr> - memory editor", 0
+    EQUS "S", 0       : EQUW cmd_s       : EQUS "Saves BASIC with incore name", 0
+    EQUS "SPACE", 0   : EQUW cmd_space   : EQUS "Inserts spaces into programs", 0
+    EQUS "STORE", 0   : EQUW cmd_store   : EQUS "Keeps function keys on break", 0
+    EQUS "XON", 0     : EQUW cmd_xon     : EQUS "Enables extended input", 0
+    EQUS "XOFF", 0    : EQUW cmd_xoff    : EQUS "Disables extended input", 0
     EQUB &FF                    \ End of command table
 .xmos_keyword
     EQUS "XMOS", 0

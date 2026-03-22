@@ -20,6 +20,8 @@ Formatting rules:
     - Multi-statement lines (: separator) have spacing normalised
     - EQUB/EQUS/EQUW data treated like instructions
     - Assignments (FOO = expr) padded for alignment
+    - beebasm-fmt: off / beebasm-fmt: on to skip formatting a section
+    - beebasm-fmt: align-cols to column-align : separators in following lines
 
 Standalone tool — no dependencies beyond Python 3.6+.
 """
@@ -287,12 +289,33 @@ def format_line(c, indent=INDENT, comment_col=COMMENT_COL, comment_style=None):
 
 
 def format_file(lines, indent=INDENT, comment_col=COMMENT_COL, comment_style=None):
-    """Format all lines. Returns list of formatted lines."""
+    """Format all lines. Returns list of formatted lines.
+
+    Supports ``beebasm-fmt: off`` / ``beebasm-fmt: on`` comment pairs
+    to preserve hand-aligned sections (e.g. data tables).
+    """
     result = []
     nesting = 0
+    fmt_enabled = True
 
     for line in lines:
         line = expand_tabs(line)
+
+        # Check for format toggle comments
+        stripped = line.strip()
+        if re.search(r'beebasm-fmt:\s*off', stripped, re.IGNORECASE):
+            fmt_enabled = False
+            result.append(line)
+            continue
+        if re.search(r'beebasm-fmt:\s*on', stripped, re.IGNORECASE):
+            fmt_enabled = True
+            result.append(line)
+            continue
+
+        if not fmt_enabled:
+            result.append(line)
+            continue
+
         c = classify_line(line)
 
         instr_upper = (c['instruction'] or '').upper()
@@ -309,7 +332,65 @@ def format_file(lines, indent=INDENT, comment_col=COMMENT_COL, comment_style=Non
             nesting += 1
 
         result.append(formatted)
+
+    # Post-pass: align columns in sections marked with beebasm-fmt: align-cols
+    result = _align_cols_pass(result)
+
     return result
+
+
+def _align_cols_pass(lines):
+    """Align : columns in sections marked with beebasm-fmt: align-cols."""
+    result = list(lines)
+    i = 0
+    while i < len(result):
+        if re.search(r'beebasm-fmt:\s*align-cols', result[i], re.IGNORECASE):
+            # Collect consecutive lines with : separators
+            start = i + 1
+            end = start
+            while end < len(result):
+                stripped = result[end].strip()
+                if not stripped or stripped.startswith('\\') or stripped.startswith('.'):
+                    break
+                if ':' not in stripped:
+                    break
+                end += 1
+            if end > start:
+                _align_colon_columns(result, start, end)
+            i = end
+        else:
+            i += 1
+    return result
+
+
+def _align_colon_columns(lines, start, end):
+    """Align : separator positions across lines[start:end]."""
+    # Split each line into segments separated by :
+    all_segments = []
+    for i in range(start, end):
+        code, comment = _find_comment(lines[i])
+        segments = _split_colon_stmts(code.strip())
+        all_segments.append((segments, comment))
+
+    # Find max width for each column position
+    max_cols = max(len(segs) for segs, _ in all_segments)
+    col_widths = [0] * max_cols
+    for segments, _ in all_segments:
+        for j, seg in enumerate(segments):
+            col_widths[j] = max(col_widths[j], len(seg))
+
+    # Rebuild lines with aligned columns
+    indent = len(lines[start]) - len(lines[start].lstrip())
+    indent_str = ' ' * indent
+    for idx, (segments, comment) in enumerate(all_segments):
+        parts = []
+        for j, seg in enumerate(segments):
+            if j < len(segments) - 1:
+                parts.append(seg.ljust(col_widths[j]))
+            else:
+                parts.append(seg)
+        code = indent_str + ' : '.join(parts)
+        lines[start + idx] = _append_comment(code, comment, COMMENT_COL)
 
 
 def main():
