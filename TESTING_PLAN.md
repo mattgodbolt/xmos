@@ -116,7 +116,18 @@ xmos/
   Using `build.rom` tests our assembly. Using `original.rom` tests against
   the known-good binary. Probably both — `original.rom` for regression,
   `build.rom` for verifying our assembly works.
-- Do we need to PR changes to jsbeeb to make TestMachine easier to consume?
-  e.g. exporting it properly, adding a `loadSidewaysRam(slot, data)` method.
-- How to handle interactive commands like *DEFKEYS and *MEM that need
-  keypress sequences rather than just text input.
+
+## jsbeeb TestMachine improvements needed
+
+- **`keyDown()`/`keyUp()` methods**: currently have to reach through
+  `processor.sysvia.keyDown(keyCode)` with raw key codes. TestMachine
+  should expose these directly, ideally accepting key names.
+- **Reusable capture API**: `captureText()` installs a new VDU state
+  machine per call. Multiple hooks on the same machine desync on
+  control codes. Need either a single resettable capture, or a simpler
+  raw-character API.
+- **`snapshotState()`/`restoreState()` including SWRAM**: currently
+  only saves main RAM (up to `romOffset`). Including the ROM area
+  would allow snapshotting after boot+load for much faster tests.
+- **`loadSidewaysRam(slot, data)`**: convenience method to write ROM
+  data directly into a SWRAM slot, avoiding the *SRLOAD dance.

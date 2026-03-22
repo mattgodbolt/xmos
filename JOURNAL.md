@@ -297,14 +297,23 @@ hook that just collects printable characters. A TestMachine
 improvement to support reusable capture would be cleaner.
 
 ### Test results
-17 tests across 3 files, all passing in ~9s:
-- `help.test.js` — *HELP XMOS, *HELP, *HELP FEATURES, dot-abbreviation
-- `xon-xoff.test.js` — *XON, *XOFF, *KEYON, *KEYOFF, *KSTATUS
-- `alias.test.js` — *ALIAS define/list/clear, multiple aliases, expansion
+25 tests across 5 files, all passing in ~17s:
+- `help.test.js` — full command listing, general help, features text, dot-abbreviation
+- `xon-xoff.test.js` — TAB line recall with XON, XOFF disabling, KEYON/KEYOFF/KSTATUS
+- `alias.test.js` — define/list/clear, multiple aliases, expansion typing
+- `dis.test.js` — disassemble known addresses, multi-line scroll
+- `lvar.test.js` — empty list, heap vs integer variables
 
-### Future improvements
-- Each test boots a fresh Master (~1s overhead). jsbeeb supports
-  `snapshotState()`/`restoreState()` but doesn't include SWRAM in the
-  snapshot — extending this would make tests much faster.
-- TestMachine could benefit from a reusable capture API that avoids
-  the multi-hook state machine issue.
+### jsbeeb TestMachine improvements to propose
+- **`keyDown()`/`keyUp()` methods**: currently have to reach through
+  `processor.sysvia.keyDown(keyCode)` with raw key codes. TestMachine
+  should expose these directly, ideally accepting key names.
+- **Reusable capture API**: `captureText()` installs a new VDU state
+  machine per call. Multiple hooks on the same machine desync on
+  control codes. Need either a single resettable capture, or a simpler
+  raw-character API.
+- **`snapshotState()`/`restoreState()` including SWRAM**: currently
+  only saves main RAM (up to `romOffset`). Including the ROM area
+  would allow snapshotting after boot+load for much faster tests.
+- **`loadSidewaysRam(slot, data)`**: convenience method to write ROM
+  data directly into a SWRAM slot, avoiding the *SRLOAD dance.
