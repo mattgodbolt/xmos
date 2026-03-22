@@ -39,6 +39,8 @@ romtype_6502    = &02           \ 6502 CPU type
 
 \ --- BASIC zero page locations ---
 \ These are valid when BASIC is the current language
+basic_str_lo  = &B2            \ BASIC string pointer low
+basic_str_hi  = &B3            \ BASIC string pointer high
 basic_page_hi = &18            \ PAGE high byte (start of BASIC program)
 basic_top_lo  = &12            \ TOP low byte (end of BASIC program)
 basic_top_hi  = &13            \ TOP high byte
