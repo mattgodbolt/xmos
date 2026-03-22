@@ -1,0 +1,25 @@
+{
+  "name": "xmos",
+  "version": "1.0.0",
+  "description": "An extension to the MOS (Machine Operating System) for the BBC Master. By Richard Talbot-Watkins and Matt Godbolt, circa 1992.",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mattgodbolt/xmos.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/mattgodbolt/xmos/issues"
+  },
+  "homepage": "https://github.com/mattgodbolt/xmos#readme",
+  "dependencies": {
+    "jsbeeb": "^1.7.0",
+    "vitest": "^4.1.0"
+  }
+}
