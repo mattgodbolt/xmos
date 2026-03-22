@@ -198,7 +198,7 @@ All code blocks are now disassembled into proper 6502 instructions:
 - [x] **Tail data annotation**: all sections labelled — build artifacts, ghost code, key/alias buffers, stored key defs, build scripts. Remaining EQUB is dead code with corrupt boundaries (ghost help handler) and structured data tables (OSFILE template, key_codes, NOOP macro).
 - [x] **Comment pass**: all routines documented across all 10 code files
 - [ ] **ZP workarounds**: 23 &00xx absolute addressing EQUB instructions (fix in improvements phase)
-- [ ] **Second macro pass**: find more repeated patterns after full annotation
+- [x] **Second macro pass**: reviewed — remaining patterns are standard 6502 idioms (16-bit pointer arithmetic, OSBYTE setup) that are better left explicit. Existing macros (STROUT, OP, NOOP, KW) cover the domain-specific patterns well.
 
 ## 2026-03-21: Label pass and absolute address elimination
 
