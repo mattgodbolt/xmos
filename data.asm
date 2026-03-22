@@ -13,7 +13,7 @@
 
 \ Remaining ROM data
 .lvar_indent
-    EQUB &00                   \ LVAR indentation counter
+    EQUB &00                    \ LVAR indentation counter
 .xi_alias_count
     EQUB &ff
 \ ============================================================================
@@ -25,277 +25,277 @@
 \ ============================================================================
 .dis_opcode_table
     \ --- &00-&0f ---
-    OP "BRK", &05                       \ &00: BRK imp
-    OP "ORA", &06                       \ &01: ORA (&l,X)
-    NOOP                                \ &02
-    NOOP                                \ &03
-    OP "TSB", &03                       \ &04: TSB &l
-    OP "ORA", &03                       \ &05: ORA &l
-    OP "ASL", &03                       \ &06: ASL &l
-    NOOP                                \ &07
-    OP "PHP", &05                       \ &08: PHP imp
-    OP "ORA", &01                       \ &09: ORA #&l
-    OP "ASL", &04                       \ &0a: ASL A
-    NOOP                                \ &0b
-    OP "TSB", &02                       \ &0c: TSB &hl
-    OP "ORA", &02                       \ &0d: ORA &hl
-    OP "ASL", &02                       \ &0e: ASL &hl
-    NOOP                                \ &0f
+    OP "BRK", &05               \ &00: BRK imp
+    OP "ORA", &06               \ &01: ORA (&l,X)
+    NOOP                        \ &02
+    NOOP                        \ &03
+    OP "TSB", &03               \ &04: TSB &l
+    OP "ORA", &03               \ &05: ORA &l
+    OP "ASL", &03               \ &06: ASL &l
+    NOOP                        \ &07
+    OP "PHP", &05               \ &08: PHP imp
+    OP "ORA", &01               \ &09: ORA #&l
+    OP "ASL", &04               \ &0a: ASL A
+    NOOP                        \ &0b
+    OP "TSB", &02               \ &0c: TSB &hl
+    OP "ORA", &02               \ &0d: ORA &hl
+    OP "ASL", &02               \ &0e: ASL &hl
+    NOOP                        \ &0f
     \ --- &10-&1f ---
-    OP "BPL", &0c                       \ &10: BPL &b
-    OP "ORA", &07                       \ &11: ORA (&l),Y
-    OP "ORA", &0f                       \ &12: ORA (&l)
-    NOOP                                \ &13
-    OP "TRB", &03                       \ &14: TRB &l
-    OP "ORA", &08                       \ &15: ORA &l,X
-    OP "ASL", &08                       \ &16: ASL &l,X
-    NOOP                                \ &17
-    OP "CLC", &05                       \ &18: CLC imp
-    OP "ORA", &0b                       \ &19: ORA &hl,Y
-    OP "INC", &04                       \ &1a: INC A
-    NOOP                                \ &1b
-    OP "TRB", &02                       \ &1c: TRB &hl
-    OP "ORA", &0a                       \ &1d: ORA &hl,X
-    OP "ASL", &0a                       \ &1e: ASL &hl,X
-    NOOP                                \ &1f
+    OP "BPL", &0c               \ &10: BPL &b
+    OP "ORA", &07               \ &11: ORA (&l),Y
+    OP "ORA", &0f               \ &12: ORA (&l)
+    NOOP                        \ &13
+    OP "TRB", &03               \ &14: TRB &l
+    OP "ORA", &08               \ &15: ORA &l,X
+    OP "ASL", &08               \ &16: ASL &l,X
+    NOOP                        \ &17
+    OP "CLC", &05               \ &18: CLC imp
+    OP "ORA", &0b               \ &19: ORA &hl,Y
+    OP "INC", &04               \ &1a: INC A
+    NOOP                        \ &1b
+    OP "TRB", &02               \ &1c: TRB &hl
+    OP "ORA", &0a               \ &1d: ORA &hl,X
+    OP "ASL", &0a               \ &1e: ASL &hl,X
+    NOOP                        \ &1f
     \ --- &20-&2f ---
-    OP "JSR", &02                       \ &20: JSR &hl
-    OP "AND", &06                       \ &21: AND (&l,X)
-    NOOP                                \ &22
-    NOOP                                \ &23
-    OP "BIT", &03                       \ &24: BIT &l
-    OP "AND", &03                       \ &25: AND &l
-    OP "ROL", &03                       \ &26: ROL &l
-    NOOP                                \ &27
-    OP "PLP", &05                       \ &28: PLP imp
-    OP "AND", &01                       \ &29: AND #&l
-    OP "ROL", &04                       \ &2a: ROL A
-    NOOP                                \ &2b
-    OP "BIT", &02                       \ &2c: BIT &hl
-    OP "AND", &02                       \ &2d: AND &hl
-    OP "ROL", &02                       \ &2e: ROL &hl
-    NOOP                                \ &2f
+    OP "JSR", &02               \ &20: JSR &hl
+    OP "AND", &06               \ &21: AND (&l,X)
+    NOOP                        \ &22
+    NOOP                        \ &23
+    OP "BIT", &03               \ &24: BIT &l
+    OP "AND", &03               \ &25: AND &l
+    OP "ROL", &03               \ &26: ROL &l
+    NOOP                        \ &27
+    OP "PLP", &05               \ &28: PLP imp
+    OP "AND", &01               \ &29: AND #&l
+    OP "ROL", &04               \ &2a: ROL A
+    NOOP                        \ &2b
+    OP "BIT", &02               \ &2c: BIT &hl
+    OP "AND", &02               \ &2d: AND &hl
+    OP "ROL", &02               \ &2e: ROL &hl
+    NOOP                        \ &2f
     \ --- &30-&3f ---
-    OP "BMI", &0c                       \ &30: BMI &b
-    OP "AND", &07                       \ &31: AND (&l),Y
-    OP "AND", &0f                       \ &32: AND (&l)
-    NOOP                                \ &33
-    OP "BIT", &08                       \ &34: BIT &l,X
-    OP "AND", &08                       \ &35: AND &l,X
-    OP "ROL", &08                       \ &36: ROL &l,X
-    NOOP                                \ &37
-    OP "SEC", &05                       \ &38: SEC imp
-    OP "AND", &0b                       \ &39: AND &hl,Y
-    OP "DEC", &04                       \ &3a: DEC A
-    NOOP                                \ &3b
-    OP "BIT", &09                       \ &3c: BIT &l,Y
-    OP "AND", &0a                       \ &3d: AND &hl,X
-    OP "ROL", &0a                       \ &3e: ROL &hl,X
-    NOOP                                \ &3f
+    OP "BMI", &0c               \ &30: BMI &b
+    OP "AND", &07               \ &31: AND (&l),Y
+    OP "AND", &0f               \ &32: AND (&l)
+    NOOP                        \ &33
+    OP "BIT", &08               \ &34: BIT &l,X
+    OP "AND", &08               \ &35: AND &l,X
+    OP "ROL", &08               \ &36: ROL &l,X
+    NOOP                        \ &37
+    OP "SEC", &05               \ &38: SEC imp
+    OP "AND", &0b               \ &39: AND &hl,Y
+    OP "DEC", &04               \ &3a: DEC A
+    NOOP                        \ &3b
+    OP "BIT", &09               \ &3c: BIT &l,Y
+    OP "AND", &0a               \ &3d: AND &hl,X
+    OP "ROL", &0a               \ &3e: ROL &hl,X
+    NOOP                        \ &3f
     \ --- &40-&4f ---
-    OP "RTI", &05                       \ &40: RTI imp
-    OP "EOR", &06                       \ &41: EOR (&l,X)
-    NOOP                                \ &42
-    NOOP                                \ &43
-    NOOP                                \ &44
-    OP "EOR", &03                       \ &45: EOR &l
-    OP "LSR", &03                       \ &46: LSR &l
-    NOOP                                \ &47
-    OP "PHA", &05                       \ &48: PHA imp
-    OP "EOR", &01                       \ &49: EOR #&l
-    OP "LSR", &04                       \ &4a: LSR A
-    NOOP                                \ &4b
-    OP "JMP", &02                       \ &4c: JMP &hl
-    OP "EOR", &02                       \ &4d: EOR &hl
-    OP "LSR", &02                       \ &4e: LSR &hl
-    NOOP                                \ &4f
+    OP "RTI", &05               \ &40: RTI imp
+    OP "EOR", &06               \ &41: EOR (&l,X)
+    NOOP                        \ &42
+    NOOP                        \ &43
+    NOOP                        \ &44
+    OP "EOR", &03               \ &45: EOR &l
+    OP "LSR", &03               \ &46: LSR &l
+    NOOP                        \ &47
+    OP "PHA", &05               \ &48: PHA imp
+    OP "EOR", &01               \ &49: EOR #&l
+    OP "LSR", &04               \ &4a: LSR A
+    NOOP                        \ &4b
+    OP "JMP", &02               \ &4c: JMP &hl
+    OP "EOR", &02               \ &4d: EOR &hl
+    OP "LSR", &02               \ &4e: LSR &hl
+    NOOP                        \ &4f
     \ --- &50-&5f ---
-    OP "BVC", &0c                       \ &50: BVC &b
-    OP "EOR", &07                       \ &51: EOR (&l),Y
-    OP "EOR", &0f                       \ &52: EOR (&l)
-    NOOP                                \ &53
-    NOOP                                \ &54
-    OP "EOR", &08                       \ &55: EOR &l,X
-    OP "LSR", &08                       \ &56: LSR &l,X
-    NOOP                                \ &57
-    OP "CLI", &05                       \ &58: CLI imp
-    OP "EOR", &0b                       \ &59: EOR &hl,Y
-    OP "PHY", &05                       \ &5a: PHY imp
-    NOOP                                \ &5b
-    NOOP                                \ &5c
-    OP "EOR", &0a                       \ &5d: EOR &hl,X
-    OP "LSR", &0a                       \ &5e: LSR &hl,X
-    NOOP                                \ &5f
+    OP "BVC", &0c               \ &50: BVC &b
+    OP "EOR", &07               \ &51: EOR (&l),Y
+    OP "EOR", &0f               \ &52: EOR (&l)
+    NOOP                        \ &53
+    NOOP                        \ &54
+    OP "EOR", &08               \ &55: EOR &l,X
+    OP "LSR", &08               \ &56: LSR &l,X
+    NOOP                        \ &57
+    OP "CLI", &05               \ &58: CLI imp
+    OP "EOR", &0b               \ &59: EOR &hl,Y
+    OP "PHY", &05               \ &5a: PHY imp
+    NOOP                        \ &5b
+    NOOP                        \ &5c
+    OP "EOR", &0a               \ &5d: EOR &hl,X
+    OP "LSR", &0a               \ &5e: LSR &hl,X
+    NOOP                        \ &5f
     \ --- &60-&6f ---
-    OP "RTS", &05                       \ &60: RTS imp
-    OP "ADC", &06                       \ &61: ADC (&l,X)
-    NOOP                                \ &62
-    NOOP                                \ &63
-    OP "STZ", &03                       \ &64: STZ &l
-    OP "ADC", &03                       \ &65: ADC &l
-    OP "ROR", &03                       \ &66: ROR &l
-    NOOP                                \ &67
-    OP "PLA", &05                       \ &68: PLA imp
-    OP "ADC", &01                       \ &69: ADC #&l
-    OP "ROR", &04                       \ &6a: ROR A
-    NOOP                                \ &6b
-    OP "JMP", &0d                       \ &6c: JMP (&hl)
-    OP "ADC", &02                       \ &6d: ADC &hl
-    OP "ROR", &02                       \ &6e: ROR &hl
-    NOOP                                \ &6f
+    OP "RTS", &05               \ &60: RTS imp
+    OP "ADC", &06               \ &61: ADC (&l,X)
+    NOOP                        \ &62
+    NOOP                        \ &63
+    OP "STZ", &03               \ &64: STZ &l
+    OP "ADC", &03               \ &65: ADC &l
+    OP "ROR", &03               \ &66: ROR &l
+    NOOP                        \ &67
+    OP "PLA", &05               \ &68: PLA imp
+    OP "ADC", &01               \ &69: ADC #&l
+    OP "ROR", &04               \ &6a: ROR A
+    NOOP                        \ &6b
+    OP "JMP", &0d               \ &6c: JMP (&hl)
+    OP "ADC", &02               \ &6d: ADC &hl
+    OP "ROR", &02               \ &6e: ROR &hl
+    NOOP                        \ &6f
     \ --- &70-&7f ---
-    OP "BVS", &0c                       \ &70: BVS &b
-    OP "ADC", &07                       \ &71: ADC (&l),Y
-    OP "ADC", &0f                       \ &72: ADC (&l)
-    NOOP                                \ &73
-    OP "STZ", &08                       \ &74: STZ &l,X
-    OP "ADC", &08                       \ &75: ADC &l,X
-    OP "ROR", &08                       \ &76: ROR &l,X
-    NOOP                                \ &77
-    OP "SEI", &05                       \ &78: SEI imp
-    OP "ADC", &0b                       \ &79: ADC &hl,Y
-    OP "PLY", &05                       \ &7a: PLY imp
-    NOOP                                \ &7b
-    OP "JMP", &0e                       \ &7c: JMP (&hl,X)
-    OP "ADC", &0a                       \ &7d: ADC &hl,X
-    OP "ROR", &0a                       \ &7e: ROR &hl,X
-    NOOP                                \ &7f
+    OP "BVS", &0c               \ &70: BVS &b
+    OP "ADC", &07               \ &71: ADC (&l),Y
+    OP "ADC", &0f               \ &72: ADC (&l)
+    NOOP                        \ &73
+    OP "STZ", &08               \ &74: STZ &l,X
+    OP "ADC", &08               \ &75: ADC &l,X
+    OP "ROR", &08               \ &76: ROR &l,X
+    NOOP                        \ &77
+    OP "SEI", &05               \ &78: SEI imp
+    OP "ADC", &0b               \ &79: ADC &hl,Y
+    OP "PLY", &05               \ &7a: PLY imp
+    NOOP                        \ &7b
+    OP "JMP", &0e               \ &7c: JMP (&hl,X)
+    OP "ADC", &0a               \ &7d: ADC &hl,X
+    OP "ROR", &0a               \ &7e: ROR &hl,X
+    NOOP                        \ &7f
     \ --- &80-&8f ---
-    OP "BRA", &0c                       \ &80: BRA &b
-    OP "STA", &06                       \ &81: STA (&l,X)
-    NOOP                                \ &82
-    NOOP                                \ &83
-    OP "STY", &03                       \ &84: STY &l
-    OP "STA", &03                       \ &85: STA &l
-    OP "STX", &03                       \ &86: STX &l
-    NOOP                                \ &87
-    OP "DEY", &05                       \ &88: DEY imp
-    OP "BIT", &01                       \ &89: BIT #&l
-    OP "TXA", &05                       \ &8a: TXA imp
-    NOOP                                \ &8b
-    OP "STY", &02                       \ &8c: STY &hl
-    OP "STA", &02                       \ &8d: STA &hl
-    OP "STX", &02                       \ &8e: STX &hl
-    NOOP                                \ &8f
+    OP "BRA", &0c               \ &80: BRA &b
+    OP "STA", &06               \ &81: STA (&l,X)
+    NOOP                        \ &82
+    NOOP                        \ &83
+    OP "STY", &03               \ &84: STY &l
+    OP "STA", &03               \ &85: STA &l
+    OP "STX", &03               \ &86: STX &l
+    NOOP                        \ &87
+    OP "DEY", &05               \ &88: DEY imp
+    OP "BIT", &01               \ &89: BIT #&l
+    OP "TXA", &05               \ &8a: TXA imp
+    NOOP                        \ &8b
+    OP "STY", &02               \ &8c: STY &hl
+    OP "STA", &02               \ &8d: STA &hl
+    OP "STX", &02               \ &8e: STX &hl
+    NOOP                        \ &8f
     \ --- &90-&9f ---
-    OP "BCC", &0c                       \ &90: BCC &b
-    OP "STA", &07                       \ &91: STA (&l),Y
-    OP "STA", &0f                       \ &92: STA (&l)
-    NOOP                                \ &93
-    OP "STY", &08                       \ &94: STY &l,X
-    OP "STA", &08                       \ &95: STA &l,X
-    OP "STX", &09                       \ &96: STX &l,Y
-    NOOP                                \ &97
-    OP "TYA", &05                       \ &98: TYA imp
-    OP "STA", &0b                       \ &99: STA &hl,Y
-    OP "TXS", &05                       \ &9a: TXS imp
-    NOOP                                \ &9b
-    OP "STZ", &02                       \ &9c: STZ &hl
-    OP "STA", &0a                       \ &9d: STA &hl,X
-    OP "STZ", &0a                       \ &9e: STZ &hl,X
-    NOOP                                \ &9f
+    OP "BCC", &0c               \ &90: BCC &b
+    OP "STA", &07               \ &91: STA (&l),Y
+    OP "STA", &0f               \ &92: STA (&l)
+    NOOP                        \ &93
+    OP "STY", &08               \ &94: STY &l,X
+    OP "STA", &08               \ &95: STA &l,X
+    OP "STX", &09               \ &96: STX &l,Y
+    NOOP                        \ &97
+    OP "TYA", &05               \ &98: TYA imp
+    OP "STA", &0b               \ &99: STA &hl,Y
+    OP "TXS", &05               \ &9a: TXS imp
+    NOOP                        \ &9b
+    OP "STZ", &02               \ &9c: STZ &hl
+    OP "STA", &0a               \ &9d: STA &hl,X
+    OP "STZ", &0a               \ &9e: STZ &hl,X
+    NOOP                        \ &9f
     \ --- &a0-&af ---
-    OP "LDY", &01                       \ &a0: LDY #&l
-    OP "LDA", &06                       \ &a1: LDA (&l,X)
-    OP "LDX", &01                       \ &a2: LDX #&l
-    NOOP                                \ &a3
-    OP "LDY", &03                       \ &a4: LDY &l
-    OP "LDA", &03                       \ &a5: LDA &l
-    OP "LDX", &03                       \ &a6: LDX &l
-    NOOP                                \ &a7
-    OP "TAY", &05                       \ &a8: TAY imp
-    OP "LDA", &01                       \ &a9: LDA #&l
-    OP "TAX", &05                       \ &aa: TAX imp
-    NOOP                                \ &ab
-    OP "LDY", &02                       \ &ac: LDY &hl
-    OP "LDA", &02                       \ &ad: LDA &hl
-    OP "LDX", &02                       \ &ae: LDX &hl
-    NOOP                                \ &af
+    OP "LDY", &01               \ &a0: LDY #&l
+    OP "LDA", &06               \ &a1: LDA (&l,X)
+    OP "LDX", &01               \ &a2: LDX #&l
+    NOOP                        \ &a3
+    OP "LDY", &03               \ &a4: LDY &l
+    OP "LDA", &03               \ &a5: LDA &l
+    OP "LDX", &03               \ &a6: LDX &l
+    NOOP                        \ &a7
+    OP "TAY", &05               \ &a8: TAY imp
+    OP "LDA", &01               \ &a9: LDA #&l
+    OP "TAX", &05               \ &aa: TAX imp
+    NOOP                        \ &ab
+    OP "LDY", &02               \ &ac: LDY &hl
+    OP "LDA", &02               \ &ad: LDA &hl
+    OP "LDX", &02               \ &ae: LDX &hl
+    NOOP                        \ &af
     \ --- &b0-&bf ---
-    OP "BCS", &0c                       \ &b0: BCS &b
-    OP "LDA", &07                       \ &b1: LDA (&l),Y
-    OP "LDA", &0f                       \ &b2: LDA (&l)
-    NOOP                                \ &b3
-    OP "LDY", &08                       \ &b4: LDY &l,X
-    OP "LDA", &08                       \ &b5: LDA &l,X
-    OP "LDX", &09                       \ &b6: LDX &l,Y
-    NOOP                                \ &b7
-    OP "CLV", &05                       \ &b8: CLV imp
-    OP "LDA", &0b                       \ &b9: LDA &hl,Y
-    OP "TSX", &05                       \ &ba: TSX imp
-    NOOP                                \ &bb
-    OP "LDY", &0a                       \ &bc: LDY &hl,X
-    OP "LDA", &0a                       \ &bd: LDA &hl,X
-    OP "LDX", &0b                       \ &be: LDX &hl,Y
-    NOOP                                \ &bf
+    OP "BCS", &0c               \ &b0: BCS &b
+    OP "LDA", &07               \ &b1: LDA (&l),Y
+    OP "LDA", &0f               \ &b2: LDA (&l)
+    NOOP                        \ &b3
+    OP "LDY", &08               \ &b4: LDY &l,X
+    OP "LDA", &08               \ &b5: LDA &l,X
+    OP "LDX", &09               \ &b6: LDX &l,Y
+    NOOP                        \ &b7
+    OP "CLV", &05               \ &b8: CLV imp
+    OP "LDA", &0b               \ &b9: LDA &hl,Y
+    OP "TSX", &05               \ &ba: TSX imp
+    NOOP                        \ &bb
+    OP "LDY", &0a               \ &bc: LDY &hl,X
+    OP "LDA", &0a               \ &bd: LDA &hl,X
+    OP "LDX", &0b               \ &be: LDX &hl,Y
+    NOOP                        \ &bf
     \ --- &c0-&cf ---
-    OP "CPY", &01                       \ &c0: CPY #&l
-    OP "CMP", &06                       \ &c1: CMP (&l,X)
-    NOOP                                \ &c2
-    NOOP                                \ &c3
-    OP "CPY", &03                       \ &c4: CPY &l
-    OP "CMP", &03                       \ &c5: CMP &l
-    OP "DEC", &03                       \ &c6: DEC &l
-    NOOP                                \ &c7
-    OP "INY", &05                       \ &c8: INY imp
-    OP "CMP", &01                       \ &c9: CMP #&l
-    OP "DEX", &05                       \ &ca: DEX imp
-    NOOP                                \ &cb
-    OP "CPY", &02                       \ &cc: CPY &hl
-    OP "CMP", &02                       \ &cd: CMP &hl
-    OP "DEC", &02                       \ &ce: DEC &hl
-    NOOP                                \ &cf
+    OP "CPY", &01               \ &c0: CPY #&l
+    OP "CMP", &06               \ &c1: CMP (&l,X)
+    NOOP                        \ &c2
+    NOOP                        \ &c3
+    OP "CPY", &03               \ &c4: CPY &l
+    OP "CMP", &03               \ &c5: CMP &l
+    OP "DEC", &03               \ &c6: DEC &l
+    NOOP                        \ &c7
+    OP "INY", &05               \ &c8: INY imp
+    OP "CMP", &01               \ &c9: CMP #&l
+    OP "DEX", &05               \ &ca: DEX imp
+    NOOP                        \ &cb
+    OP "CPY", &02               \ &cc: CPY &hl
+    OP "CMP", &02               \ &cd: CMP &hl
+    OP "DEC", &02               \ &ce: DEC &hl
+    NOOP                        \ &cf
     \ --- &d0-&df ---
-    OP "BNE", &0c                       \ &d0: BNE &b
-    OP "CMP", &07                       \ &d1: CMP (&l),Y
-    OP "CMP", &0f                       \ &d2: CMP (&l)
-    NOOP                                \ &d3
-    NOOP                                \ &d4
-    OP "CMP", &08                       \ &d5: CMP &l,X
-    OP "DEC", &08                       \ &d6: DEC &l,X
-    NOOP                                \ &d7
-    OP "CLD", &05                       \ &d8: CLD imp
-    OP "CMP", &0b                       \ &d9: CMP &hl,Y
-    OP "PHX", &05                       \ &da: PHX imp
-    NOOP                                \ &db
-    NOOP                                \ &dc
-    OP "CMP", &0a                       \ &dd: CMP &hl,X
-    OP "DEC", &0a                       \ &de: DEC &hl,X
-    NOOP                                \ &df
+    OP "BNE", &0c               \ &d0: BNE &b
+    OP "CMP", &07               \ &d1: CMP (&l),Y
+    OP "CMP", &0f               \ &d2: CMP (&l)
+    NOOP                        \ &d3
+    NOOP                        \ &d4
+    OP "CMP", &08               \ &d5: CMP &l,X
+    OP "DEC", &08               \ &d6: DEC &l,X
+    NOOP                        \ &d7
+    OP "CLD", &05               \ &d8: CLD imp
+    OP "CMP", &0b               \ &d9: CMP &hl,Y
+    OP "PHX", &05               \ &da: PHX imp
+    NOOP                        \ &db
+    NOOP                        \ &dc
+    OP "CMP", &0a               \ &dd: CMP &hl,X
+    OP "DEC", &0a               \ &de: DEC &hl,X
+    NOOP                        \ &df
     \ --- &e0-&ef ---
-    OP "CPX", &01                       \ &e0: CPX #&l
-    OP "SBC", &06                       \ &e1: SBC (&l,X)
-    NOOP                                \ &e2
-    NOOP                                \ &e3
-    OP "CPX", &03                       \ &e4: CPX &l
-    OP "SBC", &03                       \ &e5: SBC &l
-    OP "INC", &03                       \ &e6: INC &l
-    NOOP                                \ &e7
-    OP "INX", &05                       \ &e8: INX imp
-    OP "SBC", &01                       \ &e9: SBC #&l
-    OP "NOP", &05                       \ &ea: NOP imp
-    NOOP                                \ &eb
-    OP "CPX", &02                       \ &ec: CPX &hl
-    OP "SBC", &02                       \ &ed: SBC &hl
-    OP "INC", &02                       \ &ee: INC &hl
-    NOOP                                \ &ef
+    OP "CPX", &01               \ &e0: CPX #&l
+    OP "SBC", &06               \ &e1: SBC (&l,X)
+    NOOP                        \ &e2
+    NOOP                        \ &e3
+    OP "CPX", &03               \ &e4: CPX &l
+    OP "SBC", &03               \ &e5: SBC &l
+    OP "INC", &03               \ &e6: INC &l
+    NOOP                        \ &e7
+    OP "INX", &05               \ &e8: INX imp
+    OP "SBC", &01               \ &e9: SBC #&l
+    OP "NOP", &05               \ &ea: NOP imp
+    NOOP                        \ &eb
+    OP "CPX", &02               \ &ec: CPX &hl
+    OP "SBC", &02               \ &ed: SBC &hl
+    OP "INC", &02               \ &ee: INC &hl
+    NOOP                        \ &ef
     \ --- &f0-&ff ---
-    OP "BEQ", &0c                       \ &f0: BEQ &b
-    OP "SBC", &07                       \ &f1: SBC (&l),Y
-    OP "SBC", &0f                       \ &f2: SBC (&l)
-    NOOP                                \ &f3
-    NOOP                                \ &f4
-    OP "SBC", &08                       \ &f5: SBC &l,X
-    OP "INC", &08                       \ &f6: INC &l,X
-    NOOP                                \ &f7
-    OP "SED", &05                       \ &f8: SED imp
-    OP "SBC", &0b                       \ &f9: SBC &hl,Y
-    OP "PLX", &05                       \ &fa: PLX imp
-    NOOP                                \ &fb
-    NOOP                                \ &fc
-    OP "SBC", &0a                       \ &fd: SBC &hl,X
-    OP "INC", &0a                       \ &fe: INC &hl,X
-    NOOP                                \ &ff
+    OP "BEQ", &0c               \ &f0: BEQ &b
+    OP "SBC", &07               \ &f1: SBC (&l),Y
+    OP "SBC", &0f               \ &f2: SBC (&l)
+    NOOP                        \ &f3
+    NOOP                        \ &f4
+    OP "SBC", &08               \ &f5: SBC &l,X
+    OP "INC", &08               \ &f6: INC &l,X
+    NOOP                        \ &f7
+    OP "SED", &05               \ &f8: SED imp
+    OP "SBC", &0b               \ &f9: SBC &hl,Y
+    OP "PLX", &05               \ &fa: PLX imp
+    NOOP                        \ &fb
+    NOOP                        \ &fc
+    OP "SBC", &0a               \ &fd: SBC &hl,X
+    OP "INC", &0a               \ &fe: INC &hl,X
+    NOOP                        \ &ff
     EQUB &4b, &45, &59, &39
     EQUS " *SRSAVE XMos 8000+4000 7Q|M"
     EQUB &0d, &4d, &0d, &2a, &2a, &2a, &2a, &2a, &2a, &2a, &2a, &2a, &2a, &2a, &2a, &2a
@@ -589,11 +589,11 @@
 \ ============================================================================
 .uninitialised_ram
     EQUB &0d
-    FOR n, 1, 27 : EQUB &ff : NEXT
-    FOR n, 1, 54
-        FOR m, 1, 32 : EQUB &00 : NEXT
-        FOR m, 1, 32 : EQUB &ff : NEXT
-    NEXT
-    FOR n, 1, 32 : EQUB &00 : NEXT
-    FOR n, 1, 16 : EQUB &ff : NEXT
+FOR n, 1, 27 : EQUB &ff : NEXT
+        FOR n, 1, 54
+            FOR m, 1, 32 : EQUB &00 : NEXT
+                FOR m, 1, 32 : EQUB &ff : NEXT
+                NEXT
+                FOR n, 1, 32 : EQUB &00 : NEXT
+                    FOR n, 1, 16 : EQUB &ff : NEXT
 

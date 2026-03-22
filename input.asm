@@ -3,37 +3,37 @@
 .handle_reset
     PHA : PHX : PHY
     LDA rom_workspace_table,X   \ Get our ROM's workspace page
-    STA extended_input_code + &0F \ Patch workspace high byte into handler
-    STX extended_input_code + &25 \ Patch ROM slot number into handler
-    STA zp_work_hi                     \ Set up workspace pointer high
-    STA os_himem_hi                   \ Set OSHWM high byte
+    STA extended_input_code + &0F  \ Patch workspace high byte into handler
+    STX extended_input_code + &25  \ Patch ROM slot number into handler
+    STA zp_work_hi              \ Set up workspace pointer high
+    STA os_himem_hi             \ Set OSHWM high byte
     LDA #&00
-    STA zp_work_lo                     \ Workspace pointer low = 0
-    STA os_himem_lo                   \ OSHWM low byte = 0
-    JSR alias_init                   \ Initialise alias system
+    STA zp_work_lo              \ Workspace pointer low = 0
+    STA os_himem_lo             \ OSHWM low byte = 0
+    JSR alias_init              \ Initialise alias system
     LDA keyon_active
     BEQ reset_skip_keyon
     LDA #&00
     STA keyon_active
-    JSR keyon_setup                   \ Re-enable KEYON if it was active
+    JSR keyon_setup             \ Re-enable KEYON if it was active
 .reset_skip_keyon
     LDA xon_flag
     BEQ reset_skip_xon
-    LDA #&04                   \ OSBYTE 4: cursor key status
-    LDX #&01                   \ Enable cursor editing
+    LDA #&04                    \ OSBYTE 4: cursor key status
+    LDX #&01                    \ Enable cursor editing
     LDY #&00
     JSR osbyte
-    LDA #&16                   \ OSBYTE &16: reset function keys?
+    LDA #&16                    \ OSBYTE &16: reset function keys?
     LDX #&01
     JSR osbyte
 .reset_skip_xon
 {
-    LDY #&00                   \ Copy extended input handler code to workspace
+    LDY #&00                    \ Copy extended input handler code to workspace
 .copy_loop
     LDA extended_input_code,Y
     STA (zp_work_lo),Y
     INY
-    CPY #&D0                   \ Copy &D0 (208) bytes
+    CPY #&D0                    \ Copy &D0 (208) bytes
     BNE copy_loop
 }
     PLY : PLX : PLA
@@ -364,8 +364,8 @@
 .save_keyword
     EQUS "SAVE"
 .xi_cr_restore_keys
-    LDA #&04                   \ OSBYTE 4: cursor key status
-    LDX #&01                   \ Enable cursor editing
+    LDA #&04                    \ OSBYTE 4: cursor key status
+    LDX #&01                    \ Enable cursor editing
     LDY #&00
     JSR osbyte
     SEC
@@ -729,7 +729,7 @@
 .xi_quote_toggle
     EQUB &00
 .xi_htab_check_quote
-    EQUB &AD, &AE, &89         \ LDA xi_quote_toggle (absolute ZP workaround)
+    EQUB &AD, &AE, &89          \ LDA xi_quote_toggle (absolute ZP workaround)
     BNE xi_htab_output_char
     LDA #&55
     STA zp_src_lo

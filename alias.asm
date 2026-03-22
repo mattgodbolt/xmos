@@ -400,7 +400,7 @@
     STA alias_clear_flag
     RTS
 .cmd_store
-    EQUB &AD, &F4, &00  \ LDA 0x00f4
+    EQUB &AD, &F4, &00          \ LDA 0x00f4
     ORA #&80
     STA sheila_romsel
     LDX #&00
@@ -415,7 +415,7 @@
     STA alias_exec_buf,X
     INX
     BNE store_copy_rom
-    EQUB &AD, &F4, &00  \ LDA 0x00f4
+    EQUB &AD, &F4, &00          \ LDA 0x00f4
     AND #&7f
     STA sheila_romsel
     LDA #&ff
@@ -424,7 +424,7 @@
 .alias_init
     LDA store_flag
     BEQ alias_init_rts
-    EQUB &AD, &F4, &00  \ LDA 0x00f4
+    EQUB &AD, &F4, &00          \ LDA 0x00f4
     ORA #&80
     STA sheila_romsel
     LDX #&00
@@ -437,7 +437,7 @@
     STA &8200,X
     INX
     BNE store_restore_rom
-    EQUB &AD, &F4, &00  \ LDA 0x00f4
+    EQUB &AD, &F4, &00          \ LDA 0x00f4
     AND #&7f
     STA sheila_romsel
 .alias_init_rts

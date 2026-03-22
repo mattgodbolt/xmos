@@ -134,7 +134,7 @@
     RTS
 .mem_cursor_up
     DEC mem_column
-    EQUB &10, &12  \ BPL &9542
+    EQUB &10, &12               \ BPL &9542
     LDA #&07
     STA mem_column
     SEC
@@ -302,7 +302,7 @@
     STA dis_print_lo_nibble + 1
     LSR A : LSR A : LSR A : LSR A  \ high nibble
     TAX : LDA hex_digits,X
-    EQUB &92, &AC  \ STA (0xac)
+    EQUB &92, &AC               \ STA (0xac)
     INC &ac
     BNE dis_print_lo_nibble
     INC &ad
@@ -311,7 +311,7 @@
     AND #&0f
     TAX
     LDA hex_digits,X
-    EQUB &92, &AC  \ STA (0xac)
+    EQUB &92, &AC               \ STA (0xac)
     INC &ac
     BNE dis_hex_byte_rts
     INC &ad

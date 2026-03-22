@@ -15,12 +15,12 @@
     PHA
     LDA basic_str_hi
     PHA
-    LDA basic_page_hi                     \ PAGE = start of BASIC program
+    LDA basic_page_hi           \ PAGE = start of BASIC program
     STA osfile_block + 3        \ Load address high byte
     STA osfile_block + 11       \ Start address high byte
-    LDA basic_top_lo                     \ TOP low byte
+    LDA basic_top_lo            \ TOP low byte
     STA osfile_block + 14       \ End address low byte
-    LDA basic_top_hi                     \ TOP high byte
+    LDA basic_top_hi            \ TOP high byte
     STA osfile_block + 15       \ End address high byte
     LDA #&00                    \ OSFILE A=0: save file
     LDX #LO(osfile_block)
@@ -49,51 +49,51 @@
     BNE print_name
 .name_done
 }
-    STROUT saved_msg_end         \ Print closing quote + newline
+    STROUT saved_msg_end        \ Print closing quote + newline
     RTS
 
 \ --- OSFILE parameter block (18 bytes, copied from template then modified) ---
 .osfile_block
-    EQUB &07, &30              \ +0: Filename pointer (overwritten)
-    EQUB &00, &30              \ +2: Load address low/high (high overwritten with PAGE)
-    EQUB &ff, &ff              \ +4: Load address top word (&FFFF = host)
-    EQUB &2B, &80              \ +6: Exec address low/high
-    EQUB &ff, &ff              \ +8: Exec address top word (&FFFF = host)
-    EQUB &AC, &05              \ +10: Start address (overwritten)
-    EQUB &00, &00              \ +12: Start address top
-    EQUB &00, &00              \ +14: End address (overwritten with TOP)
-    EQUB &00, &00              \ +16: End address top
+    EQUB &07, &30               \ +0: Filename pointer (overwritten)
+    EQUB &00, &30               \ +2: Load address low/high (high overwritten with PAGE)
+    EQUB &ff, &ff               \ +4: Load address top word (&FFFF = host)
+    EQUB &2B, &80               \ +6: Exec address low/high
+    EQUB &ff, &ff               \ +8: Exec address top word (&FFFF = host)
+    EQUB &AC, &05               \ +10: Start address (overwritten)
+    EQUB &00, &00               \ +12: Start address top
+    EQUB &00, &00               \ +14: End address (overwritten with TOP)
+    EQUB &00, &00               \ +16: End address top
 .osfile_template                \ Template copied into osfile_block on each call
-    EQUB &00, &00, &00, &00   \ Filename/load addr (zeroed)
-    EQUB &ff, &ff, &2B, &80   \ Load addr top + exec addr
-    EQUB &ff, &ff, &00, &00   \ Exec addr top + start addr
-    EQUB &ff, &ff, &00, &00   \ Start addr top + end addr
-    EQUB &ff, &ff              \ End addr top
+    EQUB &00, &00, &00, &00     \ Filename/load addr (zeroed)
+    EQUB &ff, &ff, &2B, &80     \ Load addr top + exec addr
+    EQUB &ff, &ff, &00, &00     \ Exec addr top + start addr
+    EQUB &ff, &ff, &00, &00     \ Start addr top + end addr
+    EQUB &ff, &ff               \ End addr top
 
 \ ============================================================================
 \ find_incore_name — Validate BASIC program and find "> filename" in first line
 \ Sets basic_str_lo/hi to point at the filename
 \ ============================================================================
 .find_incore_name
-    LDA basic_page_hi                     \ PAGE high byte
+    LDA basic_page_hi           \ PAGE high byte
     STA basic_str_hi
-    LDA #&01                   \ Check byte at PAGE+1 (program present?)
+    LDA #&01                    \ Check byte at PAGE+1 (program present?)
     STA basic_str_lo
     LDY #&00
     LDA (basic_str_lo),Y
     CMP #&ff
     BEQ error_no_basic
-    LDA basic_page_hi                     \ Point to PAGE+0
+    LDA basic_page_hi           \ Point to PAGE+0
     STA basic_str_hi
     LDA #&00
     STA basic_str_lo
-    LDY #&03                   \ Offset 3 = line length in first line
+    LDY #&03                    \ Offset 3 = line length in first line
     LDA (basic_str_lo),Y
     TAY                         \ Y = end of first line
     LDA (basic_str_lo),Y
     CMP #&0d
     BNE error_bad_program
-    LDY #&03                   \ Search first line for '>' marker
+    LDY #&03                    \ Search first line for '>' marker
 {
 .skip_spaces
     INY
@@ -102,7 +102,7 @@
     BEQ skip_spaces
 }
     LDA (basic_str_lo),Y
-    CMP #&f4                   \ REM token
+    CMP #&f4                    \ REM token
     BNE error_no_incore_name
 {
 .find_marker                    \ Find '>' character
@@ -143,7 +143,7 @@
     LDX #LO(cmd_l_oscli)
     LDY #HI(cmd_l_oscli)
     JSR oscli                   \ Execute the *KEY command string
-    LDA #&8A                   \ OSBYTE &8A: read/write ROM pointer table
+    LDA #&8A                    \ OSBYTE &8A: read/write ROM pointer table
     LDY #&80
     LDX #&00
     JMP osbyte

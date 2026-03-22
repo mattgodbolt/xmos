@@ -1,41 +1,41 @@
 \ dis.asm — Disassembler: *DIS command, addressing mode tables
 
 .dis_addr_modes
-    EQUB &81                   \ Mode 0: ??? (invalid opcode)
+    EQUB &81                    \ Mode 0: ??? (invalid opcode)
     EQUS "???", 0
-    EQUS "#&l", 0             \ Mode 1: immediate
-    EQUS "&hl", 0             \ Mode 2: absolute
-    EQUS "&l", 0              \ Mode 3: zero page
-    EQUS "A", 0               \ Mode 4: accumulator
-    EQUS " ", 0               \ Mode 5: implied
-    EQUS "(&l,X)", 0          \ Mode 6: (indirect,X)
-    EQUS "(&l),Y", 0          \ Mode 7: (indirect),Y
-    EQUS "&l,X", 0            \ Mode 8: zero page,X
-    EQUS "&l,Y", 0            \ Mode 9: zero page,Y
-    EQUS "&hl,X", 0           \ Mode 10: absolute,X
-    EQUS "&hl,Y", 0           \ Mode 11: absolute,Y
-    EQUS "&b", 0              \ Mode 12: relative (branch)
-    EQUS "(&hl)", 0           \ Mode 13: (indirect)
-    EQUS "(&hl,X)", 0         \ Mode 14: (indirect,X) 65C02
-    EQUS "(&l)", 0            \ Mode 15: (indirect) 65C02 ZP
+    EQUS "#&l", 0               \ Mode 1: immediate
+    EQUS "&hl", 0               \ Mode 2: absolute
+    EQUS "&l", 0                \ Mode 3: zero page
+    EQUS "A", 0                 \ Mode 4: accumulator
+    EQUS " ", 0                 \ Mode 5: implied
+    EQUS "(&l,X)", 0            \ Mode 6: (indirect,X)
+    EQUS "(&l),Y", 0            \ Mode 7: (indirect),Y
+    EQUS "&l,X", 0              \ Mode 8: zero page,X
+    EQUS "&l,Y", 0              \ Mode 9: zero page,Y
+    EQUS "&hl,X", 0             \ Mode 10: absolute,X
+    EQUS "&hl,Y", 0             \ Mode 11: absolute,Y
+    EQUS "&b", 0                \ Mode 12: relative (branch)
+    EQUS "(&hl)", 0             \ Mode 13: (indirect)
+    EQUS "(&hl,X)", 0           \ Mode 14: (indirect,X) 65C02
+    EQUS "(&l)", 0              \ Mode 15: (indirect) 65C02 ZP
 \ --- Addressing mode pointer table (16 entries, low/high pairs) ---
 .dis_addr_mode_ptrs
-    EQUW dis_addr_modes + &00  \ Mode 0: ???
-    EQUW dis_addr_modes + &05  \ Mode 1: #&l
-    EQUW dis_addr_modes + &09  \ Mode 2: &hl
-    EQUW dis_addr_modes + &0D  \ Mode 3: &l
-    EQUW dis_addr_modes + &10  \ Mode 4: A
-    EQUW dis_addr_modes + &12  \ Mode 5: implied
-    EQUW dis_addr_modes + &14  \ Mode 6: (&l,X)
-    EQUW dis_addr_modes + &1B  \ Mode 7: (&l),Y
-    EQUW dis_addr_modes + &22  \ Mode 8: &l,X
-    EQUW dis_addr_modes + &27  \ Mode 9: &l,Y
-    EQUW dis_addr_modes + &2C  \ Mode 10: &hl,X
-    EQUW dis_addr_modes + &32  \ Mode 11: &hl,Y
-    EQUW dis_addr_modes + &38  \ Mode 12: &b
-    EQUW dis_addr_modes + &3B  \ Mode 13: (&hl)
-    EQUW dis_addr_modes + &41  \ Mode 14: (&hl,X)
-    EQUW dis_addr_modes + &49  \ Mode 15: (&l)
+    EQUW dis_addr_modes + &00   \ Mode 0: ???
+    EQUW dis_addr_modes + &05   \ Mode 1: #&l
+    EQUW dis_addr_modes + &09   \ Mode 2: &hl
+    EQUW dis_addr_modes + &0D   \ Mode 3: &l
+    EQUW dis_addr_modes + &10   \ Mode 4: A
+    EQUW dis_addr_modes + &12   \ Mode 5: implied
+    EQUW dis_addr_modes + &14   \ Mode 6: (&l,X)
+    EQUW dis_addr_modes + &1B   \ Mode 7: (&l),Y
+    EQUW dis_addr_modes + &22   \ Mode 8: &l,X
+    EQUW dis_addr_modes + &27   \ Mode 9: &l,Y
+    EQUW dis_addr_modes + &2C   \ Mode 10: &hl,X
+    EQUW dis_addr_modes + &32   \ Mode 11: &hl,Y
+    EQUW dis_addr_modes + &38   \ Mode 12: &b
+    EQUW dis_addr_modes + &3B   \ Mode 13: (&hl)
+    EQUW dis_addr_modes + &41   \ Mode 14: (&hl,X)
+    EQUW dis_addr_modes + &49   \ Mode 15: (&l)
 \ --- Operand byte counts per addressing mode ---
 .dis_operand_sizes
     EQUB 1, 2, 3, 2, 1, 1, 2, 2, 2, 2, 3, 3, 2, 3, 3, 2
@@ -62,10 +62,10 @@
     JSR oswrch
     LDY #&00
     STY &ad
-    LDA (zp_src_lo),Y                 \ opcode × 4 to get table offset
+    LDA (zp_src_lo),Y           \ opcode × 4 to get table offset
     ASL A : ROL &ad
     ASL A : ROL &ad
-    CLC : ADC #&56 : STA &ac   \ add table base low byte
+    CLC : ADC #&56 : STA &ac    \ add table base low byte
     LDA zp_tmp_hi
     ADC #&a1
     STA zp_tmp_hi
@@ -227,22 +227,22 @@
     JMP dis_format_loop
 .print_backspace
     LDA #&08
-    FOR n, 1, 5 : JSR oswrch : NEXT
-    LDY #&01
-    LDA (&a8),Y
-    BMI bau_space_rts
-    STA dec_value_hi
-    LDY #&02
-    LDA (&a8),Y
-    STA dec_value_lo
-    PHX
-    PHY
-    JSR print_decimal
-    PLY
-    PLX
+FOR n, 1, 5 : JSR oswrch : NEXT
+        LDY #&01
+        LDA (&a8),Y
+        BMI bau_space_rts
+        STA dec_value_hi
+        LDY #&02
+        LDA (&a8),Y
+        STA dec_value_lo
+        PHX
+        PHY
+        JSR print_decimal
+        PLY
+        PLX
 .bau_space_rts
-    RTS
+        RTS
 .msg_now_splitting
-    EQUS 13, "Now splitting line:      " : EQUB 0
+        EQUS 13, "Now splitting line:      " : EQUB 0
 .msg_now_spacing
-    EQUS 13, "Now spacing out line:      " : EQUB 0
+        EQUS 13, "Now spacing out line:      " : EQUB 0

@@ -4,7 +4,7 @@
 \ Reverse engineered disassembly
 \ ============================================================================
 
-CPU 1  \ 65C02
+CPU 1                           \ 65C02
 
 INCLUDE "constants.asm"
 INCLUDE "macros.asm"
@@ -18,10 +18,10 @@ GUARD &C000
     BRK : BRK : BRK             \ No language entry
     JMP service_entry           \ Service entry point
     EQUB romtype_service OR romtype_6502
-    EQUB LO(copyright_ptr - &8000) \ Copyright offset from ROM start
+    EQUB LO(copyright_ptr - &8000)  \ Copyright offset from ROM start
 .rom_start
     EQUB &01                    \ Version number
-    EQUS "MOS Extension"       \ ROM title
+    EQUS "MOS Extension"        \ ROM title
 .copyright_ptr
     EQUS 0, "(C) RTW and MG 1992", 0
 
@@ -58,7 +58,7 @@ GUARD &C000
     PHA : PHX : PHY
     LDX #&00
 .print_loop
-    LDA (cmd_line_lo),Y                 \ Check if bare *HELP (CR = end of line)
+    LDA (cmd_line_lo),Y         \ Check if bare *HELP (CR = end of line)
     CMP #&0D
     BNE help_has_argument
     LDA help_title_text,X       \ Print help title string
@@ -91,7 +91,7 @@ GUARD &C000
 .help_print_loop
     LDY #&00
     LDA (zp_ptr_lo)
-    CMP #&FF                   \ End of table marker?
+    CMP #&FF                    \ End of table marker?
     BEQ help_done
     LDA #' ' : JSR osasci : JSR osasci  \ two space indent
 .print_name                     \ Print command name
@@ -104,7 +104,7 @@ GUARD &C000
     TYA                         \ Pad with spaces to column 11
     SEC                         \ (9 - name_length spaces)
     SBC #&09
-    EOR #&FF : INC A             \ negate
+    EOR #&FF : INC A            \ negate
     TAX
 .pad_loop
     LDA #' ' : JSR osasci
@@ -187,9 +187,9 @@ GUARD &C000
     STA zp_ptr_hi
     PLY
     LDA (zp_ptr_lo)
-    CMP #&FF                   \ End of table?
+    CMP #&FF                    \ End of table?
     BNE help_try_next_cmd
-    LDA #&0F                   \ Print mode 0 (reset double height)
+    LDA #&0F                    \ Print mode 0 (reset double height)
     JSR osasci
     PLY : PLX : PLA
     RTS
@@ -199,7 +199,7 @@ GUARD &C000
     PLY
     LDA #' ' : JSR osasci : JSR osasci
     LDY #&FF
-.print_name_2                     \ Print command name
+.print_name_2                   \ Print command name
     INY
     LDA (zp_ptr_lo),Y
     JSR osasci
@@ -208,7 +208,7 @@ GUARD &C000
     TYA                         \ Pad with spaces to column 11
     SEC
     SBC #&09
-    EOR #&FF : INC A             \ negate
+    EOR #&FF : INC A            \ negate
     TAX
 .pad_loop_2
     LDA #' ' : JSR osasci
@@ -241,12 +241,12 @@ GUARD &C000
 .cmd_try_next
     PHY
     LDA (zp_ptr_lo)
-    CMP #&FF                   \ End of command table?
+    CMP #&FF                    \ End of command table?
     BEQ cmd_not_found
     JSR compare_string
     BCS cmd_found
     LDY #&00
-.skip_name_2                      \ Skip command name
+.skip_name_2                    \ Skip command name
     INY
     LDA (zp_ptr_lo),Y
     BNE skip_name_2
@@ -273,51 +273,51 @@ GUARD &C000
 .cmd_found
     PLY
     LDY #&00
-.skip_cmd_name                      \ Skip past command name to handler address
+.skip_cmd_name                  \ Skip past command name to handler address
     INY
     LDA (zp_ptr_lo),Y
     BNE skip_cmd_name
     INY
-    LDA (zp_ptr_lo),Y                \ Load handler address low byte
+    LDA (zp_ptr_lo),Y           \ Load handler address low byte
     STA cmd_dispatch_addr + 1
     INY
-    LDA (zp_ptr_lo),Y                \ Load handler address high byte
+    LDA (zp_ptr_lo),Y           \ Load handler address high byte
     STA cmd_dispatch_addr + 2
     JSR cmd_dispatch
     PLY : PLX : PLA
-    LDA #&00                   \ Claim the service call
+    LDA #&00                    \ Claim the service call
     RTS
 
 }
 .cmd_dispatch
 .cmd_dispatch_addr
-    JMP cmd_keyoff                  \ Self-modified: handler address written here
+    JMP cmd_keyoff              \ Self-modified: handler address written here
 \ ============================================================================
 \ Command table
 \ Format: name (null-terminated), handler address (2 bytes LE), help text (null-terminated)
 \ Terminated by &FF
 \ ============================================================================
 .command_table
-    EQUS "ALIAS", 0    : EQUW cmd_alias    : EQUS "<alias name> <alias>", 0
-    EQUS "ALIASES", 0  : EQUW cmd_aliases  : EQUS "Shows active aliases", 0
-    EQUS "ALICLR", 0   : EQUW cmd_aliclr   : EQUS "Clears all aliases", 0
-    EQUS "ALILD", 0    : EQUW cmd_alild    : EQUS "Loads alias file", 0
-    EQUS "ALISV", 0    : EQUW cmd_alisv    : EQUS "Saves alias file", 0
-    EQUS "BAU", 0      : EQUW cmd_bau      : EQUS "Splits to single commands", 0
-    EQUS "DEFKEYS", 0  : EQUW cmd_defkeys  : EQUS "Defines new keys", 0
-    EQUS "DIS", 0      : EQUW cmd_dis      : EQUS "<addr> - disassemble memory", 0
-    EQUS "KEYON", 0    : EQUW cmd_keyon    : EQUS "Enables redefined keys", 0
-    EQUS "KEYOFF", 0   : EQUW cmd_keyoff   : EQUS "Disables redefined keys", 0
-    EQUS "KSTATUS", 0  : EQUW cmd_kstatus  : EQUS "Displays KEYON status", 0
-    EQUS "L", 0        : EQUW cmd_l        : EQUS "Selects mode 128", 0
-    EQUS "LVAR", 0     : EQUW cmd_lvar     : EQUS "Shows current variables", 0
-    EQUS "MEM", 0      : EQUW cmd_mem      : EQUS "<addr> - memory editor", 0
-    EQUS "S", 0        : EQUW cmd_s        : EQUS "Saves BASIC with incore name", 0
-    EQUS "SPACE", 0    : EQUW cmd_space    : EQUS "Inserts spaces into programs", 0
-    EQUS "STORE", 0    : EQUW cmd_store    : EQUS "Keeps function keys on break", 0
-    EQUS "XON", 0      : EQUW cmd_xon      : EQUS "Enables extended input", 0
-    EQUS "XOFF", 0     : EQUW cmd_xoff     : EQUS "Disables extended input", 0
-    EQUB &FF                  \ End of command table
+    EQUS "ALIAS", 0 : EQUW cmd_alias : EQUS "<alias name> <alias>", 0
+    EQUS "ALIASES", 0 : EQUW cmd_aliases : EQUS "Shows active aliases", 0
+    EQUS "ALICLR", 0 : EQUW cmd_aliclr : EQUS "Clears all aliases", 0
+    EQUS "ALILD", 0 : EQUW cmd_alild : EQUS "Loads alias file", 0
+    EQUS "ALISV", 0 : EQUW cmd_alisv : EQUS "Saves alias file", 0
+    EQUS "BAU", 0 : EQUW cmd_bau : EQUS "Splits to single commands", 0
+    EQUS "DEFKEYS", 0 : EQUW cmd_defkeys : EQUS "Defines new keys", 0
+    EQUS "DIS", 0 : EQUW cmd_dis : EQUS "<addr> - disassemble memory", 0
+    EQUS "KEYON", 0 : EQUW cmd_keyon : EQUS "Enables redefined keys", 0
+    EQUS "KEYOFF", 0 : EQUW cmd_keyoff : EQUS "Disables redefined keys", 0
+    EQUS "KSTATUS", 0 : EQUW cmd_kstatus : EQUS "Displays KEYON status", 0
+    EQUS "L", 0 : EQUW cmd_l : EQUS "Selects mode 128", 0
+    EQUS "LVAR", 0 : EQUW cmd_lvar : EQUS "Shows current variables", 0
+    EQUS "MEM", 0 : EQUW cmd_mem : EQUS "<addr> - memory editor", 0
+    EQUS "S", 0 : EQUW cmd_s : EQUS "Saves BASIC with incore name", 0
+    EQUS "SPACE", 0 : EQUW cmd_space : EQUS "Inserts spaces into programs", 0
+    EQUS "STORE", 0 : EQUW cmd_store : EQUS "Keeps function keys on break", 0
+    EQUS "XON", 0 : EQUW cmd_xon : EQUS "Enables extended input", 0
+    EQUS "XOFF", 0 : EQUW cmd_xoff : EQUS "Disables extended input", 0
+    EQUB &FF                    \ End of command table
 .xmos_keyword
     EQUS "XMOS", 0
 \ ============================================================================
@@ -326,8 +326,8 @@ GUARD &C000
 .cmd_xon
     LDA #&FF
     STA xon_flag
-    LDA #&04                   \ OSBYTE 4: set cursor key status
-    LDX #&01                   \ X=1: cursor editing mode
+    LDA #&04                    \ OSBYTE 4: set cursor key status
+    LDX #&01                    \ X=1: cursor editing mode
     LDY #&00
     JMP osbyte
 
@@ -337,26 +337,26 @@ GUARD &C000
 .cmd_xoff
     LDA #&00
     STA xon_flag
-    LDA #&04                   \ OSBYTE 4: set cursor key status
-    LDX #&00                   \ X=0: normal cursor keys
+    LDA #&04                    \ OSBYTE 4: set cursor key status
+    LDX #&00                    \ X=0: normal cursor keys
     LDY #&00
     JMP osbyte
 
 \ --- Small utility: ring the bell ---
 .beep
-    LDA #&07                   \ BEL character
+    LDA #&07                    \ BEL character
     JMP oswrch
 \ --- Workspace variables (in sideways RAM, overwritten at runtime) ---
 .xon_flag
-    EQUB &FF                   \ non-zero = XON active
+    EQUB &FF                    \ non-zero = XON active
 .xi_cursor_pos
-    EQUB &1A                   \ current cursor position in input line
+    EQUB &1A                    \ current cursor position in input line
 .xi_line_len
-    EQUB &1A                   \ current line length
+    EQUB &1A                    \ current line length
 .xi_char
-    EQUB &0D                   \ last character read / temp
+    EQUB &0D                    \ last character read / temp
 .xi_temp
-    EQUB &08                   \ temp for number parsing
+    EQUB &08                    \ temp for number parsing
 
 INCLUDE "input.asm"
 INCLUDE "util.asm"

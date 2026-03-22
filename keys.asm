@@ -8,7 +8,7 @@
     BEQ key_remap_keyboard
     PLP
 .key_remap_jmp1
-    JMP &FFFF                  \ Patched: original KEYV address
+    JMP &FFFF                   \ Patched: original KEYV address
 \ Scan handler: remap key codes for OSBYTE &81
 \ Each CPX/LDX pair is patched by KEYON with the configured key codes
 .key_remap_scan
@@ -46,7 +46,7 @@
 .key_remap_pass2
     PLP
 .key_remap_jmp2
-    JMP &FFFF                  \ Patched: original KEYV address
+    JMP &FFFF                   \ Patched: original KEYV address
 
 \ Keyboard handler: remap key codes for OSBYTE &79
 .key_remap_keyboard
@@ -84,13 +84,13 @@
 .kr_kbd_pass
     PLP
 .key_remap_jmp3
-    JMP &FFFF                  \ Patched: original KEYV address
+    JMP &FFFF                   \ Patched: original KEYV address
 
 \ Shifted handler: call original KEYV then remap results
 .key_remap_shifted
     PLP
 .key_remap_jsr
-    JSR &FFFF                  \ Patched: call original KEYV
+    JSR &FFFF                   \ Patched: call original KEYV
     PHP
 .kr_shift_cpx_0
     CPX #&40
@@ -146,7 +146,7 @@
     EQUB &00
 .keyon_active
     EQUB &00
-.key_codes                     \ 5-byte table of key scan codes to remap
+.key_codes                      \ 5-byte table of key scan codes to remap
     EQUB &41, &02, &49, &69, &4A
 .keyon_already_msg
     STROUT msg_keyon_already
@@ -281,162 +281,162 @@
 .keyname_scan_loop
     CMP (&a8),Y
     BEQ keyname_found
-    FOR n, 1, 10 : INY : NEXT  \ skip 10-byte entry (keycode + 9-char name)
-    CPY #&96
-    BCC keyname_scan_loop
-    JMP oswrch
+FOR n, 1, 10 : INY : NEXT       \ skip 10-byte entry (keycode + 9-char name)
+        CPY #&96
+        BCC keyname_scan_loop
+        JMP oswrch
 .keyname_found
-    LDX #&09
-    INY
+        LDX #&09
+        INY
 .keyname_print_loop
-    LDA (zp_ptr_lo),Y
-    JSR oswrch
-    INY
-    DEX
-    BNE keyname_print_loop
-    RTS
+        LDA (zp_ptr_lo),Y
+        JSR oswrch
+        INY
+        DEX
+        BNE keyname_print_loop
+        RTS
 \ --- DEFKEYS joystick direction labels (12 chars each) ---
 .defkeys_direction_labels
-    EQUS "     Left : "  \ 12 bytes each
-    EQUS "    Right : "
-    EQUS "       Up : "
-    EQUS "     Down : "
-    EQUS "Jump/fire : "
+        EQUS "     Left : "     \ 12 bytes each
+        EQUS "    Right : "
+        EQUS "       Up : "
+        EQUS "     Down : "
+        EQUS "Jump/fire : "
 
 \ ============================================================================
 \ *KSTATUS — Display current key redefinition status
 \ ============================================================================
 .kstatus_not_active
-    JMP keyoff_print_msg        \ Print "Redefined keys off" message
+        JMP keyoff_print_msg    \ Print "Redefined keys off" message
 .cmd_kstatus
-    LDA keyon_active
-    BEQ kstatus_not_active
-    STROUT msg_keys_on
-    LDA #&d0
-    STA zp_work_lo
-    LDA #&8e
-    STA zp_work_hi
-    LDX #&00
+        LDA keyon_active
+        BEQ kstatus_not_active
+        STROUT msg_keys_on
+        LDA #&d0
+        STA zp_work_lo
+        LDA #&8e
+        STA zp_work_hi
+        LDX #&00
 .kstatus_entry_loop
-    LDY #&00
+        LDY #&00
 .kstatus_print_dir
-    LDA (zp_work_lo),Y
-    JSR oswrch
-    INY
-    CPY #&0c
-    BNE kstatus_print_dir
-    CLC : LDA zp_work_lo : ADC #&0c
-    STA zp_work_lo
-    LDA zp_work_hi
-    ADC #&00
-    STA zp_work_hi
-    LDA key_codes,X
-    PHX
-    DEC A
-    JSR keyname_lookup
-    JSR osnewl
-    PLX
-    INX
-    CPX #&05
-    BNE kstatus_entry_loop
-    JSR osnewl
-    JMP keyon_rts
+        LDA (zp_work_lo),Y
+        JSR oswrch
+        INY
+        CPY #&0c
+        BNE kstatus_print_dir
+        CLC : LDA zp_work_lo : ADC #&0c
+        STA zp_work_lo
+        LDA zp_work_hi
+        ADC #&00
+        STA zp_work_hi
+        LDA key_codes,X
+        PHX
+        DEC A
+        JSR keyname_lookup
+        JSR osnewl
+        PLX
+        INX
+        CPX #&05
+        BNE kstatus_entry_loop
+        JSR osnewl
+        JMP keyon_rts
 .msg_key_redefiner
-    EQUS "KEY REDEFINER", 13, "-------------", 13, 0
+        EQUS "KEY REDEFINER", 13, "-------------", 13, 0
 .cmd_defkeys
-    LDA keyon_active
-    BEQ defkeys_start
-    LDA #&00 : STA keyon_active
-    LDA saved_keyv_lo : STA keyv_lo
-    LDA saved_keyv_hi : STA keyv_hi
+        LDA keyon_active
+        BEQ defkeys_start
+        LDA #&00 : STA keyon_active
+        LDA saved_keyv_lo : STA keyv_lo
+        LDA saved_keyv_hi : STA keyv_hi
 .defkeys_start
-    LDA #&81
-    LDX #&b6
-    LDY #&ff
-    JSR osbyte
-    CPX #&ff
-    BEQ defkeys_start
-    JSR osnewl
-    STROUT msg_key_redefiner
-    JSR osnewl
-    LDA #&d0
-    STA zp_work_lo
-    LDA #&8e
-    STA zp_work_hi
-    LDX #&00
+        LDA #&81
+        LDX #&b6
+        LDY #&ff
+        JSR osbyte
+        CPX #&ff
+        BEQ defkeys_start
+        JSR osnewl
+        STROUT msg_key_redefiner
+        JSR osnewl
+        LDA #&d0
+        STA zp_work_lo
+        LDA #&8e
+        STA zp_work_hi
+        LDX #&00
 .defkeys_header_y
-    LDY #&00
+        LDY #&00
 .defkeys_header_loop
-    LDA (zp_work_lo),Y
-    JSR oswrch
-    INY
-    CPY #&0c
-    BNE defkeys_header_loop
-    CLC : LDA zp_work_lo : ADC #&0c
-    STA zp_work_lo
-    LDA zp_work_hi
-    ADC #&00
-    STA zp_work_hi
-    JSR defkeys_wait_key
-    INX
-    CPX #&05
-    BNE defkeys_header_y
-    JSR osnewl
-    LDA #&0f
-    JSR osbyte
-    JMP keyon_setup
+        LDA (zp_work_lo),Y
+        JSR oswrch
+        INY
+        CPY #&0c
+        BNE defkeys_header_loop
+        CLC : LDA zp_work_lo : ADC #&0c
+        STA zp_work_lo
+        LDA zp_work_hi
+        ADC #&00
+        STA zp_work_hi
+        JSR defkeys_wait_key
+        INX
+        CPX #&05
+        BNE defkeys_header_y
+        JSR osnewl
+        LDA #&0f
+        JSR osbyte
+        JMP keyon_setup
 .defkeys_wait_key
-    PHX
+        PHX
 .defkeys_read_key
-    LDX #&81
+        LDX #&81
 .defkeys_store_key
-    PHX
-    LDA #&81
-    LDY #&ff
-    JSR osbyte
-    CPX #&ff
-    BEQ defkeys_check_match
-    PLX
-    INX
-    BNE defkeys_store_key
-    BEQ defkeys_read_key
+        PHX
+        LDA #&81
+        LDY #&ff
+        JSR osbyte
+        CPX #&ff
+        BEQ defkeys_check_match
+        PLX
+        INX
+        BNE defkeys_store_key
+        BEQ defkeys_read_key
 .defkeys_check_match
-    PLA
-    EOR #&ff
-    INC A
-    PLX
-    STA key_codes,X
-    DEC A
-    PHX
-    PHA
-    JSR keyname_lookup
-    JSR osnewl
-    PLA
-    EOR #&ff
-    TAX
-    PHX
+        PLA
+        EOR #&ff
+        INC A
+        PLX
+        STA key_codes,X
+        DEC A
+        PHX
+        PHA
+        JSR keyname_lookup
+        JSR osnewl
+        PLA
+        EOR #&ff
+        TAX
+        PHX
 .defkeys_next_entry
-    PLX
-    PHX
-    LDA #&81
-    LDY #&ff
-    JSR osbyte
-    CPX #&ff
-    BEQ defkeys_next_entry
-    PLX
-    PLX
-    RTS
+        PLX
+        PHX
+        LDA #&81
+        LDY #&ff
+        JSR osbyte
+        CPX #&ff
+        BEQ defkeys_next_entry
+        PLX
+        PLX
+        RTS
 .parse_cmdline
-    LDY compare_string_y
-    DEY
+        LDY compare_string_y
+        DEY
 .parse_skip_spaces
-    INY
-    LDA (cmd_line_lo),Y
-    CMP #' '
-    BEQ parse_skip_spaces
-    CMP #'.'
-    BEQ parse_skip_spaces
-    STY compare_string_y
-    RTS
+        INY
+        LDA (cmd_line_lo),Y
+        CMP #' '
+        BEQ parse_skip_spaces
+        CMP #'.'
+        BEQ parse_skip_spaces
+        STY compare_string_y
+        RTS
 .alias_semicolon_flag
-    EQUB &ff
+        EQUB &ff
