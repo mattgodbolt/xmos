@@ -1,5 +1,8 @@
 \ input.asm — Extended input system: handle_reset, XON handler, keyboard intercept
 
+\ Initialise the extended input system on ROM reset.
+\ Patches workspace addresses into the handler code, re-enables KEYON/XON
+\ if they were active, and copies the input handler into private workspace RAM.
 .handle_reset
     PHA : PHX : PHY
     LDA rom_workspace_table,X   \ Get our ROM's workspace page
@@ -43,12 +46,15 @@
 \ This block runs from the ROM's private workspace page, intercepting
 \ keyboard input to provide cursor editing, insert/delete, etc.
 \ ============================================================================
+\ KEYV intercept entry point. If A=0 (keyboard read), handle it ourselves;
+\ otherwise fall through to the default keyboard vector handler.
 .extended_input_code
     PHP
     CMP #&00
     BEQ xi_entry
     PLP
     JMP default_keyv
+\ Save caller's register block, page in XMOS ROM, and call the main handler.
 .xi_entry
     PLA
     STX zp_src_lo
@@ -76,12 +82,16 @@
     LDA #&00
     PLP
     RTS
+\ If XON mode is not active, pass through to the default KEYV handler.
+\ Otherwise, enter the extended line editor.
 .xi_check_xon
     LDA xon_flag
     BNE xi_init_state
     LDX zp_src_lo
     LDY zp_src_hi
     JMP default_keyv
+\ Reset editor state and begin reading a new input line.
+\ Fetches the caller's buffer address from the register block.
 .xi_init_state
     LDA #&00
     STA xi_scroll_count
@@ -94,6 +104,8 @@
     INY
     LDA (zp_work_lo),Y
     STA zp_ptr_hi
+\ Main input loop: read a character and dispatch it.
+\ Escape is echoed and re-read; all other keys are dispatched by type.
 .xi_read_loop
     JSR osrdch
     STA xi_char
@@ -102,6 +114,8 @@
     LDA xi_char
     JSR oswrch
     JMP xi_read_loop
+\ Dispatch table for special keys: cursor left/right, delete, CR, escape,
+\ Ctrl-U (clear), copy up/down, Tab, Ctrl-N/O, horizontal tab, and null.
 .xi_dispatch
 {
         LDA xi_char
@@ -157,6 +171,8 @@
         BNE xi_handle_printable
         JMP xi_handle_null
 }
+\ Handle a printable character: validate it's within the allowed range
+\ and the buffer isn't full, then insert it at the cursor position.
 .xi_handle_printable
     LDA xi_char
     CMP #&20
@@ -187,6 +203,8 @@
     JMP xi_read_loop
 .xi_insert_mode
     EQUB &00
+\ Insert xi_char into the line buffer at the current cursor position.
+\ Shifts characters after the cursor rightward, then redraws the tail.
 .xi_do_insert
     SEC
     LDA xi_cursor_pos
@@ -230,6 +248,8 @@
     BNE xi_backspace_loop
 .xi_insert_done
     RTS
+\ Cursor left: move insertion point one character left within the line.
+\ If already at position 0, switch to scroll mode via cursor key reset.
 .xi_handle_left
 {
         LDA xi_cursor_pos
@@ -245,6 +265,8 @@
 .done
         JMP xi_read_loop
 }
+\ Cursor right: move insertion point one character right within the line.
+\ If already at position 0, switch to scroll mode via cursor key reset.
 .xi_handle_right
 {
         LDA xi_cursor_pos
@@ -261,6 +283,8 @@
 .done
         JMP xi_read_loop
 }
+\ Delete: remove the character before the cursor, shift remaining chars
+\ left, and redraw the line tail with trailing space to erase the last char.
 .xi_handle_delete
 {
         LDA xi_line_len
@@ -309,6 +333,9 @@
 .done
         JMP xi_read_loop
 }
+\ Carriage return: finalise the input line and return it to the caller.
+\ In BASIC edit mode, intercepts "SAVE" to auto-save before returning.
+\ Moves the cursor to end-of-line, stores CR terminator, and exits.
 .xi_handle_cr
     LDA xon_flag
     BEQ xi_cr_check_mode
@@ -363,6 +390,8 @@
     RTS
 .save_keyword
     EQUS "SAVE"
+\ Escape key handler: restore cursor keys to editing mode, move cursor
+\ to end of line, and return with carry set to indicate escape.
 .xi_cr_restore_keys
     LDA #&04                    \ OSBYTE 4: cursor key status
     LDX #&01                    \ Enable cursor editing
@@ -382,9 +411,12 @@
     LDY xi_cursor_pos
     SEC
     RTS
+\ Ctrl-U: clear the entire input line by deleting all characters.
 .xi_handle_clear
     JSR xi_do_clear
     JMP xi_read_loop
+\ Erase all characters on the current line by moving cursor to end,
+\ then issuing delete for each character. Resets line_len and cursor_pos.
 .xi_do_clear
 {
         LDA xi_cursor_pos
@@ -412,6 +444,8 @@
 .done
         RTS
 }
+\ Null character (Ctrl-@): if the line is empty, turn off XON mode
+\ and return an empty line terminated with CR.
 .xi_handle_null
     LDA xi_cursor_pos
     BEQ xi_null_not_empty
@@ -424,6 +458,9 @@
     STA (zp_ptr_lo),Y
     CLC
     RTS
+\ Copy-up (cursor up in copy mode): if no key is pending in the buffer,
+\ enter insert/scroll mode and scroll the screen up. If a key is pending,
+\ move the cursor up one screen line (by subtracting the window width).
 .xi_handle_copy_up
     LDA #&81
     LDX #&ff
@@ -476,6 +513,9 @@
     LDA #&00
     STA xi_line_len
     JMP xi_read_loop
+\ Copy-down (cursor down in copy mode): if no key is pending, enter
+\ insert/scroll mode and scroll down. If a key is pending, move the
+\ cursor down one screen line (by adding the window width).
 .xi_handle_copy_down
     LDA #&81
     LDX #&ff
@@ -528,6 +568,8 @@
     LDA xi_cursor_pos
     STA xi_line_len
     JMP xi_read_loop
+\ Temporarily disable cursor editing mode and re-inject a cursor key,
+\ allowing normal screen-level cursor movement for one keypress.
 .xi_reset_cursor_keys
     PHY
     LDA #&04
@@ -539,6 +581,9 @@
     LDX #&00
     JSR osbyte
     JMP xi_read_loop
+\ Tab (copy key): delete the character at the current cursor position
+\ by shifting remaining characters left and redrawing. Used for
+\ character-at-a-time deletion during copy editing.
 .xi_handle_tab
     LDA xi_cursor_pos
     CMP xi_line_len
@@ -592,6 +637,9 @@
     JSR oswrch
 .xi_tab_finished
     JMP xi_read_loop
+\ Horizontal tab (Ctrl-I): in BASIC edit mode, parse a line number from
+\ the current input, look up the corresponding BASIC program line, and
+\ expand its tokenised content into the input buffer for editing.
 .xi_handle_htab
     LDA xi_cursor_pos
     BEQ xi_tab_finished
@@ -626,6 +674,7 @@
     CPY xi_cursor_pos
     BEQ xi_tab_finished
     BNE xi_htab_parse_loop
+\ Multiply the accumulated number by 10 and add the current digit.
 .xi_htab_mul10
     ASL xi_char
     ROL xi_temp
@@ -661,6 +710,8 @@
     BCS xi_htab_lookup
     CPY xi_cursor_pos
     BNE xi_htab_mul10
+\ Walk the BASIC program's linked list to find the line matching
+\ the parsed number, then expand its tokens into the input buffer.
 .xi_htab_lookup
     LDY xi_cursor_pos
     LDA #&00
@@ -728,6 +779,8 @@
     JMP xi_read_loop
 .xi_quote_toggle
     EQUB &00
+\ When expanding a BASIC token outside of a quoted string, look up the
+\ full keyword text and insert each character into the input buffer.
 .xi_htab_check_quote
     EQUB &AD, &AE, &89          \ LDA xi_quote_toggle (absolute ZP workaround)
     BNE xi_htab_output_char

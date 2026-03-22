@@ -1,5 +1,11 @@
 \ basic.asm — BASIC commands: *S, *L (save and mode setup)
 
+\ ============================================================================
+\ cmd_s — *S command: save the current BASIC program to disc using the
+\ filename embedded in the first line (e.g. 10 REM > Filename). Copies a
+\ template into the OSFILE parameter block, fills in PAGE/TOP addresses,
+\ calls OSFILE &00 (save), then prints a confirmation with the filename.
+\ ============================================================================
 .cmd_s
 {
         LDY #&00
@@ -52,7 +58,13 @@
     STROUT saved_msg_end        \ Print closing quote + newline
     RTS
 
-\ --- OSFILE parameter block (18 bytes, copied from template then modified) ---
+\ --- OSFILE parameter block (18 bytes). Layout per the MOS specification:
+\ +0,1: filename pointer  +2-5: load address  +6-9: exec address
+\ +10-13: start address   +14-17: end address
+\ High words &FFFF select the I/O processor (host) address space.
+\ Copied from osfile_template at the start of cmd_s, then patched with
+\ the incore filename pointer, PAGE (load/start), and TOP (end).
+\ ---
 .osfile_block
     EQUB &07, &30               \ +0: Filename pointer (overwritten)
     EQUB &00, &30               \ +2: Load address low/high (high overwritten with PAGE)
@@ -71,8 +83,12 @@
     EQUB &ff, &ff               \ End addr top
 
 \ ============================================================================
-\ find_incore_name — Validate BASIC program and find "> filename" in first line
-\ Sets basic_str_lo/hi to point at the filename
+\ find_incore_name — Locate the embedded filename in the BASIC program.
+\ Validates that a program exists (byte at PAGE+1 != &FF), checks the first
+\ line is well-formed (terminated by &0D), then scans for a REM token (&F4)
+\ followed by '>'. On success, sets the OSFILE filename pointer and
+\ basic_str_lo/hi to the character after '>'. Raises an error if no program
+\ is loaded, the first line is corrupt, or no "> name" marker is found.
 \ ============================================================================
 .find_incore_name
     LDA basic_page_hi           \ PAGE high byte
@@ -137,7 +153,9 @@
     EQUS "'", 13, 0
 
 \ ============================================================================
-\ *L — Select MODE 128 and set up key definitions
+\ cmd_l — *L command: configure the editing environment by programming
+\ function key 0 with a sequence of commands (shadow MODE 128, colours,
+\ etc.) via *KEY, then calls OSBYTE &8A to select the language ROM.
 \ ============================================================================
 .cmd_l
     LDX #LO(cmd_l_oscli)

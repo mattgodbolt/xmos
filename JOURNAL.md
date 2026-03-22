@@ -196,7 +196,7 @@ All code blocks are now disassembled into proper 6502 instructions:
 ### Remaining work
 - [ ] **Scoping review**: existing `{ }` usage is inconsistent — many scopes wrap a single loop label mid-routine instead of wrapping the whole routine. Should mirror C-like scoping: one `{ }` per function, not per branch target. See util.asm `print_inline` and `copy_inline_to_stack` for examples of the problem.
 - [x] **Tail data annotation**: all sections labelled — build artifacts, ghost code, key/alias buffers, stored key defs, build scripts. Remaining EQUB is dead code with corrupt boundaries (ghost help handler) and structured data tables (OSFILE template, key_codes, NOOP macro).
-- [ ] **Comment pass**: add high-level comments explaining each routine's purpose
+- [x] **Comment pass**: all routines documented across all 10 code files
 - [ ] **ZP workarounds**: 23 &00xx absolute addressing EQUB instructions (fix in improvements phase)
 - [ ] **Second macro pass**: find more repeated patterns after full annotation
 

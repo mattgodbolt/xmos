@@ -1,4 +1,14 @@
 \ dis.asm — Disassembler: *DIS command, addressing mode tables
+\
+\ The disassembler works by looking up each opcode in a 256×4-byte table
+\ (stored elsewhere in the ROM). Each entry contains a 3-char mnemonic and
+\ an addressing mode index. The mode index selects a printf-style format
+\ string from the table below, where placeholder letters are substituted
+\ with actual operand bytes:
+\   &l  = low byte operand (1-byte)
+\   &h  = high byte operand (2nd byte of a 16-bit operand)
+\   &b  = branch offset, resolved to an absolute target address
+\ All other characters in the format string are printed literally.
 
 .dis_addr_modes
     EQUB &81                    \ Mode 0: ??? (invalid opcode)
@@ -39,6 +49,8 @@
 \ --- Operand byte counts per addressing mode ---
 .dis_operand_sizes
     EQUB 1, 2, 3, 2, 1, 1, 2, 2, 2, 2, 3, 3, 2, 3, 3, 2
+\ Entry point for *DIS [address]. If no address given, continues from
+\ the last position (saved across invocations in mem_vdu_1/2).
 .cmd_dis
     JSR parse_cmdline
     CMP #&0d
@@ -50,6 +62,9 @@
     STA zp_src_lo
     LDA mem_vdu_2
     STA zp_src_hi
+\ Print one disassembled line: address, mnemonic, operand, raw bytes, ASCII.
+\ The opcode is multiplied by 4 to index into a 1024-byte lookup table that
+\ holds {3-char mnemonic, addressing mode index} for each of the 256 opcodes.
 .dis_print_header
     LDA #&82
     JSR oswrch
@@ -83,6 +98,8 @@
     BNE dis_print_opcode
     LDA #&20
     JSR oswrch
+\ Fetch the addressing mode index from the 4th byte of the opcode table entry,
+\ then look up the corresponding format string pointer from dis_addr_mode_ptrs.
 .dis_get_mode
     LDY #&03
     LDA (zp_tmp_lo),Y
@@ -94,24 +111,28 @@
     LDA dis_addr_mode_ptrs + 1,X
     STA zp_tmp_hi
     LDY #&ff
+\ Walk the format string character by character. Literal chars are printed
+\ directly; 'h' (high byte), 'l' (low byte), and 'b' (branch target)
+\ are intercepted and replaced with the actual operand values.
 .dis_format_loop
     INY
     LDA (zp_tmp_lo),Y
     BEQ dis_print_addr
-    CMP #&68
+    CMP #&68                    \ 'h' — print high byte of operand
     BNE dis_check_lo
     JMP dis_check_up
 .dis_check_lo
-    CMP #&6c
+    CMP #&6c                    \ 'l' — print low byte of operand
     BNE dis_check_branch
     JMP dis_check_down
 .dis_check_branch
-    CMP #&62
+    CMP #&62                    \ 'b' — resolve and print branch target
     BNE dis_print_char
     JMP dis_check_right
 .dis_print_char
     JSR oswrch
     BRA dis_format_loop
+\ Tab to a fixed column, then print the raw instruction bytes in hex.
 .dis_print_addr
     LDA #&86
     JSR oswrch
@@ -133,6 +154,8 @@
     INY
     DEX
     BNE dis_print_byte
+\ Tab further right, then print the raw bytes as printable ASCII
+\ (non-printable chars shown as '.')
 .dis_print_ascii
     LDA #&85
     JSR oswrch
@@ -164,10 +187,13 @@
     STA zp_src_lo
     BCC dis_wait_key
     INC zp_src_hi
+\ Wait for a keypress: any key continues to the next instruction,
+\ Escape saves the current position and exits.
 .dis_wait_key
     JSR osrdch
     BCS dis_save_state
     JMP dis_print_header
+\ Save current address so *DIS with no argument can resume here.
 .dis_save_state
     LDA zp_src_lo
     STA mem_vdu_1
@@ -176,6 +202,7 @@
     LDA #&00
     STA &ff
     RTS
+\ Print the high byte of a two-byte operand (byte at PC+2).
 .dis_check_up
     PHY
     LDY #&02
@@ -183,6 +210,7 @@
     JSR dis_print_hex_word
     PLY
     JMP dis_format_loop
+\ Print the low byte of the operand (byte at PC+1).
 .dis_check_down
     PHY
     LDY #&01
@@ -190,6 +218,9 @@
     JSR dis_print_hex_word
     PLY
     JMP dis_format_loop
+\ Resolve a relative branch offset to an absolute target address.
+\ Computes target = (PC + 2) + signed_offset, handling both forward
+\ (positive) and backward (negative) branches.
 .dis_check_right
     PHY
     LDY #&01
@@ -213,6 +244,8 @@
     JSR dis_print_hex_word
     PLY
     JMP dis_format_loop
+\ Backward branch: offset is negative, so add &FF to the high byte
+\ (sign-extend the 8-bit negative offset to 16 bits).
 .dis_advance
     CLC
     ADC &a8
@@ -225,6 +258,8 @@
     JSR dis_print_hex_word
     PLY
     JMP dis_format_loop
+\ Print 5 backspaces then overwrite with the current BASIC line number
+\ (read from the line header). Used by the line-spacing progress display.
 .print_backspace
     LDA #&08
     FOR n, 1, 5 : JSR oswrch : NEXT

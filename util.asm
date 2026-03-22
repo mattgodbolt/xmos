@@ -1,5 +1,9 @@
 \ util.asm — Utility routines: print_inline, copy_inline_to_stack, compare_string
 
+\ ============================================================================
+\ print_inline — Print a null-terminated string embedded immediately after
+\ the JSR. Returns to the instruction following the null terminator.
+\ ============================================================================
 .print_inline
     PLA                         \ Pull return address (points to string - 1)
     STA zp_ptr_lo
@@ -25,8 +29,9 @@
     RTS                         \ "Return" to instruction after the string
 
 \ ============================================================================
-\ copy_inline_to_stack — Copy inline string to stack page and execute
-\ Used for self-modifying command strings that run from the stack.
+\ copy_inline_to_stack — Copy inline code/data after the JSR to the stack
+\ page (&0100) and jump to it. Used to generate BRK-based error messages,
+\ since BRK requires the error block to sit at the current PC.
 \ ============================================================================
 .copy_inline_to_stack
     PLA                         \ Pull return address (points to code - 1)
@@ -45,11 +50,11 @@
 }
     JMP &0100                   \ Execute the copied code
 \ ============================================================================
-\ compare_string — Compare command line against string at (&A8)
-\ Entry: (&F2),Y = command line position, (&A8) = string to compare
-\ Exit:  C=1 if match, C=0 if no match. Y advanced past the match.
-\ Supports abbreviated commands (e.g. "D." matches "DIS")
-\ Converts lowercase to uppercase for case-insensitive comparison
+\ compare_string — Case-insensitive match of the command line against a
+\ null-terminated keyword. Supports BBC-style dot abbreviation (e.g. "D."
+\ matches "DUMP"). Entry: (&F2),Y points into the command line; (&A8)
+\ points to the keyword. Exit: C=1 and Y past the match on success, C=0
+\ on failure. compare_string_y holds Y on the most recent successful match.
 \ ============================================================================
 .compare_string
     LDX #&00

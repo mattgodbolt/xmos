@@ -27,6 +27,11 @@ GUARD &C000
 
 \ ============================================================================
 \ Service entry — dispatches on service call number in A
+\ Handles four service calls:
+\   svc_command      — intercept unrecognised * commands
+\   svc_help         — respond to *HELP requests
+\   svc_post_reset   — reinitialise state after a break/reset
+\   svc_claim_static — reserve one byte of static workspace
 \ ============================================================================
 .service_entry
     CMP #svc_command
@@ -43,7 +48,8 @@ GUARD &C000
     BEQ handle_claim_static
     RTS
 
-\ Handle service call &22: claim static workspace for extended input
+\ Claim one byte of static workspace (Y is decremented to allocate)
+\ and record its address in the ROM workspace table for later use.
 .handle_claim_static
     DEY
     TYA
@@ -52,6 +58,10 @@ GUARD &C000
     RTS
 \ ============================================================================
 \ *HELP handler (service call &09)
+\ Bare *HELP — prints the ROM title and sub-topic keywords (XMOS, FEATURES).
+\ *HELP XMOS — lists every command with its one-line help text.
+\ *HELP FEATURES — prints the extended feature documentation block.
+\ *HELP <cmd> — prints the help entry for a single command if found.
 \ ============================================================================
 {
 .*handle_help
@@ -228,6 +238,10 @@ GUARD &C000
 
 \ ============================================================================
 \ * command handler (service call &04) — dispatch unrecognised commands
+\ Walks the command table comparing each entry's name against the input.
+\ On a match, copies the handler address into a self-modifying JMP instruction
+\ and calls it via JSR so the handler can simply RTS to return here.
+\ If no built-in command matches, falls through to the alias checker.
 }
 
 \ ============================================================================
@@ -289,13 +303,15 @@ GUARD &C000
         RTS
 
 }
+\ Trampoline: the JMP target is patched at runtime by handle_command.
+\ The default target is arbitrary — it is always overwritten before use.
 .cmd_dispatch
 .cmd_dispatch_addr
     JMP cmd_keyoff              \ Self-modified: handler address written here
 \ ============================================================================
 \ Command table
-\ Format: name (null-terminated), handler address (2 bytes LE), help text (null-terminated)
-\ Terminated by &FF
+\ Each entry: null-terminated name, 2-byte handler address (little-endian),
+\ null-terminated help text. The table ends with a single &FF byte.
 \ ============================================================================
 .command_table
     EQUS "ALIAS", 0 : EQUW cmd_alias : EQUS "<alias name> <alias>", 0
@@ -321,7 +337,8 @@ GUARD &C000
 .xmos_keyword
     EQUS "XMOS", 0
 \ ============================================================================
-\ *XON — Enable extended input
+\ *XON — Enable extended input (line-editing enhancements).
+\ Sets the XON flag and switches cursor keys to editing mode via OSBYTE 4.
 \ ============================================================================
 .cmd_xon
     LDA #&FF
@@ -332,7 +349,8 @@ GUARD &C000
     JMP osbyte
 
 \ ============================================================================
-\ *XOFF — Disable extended input
+\ *XOFF — Disable extended input, restoring normal cursor key behaviour.
+\ Clears the XON flag and resets cursor keys to normal mode via OSBYTE 4.
 \ ============================================================================
 .cmd_xoff
     LDA #&00
@@ -342,21 +360,23 @@ GUARD &C000
     LDY #&00
     JMP osbyte
 
-\ --- Small utility: ring the bell ---
+\ Ring the bell (used to signal errors or invalid key presses).
 .beep
     LDA #&07                    \ BEL character
     JMP oswrch
 \ --- Workspace variables (in sideways RAM, overwritten at runtime) ---
+\ These live in the ROM image but are mutated in sideways RAM at runtime.
+\ Initial values here are the defaults set after the ROM is first loaded.
 .xon_flag
-    EQUB &FF                    \ non-zero = XON active
+    EQUB &FF                    \ non-zero = extended input (XON) is active
 .xi_cursor_pos
-    EQUB &1A                    \ current cursor position in input line
+    EQUB &1A                    \ cursor position within the current input line
 .xi_line_len
-    EQUB &1A                    \ current line length
+    EQUB &1A                    \ total length of the current input line
 .xi_char
-    EQUB &0D                    \ last character read / temp
+    EQUB &0D                    \ last character read during input processing
 .xi_temp
-    EQUB &08                    \ temp for number parsing
+    EQUB &08                    \ scratch byte used during number parsing
 
 INCLUDE "input.asm"
 INCLUDE "util.asm"

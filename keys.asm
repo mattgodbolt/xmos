@@ -1,5 +1,12 @@
 \ keys.asm — Key system: remap handler, KEYON/OFF, KSTATUS, DEFKEYS
 
+\ ============================================================================
+\ KEYV intercept handler — dispatches keyboard vector calls
+\ Routes to the scan handler (A=&81), keyboard handler (A=&79),
+\ or falls through to the original KEYV for all other calls.
+\ This entire block is copied to RAM at &D100 by KEYON so it can
+\ self-modify the CPX/LDX pairs with the user's chosen key codes.
+\ ============================================================================
 .key_remap_handler
     PHP
     CMP #&81
@@ -9,8 +16,8 @@
     PLP
 .key_remap_jmp1
     JMP &FFFF                   \ Patched: original KEYV address
-\ Scan handler: remap key codes for OSBYTE &81
-\ Each CPX/LDX pair is patched by KEYON with the configured key codes
+\ Scan handler (A=&81): remaps negative INKEY key-scan values.
+\ Each CPX/LDX pair is patched by KEYON with the configured key codes.
 .key_remap_scan
     CPY #&ff
     BNE key_remap_pass2
@@ -48,7 +55,8 @@
 .key_remap_jmp2
     JMP &FFFF                   \ Patched: original KEYV address
 
-\ Keyboard handler: remap key codes for OSBYTE &79
+\ Keyboard handler (A=&79): remaps ASCII key codes for unshifted keys.
+\ Keys above &80 are unshifted; below &80 falls through to the shifted handler.
 .key_remap_keyboard
     CPX #&80
     BCC key_remap_shifted
@@ -86,7 +94,9 @@
 .key_remap_jmp3
     JMP &FFFF                   \ Patched: original KEYV address
 
-\ Shifted handler: call original KEYV then remap results
+\ Shifted key handler: calls the original KEYV first, then remaps the
+\ result. Also writes to &EC (the OS copy of the last key pressed) so
+\ SHIFT+key combinations produce the correct unshifted character.
 .key_remap_shifted
     PLP
 .key_remap_jsr
@@ -140,17 +150,22 @@
     PLP
     RTS
 
+\ --- State variables ---
 .saved_keyv_lo
     EQUB &00
 .saved_keyv_hi
     EQUB &00
-.keyon_active
+.keyon_active                   \ Non-zero when key remapping is active
     EQUB &00
-.key_codes                      \ 5-byte table of key scan codes to remap
+.key_codes                      \ 5 internal key numbers: left, right, up, down, fire
     EQUB &41, &02, &49, &69, &4A
 .keyon_already_msg
     STROUT msg_keyon_already
     JMP keyon_rts
+\ Install the key remap handler: save the current KEYV, compute remapped
+\ key codes from the key_codes table (negated for scan, +&7F for keyboard,
+\ -1 for shifted), patch them into the handler, copy the handler to RAM,
+\ and point KEYV at the copy.
 .keyon_setup
     LDA keyon_active
     BNE keyon_already_msg
@@ -208,6 +223,7 @@
     LDA #&d1
     STA keyv_hi
     RTS
+\ *KEYON — Activate key remapping with the current key_codes definitions
 .cmd_keyon
     JSR keyon_setup
     STROUT msg_keys_redefined
@@ -255,6 +271,10 @@
     EQUB &8E : EQUS "DOWN     "
     EQUB &8F : EQUS "UP       "
     EQUB &E0 : EQUS "BREAK!!! "
+\ Look up a key code in A and print its 9-character name.
+\ Handles special cases for TAB (&00) and CAPS LOCK (&01) which use
+\ internal key numbers; other codes are translated via the OS key table
+\ before searching the name table. Falls through to OSWRCH for unknown keys.
 .keyname_lookup
     CMP #&00
     BNE keyname_check_caps
@@ -308,6 +328,8 @@
 \ ============================================================================
 .kstatus_not_active
     JMP keyoff_print_msg        \ Print "Redefined keys off" message
+\ Print the current remapping state: if active, show each direction label
+\ followed by the name of the key assigned to it from key_codes.
 .cmd_kstatus
     LDA keyon_active
     BEQ kstatus_not_active
@@ -343,6 +365,13 @@
     JMP keyon_rts
 .msg_key_redefiner
     EQUS "KEY REDEFINER", 13, "-------------", 13, 0
+\ ============================================================================
+\ *DEFKEYS — Interactive key redefiner
+\ Disables any active remapping first, then prompts for each of the 5
+\ joystick directions (left/right/up/down/fire) by printing the direction
+\ label and waiting for the user to press a key. Stores the chosen internal
+\ key numbers into key_codes, then calls keyon_setup to activate them.
+\ ============================================================================
 .cmd_defkeys
     LDA keyon_active
     BEQ defkeys_start
@@ -385,6 +414,9 @@
     LDA #&0f
     JSR osbyte
     JMP keyon_setup
+\ Wait for a keypress using negative INKEY scanning: scans key numbers
+\ &81..&FF until one returns a match, converts it to an internal key number,
+\ stores it in key_codes, prints the key name, then waits for key release.
 .defkeys_wait_key
     PHX
 .defkeys_read_key
@@ -426,6 +458,8 @@
     PLX
     PLX
     RTS
+\ Skip spaces and dots in the command line, leaving Y pointing at the
+\ next non-whitespace character.
 .parse_cmdline
     LDY compare_string_y
     DEY
