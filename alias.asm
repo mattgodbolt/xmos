@@ -9,11 +9,11 @@
     JMP alias_syntax_error
 .alias_table_start
     LDA #&65
-    STA &a8
+    STA zp_ptr_lo
     LDA #&b1
-    STA &a9
+    STA zp_ptr_hi
 .alias_check_end
-    EQUB &B2, &A8  \ LDA (0xa8)
+    LDA (zp_ptr_lo)
     CMP #&ff
     BEQ alias_exec_setup
     LDY compare_string_y
@@ -27,24 +27,24 @@
     LDY #&ff
 .alias_skip_name
     INY
-    LDA (&a8),Y
+    LDA (zp_ptr_lo),Y
     BNE alias_skip_name
     INY
-    LDA (&a8),Y
+    LDA (zp_ptr_lo),Y
     CLC
-    ADC &a8
+    ADC zp_ptr_lo
     STA &aa
-    LDA &a9
+    LDA zp_ptr_hi
     ADC #&00
     STA &ab
     LDY #&00
 .alias_copy_loop
     LDA (&aa),Y
-    STA (&a8),Y
+    STA (zp_ptr_lo),Y
     CMP #&ff
     BNE alias_copy_next
-    STA (&a8),Y
-    EQUB &B2, &A8  \ LDA (0xa8)
+    STA (zp_ptr_lo),Y
+    LDA (zp_ptr_lo)
     CMP #&ff
     BNE alias_find_end
     BEQ alias_exec_setup
@@ -60,16 +60,16 @@
     LDY #&ff
 .alias_find_loop
     INY
-    LDA (&a8),Y
+    LDA (zp_ptr_lo),Y
     BNE alias_find_loop
     INY
-    LDA (&a8),Y
+    LDA (zp_ptr_lo),Y
     CLC
-    ADC &a8
-    STA &a8
-    LDA &a9
+    ADC zp_ptr_lo
+    STA zp_ptr_lo
+    LDA zp_ptr_hi
     ADC #&00
-    STA &a9
+    STA zp_ptr_hi
     JMP alias_check_end
 .alias_exec_setup
     LDA compare_string_y
@@ -78,16 +78,16 @@
     DEY
 .alias_exec_copy
     INY
-    LDA (&f2),Y
+    LDA (cmd_line_lo),Y
     CMP #&0d
     BNE alias_exec_copy
     TYA
     SEC
     SBC compare_string_y
     CLC
-    ADC &a8
+    ADC zp_ptr_lo
     BCC alias_exec_run
-    LDA &a9
+    LDA zp_ptr_hi
     CMP #&be
     BCC alias_exec_run
     JSR copy_inline_to_stack    \ BRK error: "No room for alias"
@@ -102,8 +102,8 @@
     STA &f3
     LDY #&00
 .alias_skip_ws
-    LDA (&f2),Y
-    CMP #&20
+    LDA (cmd_line_lo),Y
+    CMP #' '
     BEQ alias_terminate
     CMP #&0d
     BNE alias_upper_case
@@ -115,12 +115,12 @@
     BCS alias_store_char
     AND #&df
 .alias_store_char
-    STA (&a8),Y
+    STA (zp_ptr_lo),Y
     INY
     BNE alias_skip_ws
 .alias_terminate
     LDA #&00
-    STA (&a8),Y
+    STA (zp_ptr_lo),Y
     INY
     SEC
     LDA &f2
@@ -132,34 +132,34 @@
     STY compare_string_y
     INY
 .alias_parse_arg
-    LDA (&f2),Y
+    LDA (cmd_line_lo),Y
     CMP #&0d
     BEQ alias_store_arg
-    STA (&a8),Y
+    STA (zp_ptr_lo),Y
     INY
     BNE alias_parse_arg
 .alias_store_arg
-    STA (&a8),Y
+    STA (zp_ptr_lo),Y
     INY
     LDA #&ff
-    STA (&a8),Y
+    STA (zp_ptr_lo),Y
     TYA
     LDY compare_string_y
-    STA (&a8),Y
+    STA (zp_ptr_lo),Y
     RTS
 .cmd_aliases
     LDA #&65
-    STA &a8
+    STA zp_ptr_lo
     LDA #&b1
-    STA &a9
+    STA zp_ptr_hi
 .alias_list_check
-    EQUB &B2, &A8  \ LDA (0xa8)
+    LDA (zp_ptr_lo)
     CMP #&ff
     BEQ alias_list_done
     LDY #&ff
 .alias_list_name
     INY
-    LDA (&a8),Y
+    LDA (zp_ptr_lo),Y
     JSR osasci
     CMP #&00
     BNE alias_list_name
@@ -172,24 +172,24 @@
     JSR osasci
 .alias_list_value
     INY
-    LDA (&a8),Y
+    LDA (zp_ptr_lo),Y
     JSR osasci
     CMP #&0d
     BNE alias_list_value
     INY
     TYA
     CLC
-    ADC &a8
-    STA &a8
-    LDA &a9
+    ADC zp_ptr_lo
+    STA zp_ptr_lo
+    LDA zp_ptr_hi
     ADC #&00
-    STA &a9
+    STA zp_ptr_hi
     JMP alias_list_check
 .alias_list_done
     RTS
 .alias_clear_entry
     LDA #&ff
-    EQUB &92, &A8  \ STA (0xa8)
+    STA (zp_ptr_lo)
     LDA alias_semicolon_flag
     BEQ alias_syntax_error
     RTS
@@ -198,11 +198,11 @@
     EQUS &48, "Syntax : ALIAS <alias name> <alias>", 0
 .check_alias
     LDA #&65
-    STA &a8
+    STA zp_ptr_lo
     LDA #&b1
-    STA &a9
+    STA zp_ptr_hi
 .alias_walk_check
-    EQUB &B2, &A8  \ LDA (0xa8)
+    LDA (zp_ptr_lo)
     CMP #&ff
     BEQ alias_cmd_done
     PHY
@@ -211,17 +211,17 @@
     LDY #&ff
 .alias_walk_name
     INY
-    LDA (&a8),Y
+    LDA (zp_ptr_lo),Y
     CMP #&0d
     BNE alias_walk_name
     INY
     CLC
     TYA
-    ADC &a8
-    STA &a8
-    LDA &a9
+    ADC zp_ptr_lo
+    STA zp_ptr_lo
+    LDA zp_ptr_hi
     ADC #&00
-    STA &a9
+    STA zp_ptr_hi
     PLY
     JMP alias_walk_check
 .alias_cmd_done
@@ -233,7 +233,7 @@
     LDY #&ff
 .alias_exec_name
     INY
-    LDA (&a8),Y
+    LDA (zp_ptr_lo),Y
     CMP #&00
     BNE alias_exec_name
     INY
@@ -242,7 +242,7 @@
     LDX #&00
 .alias_exec_expand
     LDY alias_file_handle
-    LDA (&a8),Y
+    LDA (zp_ptr_lo),Y
     INY
     STY alias_file_handle
     STA store_buf_3,X
@@ -255,7 +255,7 @@
     BEQ alias_copy_literal
     JMP alias_exec_expand
 .alias_copy_literal
-    LDA (&a8),Y
+    LDA (zp_ptr_lo),Y
     INY
     STY alias_file_handle
     CMP #&25
@@ -275,10 +275,10 @@
     DEY
 .alias_find_param
     INY
-    LDA (&f2),Y
+    LDA (cmd_line_lo),Y
     CMP #&0d
     BEQ alias_skip_rest
-    CMP #&20
+    CMP #' '
     BNE alias_find_param
     DEX
     BNE alias_find_param
@@ -286,8 +286,8 @@
 .alias_copy_param
     PLX
 .alias_copy_param_loop
-    LDA (&f2),Y
-    CMP #&20
+    LDA (cmd_line_lo),Y
+    CMP #' '
     BEQ alias_next_expand
     CMP #&0d
     BEQ alias_next_expand
@@ -333,21 +333,21 @@
     BEQ alild_not_found
     STA alias_file_handle
     LDA #&65
-    STA &a8
+    STA zp_ptr_lo
     LDA #&b1
-    STA &a9
+    STA zp_ptr_hi
 .alild_read_loop
     LDY alias_file_handle
     JSR osbget
     BCS alild_close
-    EQUB &92, &A8  \ STA (0xa8)
+    STA (zp_ptr_lo)
     CLC
-    LDA &a8
+    LDA zp_ptr_lo
     ADC #&01
-    STA &a8
-    LDA &a9
+    STA zp_ptr_lo
+    LDA zp_ptr_hi
     ADC #&00
-    STA &a9
+    STA zp_ptr_hi
     JMP alild_read_loop
 .alild_close
     LDA #&00
@@ -371,22 +371,22 @@
     BEQ alild_cant_open
     STA alias_file_handle
     LDA #&65
-    STA &a8
+    STA zp_ptr_lo
     LDA #&b1
-    STA &a9
+    STA zp_ptr_hi
 .alild_check_end
     LDY alias_file_handle
-    EQUB &B2, &A8  \ LDA (0xa8)
+    LDA (zp_ptr_lo)
     JSR osbput
     CMP #&ff
     BEQ alild_open_error
     CLC
-    LDA &a8
+    LDA zp_ptr_lo
     ADC #&01
-    STA &a8
-    LDA &a9
+    STA zp_ptr_lo
+    LDA zp_ptr_hi
     ADC #&00
-    STA &a9
+    STA zp_ptr_hi
     JMP alild_check_end
 .alild_open_error
     LDA #&00
@@ -470,10 +470,10 @@
     STA &ae
     STA &af
 .parse_hex_loop
-    LDA (&f2),Y
+    LDA (cmd_line_lo),Y
     CMP #&0d
     BEQ mem_rts
-    CMP #&20
+    CMP #' '
     BEQ mem_rts
     JSR parse_hex_digit
     BCC parse_hex_shift
