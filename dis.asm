@@ -62,14 +62,10 @@
     JSR oswrch
     LDY #&00
     STY &ad
-    LDA (&ae),Y
-    ASL A
-    ROL &ad
-    ASL A
-    ROL &ad
-    CLC
-    ADC #&56
-    STA &ac
+    LDA (&ae),Y                 \ opcode × 4 to get table offset
+    ASL A : ROL &ad
+    ASL A : ROL &ad
+    CLC : ADC #&56 : STA &ac   \ add table base low byte
     LDA &ad
     ADC #&a1
     STA &ad
@@ -231,11 +227,7 @@
     JMP dis_format_loop
 .print_backspace
     LDA #&08
-    JSR oswrch
-    JSR oswrch
-    JSR oswrch
-    JSR oswrch
-    JSR oswrch
+    FOR n, 1, 5 : JSR oswrch : NEXT
     LDY #&01
     LDA (&a8),Y
     BMI bau_space_rts
@@ -246,7 +238,8 @@
     PHX
     PHY
     JSR print_decimal
-    PLY : PLX
+    PLY
+    PLX
 .bau_space_rts
     RTS
 .msg_now_splitting

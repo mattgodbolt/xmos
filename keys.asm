@@ -313,11 +313,7 @@
 .keyname_scan_loop
     CMP (&a8),Y
     BEQ keyname_found
-    INY : INY
-    INY : INY
-    INY : INY
-    INY : INY
-    INY : INY
+    FOR n, 1, 10 : INY : NEXT  \ skip 10-byte entry (keycode + 9-char name)
     CPY #&96
     BCC keyname_scan_loop
     JMP oswrch
@@ -389,8 +385,7 @@
     BEQ defkeys_start
     LDA #&00
     STA keyon_active
-    LDA saved_keyv_lo
-    STA keyv_lo
+    LDA saved_keyv_lo : STA keyv_lo
     LDA saved_keyv_hi
     STA keyv_hi
 .defkeys_start

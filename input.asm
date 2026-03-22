@@ -1,8 +1,7 @@
 \ input.asm — Extended input system: handle_reset, XON handler, keyboard intercept
 
 .handle_reset
-    PHA : PHX
-    PHY
+    PHA : PHX : PHY
     LDA rom_workspace_table,X   \ Get our ROM's workspace page
     STA extended_input_code + &0F \ Patch workspace high byte into handler
     STX extended_input_code + &25 \ Patch ROM slot number into handler
@@ -37,8 +36,7 @@
     CPY #&D0                   \ Copy &D0 (208) bytes
     BNE copy_loop
 }
-    PLY : PLX
-    PLA
+    PLY : PLX : PLA
     RTS
 \ ============================================================================
 \ Extended input handler code — copied to workspace RAM on reset
@@ -278,7 +276,8 @@
     LDA (&a8),Y
     DEY
     STA (&a8),Y
-    INY : INY
+    INY
+    INY
     DEX
     BNE shift_loop
 .do_delete
@@ -311,27 +310,26 @@
     JMP xi_read_loop
 }
 .xi_handle_cr
-{
     LDA xon_flag
-    BEQ check_mode
+    BEQ xi_cr_check_mode
     LDA #&04
     LDX #&01
     LDY #&00
     JSR osbyte
-.check_mode
+.xi_cr_check_mode
     LDA os_mode
     CMP #&0c
-    BNE normal
+    BNE xi_cr_normal
     LDA xi_cursor_pos
     CMP #&04
-    BNE normal
+    BNE xi_cr_normal
     LDY #&03
-.check_save
+.xi_cr_check_save
     LDA (&a8),Y
     CMP save_keyword,Y
-    BNE normal
+    BNE xi_cr_normal
     DEY
-    BPL check_save
+    BPL xi_cr_check_save
     JSR osnewl
     LDA os_mode
     PHA
@@ -343,18 +341,18 @@
     STA os_mode
     CLC
     RTS
-.normal
+.xi_cr_normal
     SEC
     LDA xi_cursor_pos
     SBC xi_line_len
-    BEQ finish
+    BEQ xi_cr_finish
     TAX
-.fwd_loop
+.xi_cr_fwd_loop
     LDA #&09
     JSR oswrch
     DEX
-    BNE fwd_loop
-.finish
+    BNE xi_cr_fwd_loop
+.xi_cr_finish
     JSR xi_support_entry
     LDY xi_cursor_pos
     LDA #&0d
@@ -363,7 +361,6 @@
     CLC
     LDX #&00
     RTS
-}
 .save_keyword
     EQUS "SAVE"
 .xi_cr_restore_keys
@@ -558,7 +555,8 @@
     LDA (&a8),Y
     DEY
     STA (&a8),Y
-    INY : INY
+    INY
+    INY
     DEX
     BNE xi_tab_shift_loop
 .xi_tab_update_pos
@@ -759,7 +757,8 @@
 .xi_htab_kw_done
     JMP xi_htab_next_char
 .xi_htab_kw_advance
-    INY : INY
+    INY
+    INY
     TYA
     CLC
     ADC &00AE

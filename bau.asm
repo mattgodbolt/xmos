@@ -224,8 +224,7 @@
 .space_check_token
     CMP #&8d
     BNE space_check_else
-    INY : INY
-    INY
+    INY : INY : INY             \ skip 3-byte token
     BNE space_scan_loop
 .space_check_else
     CMP #&a7
@@ -372,7 +371,8 @@
     LDA #&20
     INY
     STA (&a8),Y
-    INY : INY
+    INY
+    INY
     JMP space_scan_loop
 .space_shift_up
     LDA &a8

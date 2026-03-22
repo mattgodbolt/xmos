@@ -215,7 +215,8 @@
     CMP #&0d
     BNE alias_walk_name
     INY
-    CLC : TYA
+    CLC
+    TYA
     ADC &a8
     STA &a8
     LDA &a9
@@ -224,8 +225,7 @@
     PLY
     JMP alias_walk_check
 .alias_cmd_done
-    PLY : PLX
-    PLA
+    PLY : PLX : PLA
     RTS
 .alias_exec_entry
     PLY
@@ -236,7 +236,8 @@
     LDA (&a8),Y
     CMP #&00
     BNE alias_exec_name
-    INY : INY
+    INY
+    INY
     STY alias_file_handle
     LDX #&00
 .alias_exec_expand
@@ -308,8 +309,7 @@
     LDX #&00
     LDY #&89
     JSR osbyte
-    PLY : PLX
-    PLA
+    PLY : PLX : PLA
     LDA #&00
     RTS
 .alisv_write_header
@@ -320,7 +320,8 @@
     JMP alias_exec_expand
 .cmd_alild
     JSR parse_cmdline
-    CLC : TYA
+    CLC
+    TYA
     ADC &f2
     TAX
     LDA &f3
@@ -357,7 +358,8 @@
     EQUS &D6, "Alias file not found", 0
 .cmd_alisv
     JSR parse_cmdline
-    CLC : TYA
+    CLC
+    TYA
     ADC &f2
     TAX
     LDA &f3

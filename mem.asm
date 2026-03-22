@@ -33,12 +33,10 @@
     STA mode7_screen,X
     DEX
     BPL mem_copy_header
-    LDA os_wrch_dest
-    STA mem_mode
+    LDA os_wrch_dest : STA mem_mode
     LDA #&01
     STA os_wrch_dest
-    LDA os_disp_addr
-    STA mem_page_size
+    LDA os_disp_addr : STA mem_page_size
     LDA #&02
     STA os_disp_addr
     LDA #&50
@@ -104,10 +102,7 @@
     STA alias_file_handle
     LDY mem_column
     LDA (&a8),Y
-    ASL A
-    ASL A
-    ASL A
-    ASL A
+    ASL A : ASL A : ASL A : ASL A  \ shift to high nibble
     ORA alias_file_handle
     STA (&a8),Y
     JMP mem_adjust_ptr
@@ -122,10 +117,8 @@
     JSR cmd_dispatch
     JMP mem_adjust_ptr
 .mem_set_mode
-    LDA mem_mode
-    STA os_wrch_dest
-    LDA mem_page_size
-    STA os_disp_addr
+    LDA mem_mode : STA os_wrch_dest
+    LDA mem_page_size : STA os_disp_addr
     LDA #&0a
     STA crtc_addr
     LDA #&72
@@ -291,8 +284,7 @@
     TYA
 .dis_bracket_loop
     STA mode7_screen + &1E6,Y
-    INY : INY
-    INY
+    INY : INY : INY
     CPY #&1b
     BNE dis_bracket_loop
     LDA mem_column
@@ -308,12 +300,8 @@
     EQUB &00
 .dis_print_hex_byte
     STA dis_print_lo_nibble + 1
-    LSR A
-    LSR A
-    LSR A
-    LSR A
-    TAX
-    LDA hex_digits,X
+    LSR A : LSR A : LSR A : LSR A  \ high nibble
+    TAX : LDA hex_digits,X
     EQUB &92, &AC  \ STA (0xac)
     INC &ac
     BNE dis_print_lo_nibble
@@ -331,12 +319,8 @@
     RTS
 .dis_print_hex_word
     STA dis_hex_word_lda + 1
-    LSR A
-    LSR A
-    LSR A
-    LSR A
-    TAX
-    LDA hex_digits,X
+    LSR A : LSR A : LSR A : LSR A  \ high nibble
+    TAX : LDA hex_digits,X
     JSR oswrch
 .dis_hex_word_lda
     LDA #&62
