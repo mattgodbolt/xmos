@@ -296,24 +296,35 @@ silently dropping output. The test helper uses a simpler raw WRCHV
 hook that just collects printable characters. A TestMachine
 improvement to support reusable capture would be cleaner.
 
+**CAPS LOCK and case handling**: TestMachine's `_charToKey()` always
+sends uppercase keycodes with `shift: false`. With CAPS LOCK on (boot
+default), every letter is uppercase and lowercase is impossible. This
+caused `total` to become `TOTAL` which BBC BASIC tokenises as `TO`+
+`TAL`. Fix: toggle CAPS LOCK off after boot and use a `typeText()`
+wrapper that sets `shift: true` for uppercase letters.
+
 ### Test results
-25 tests across 5 files, all passing in ~17s:
+30 tests across 7 files, all passing:
 - `help.test.js` — full command listing, general help, features text, dot-abbreviation
 - `xon-xoff.test.js` — TAB line recall with XON, XOFF disabling, KEYON/KEYOFF/KSTATUS
 - `alias.test.js` — define/list/clear, multiple aliases, expansion typing
+- `save.test.js` — *S save with incore filename, leading spaces
 - `dis.test.js` — disassemble known addresses, multi-line scroll
 - `lvar.test.js` — empty list, heap vs integer variables
+- `bau.test.js` — *BAU line splitting, *SPACE keyword spacing
+
+### CI and pre-commit
+- `npm test` runs as a pre-commit hook alongside beebasm-fmt and check.sh
+- GitHub Actions CI runs both `check.sh` (ROM verification) and `npm test`
 
 ### jsbeeb TestMachine improvements to propose
+- **`type()` cannot produce lowercase**: workaround is CAPS LOCK off
+  + `typeText()` wrapper. Proper fix: `type()` should handle case.
 - **`keyDown()`/`keyUp()` methods**: currently have to reach through
-  `processor.sysvia.keyDown(keyCode)` with raw key codes. TestMachine
-  should expose these directly, ideally accepting key names.
+  `processor.sysvia.keyDown(keyCode)` with raw key codes.
 - **Reusable capture API**: `captureText()` installs a new VDU state
-  machine per call. Multiple hooks on the same machine desync on
-  control codes. Need either a single resettable capture, or a simpler
-  raw-character API.
+  machine per call. Multiple hooks desync on control codes.
 - **`snapshotState()`/`restoreState()` including SWRAM**: currently
-  only saves main RAM (up to `romOffset`). Including the ROM area
-  would allow snapshotting after boot+load for much faster tests.
-- **`loadSidewaysRam(slot, data)`**: convenience method to write ROM
-  data directly into a SWRAM slot, avoiding the *SRLOAD dance.
+  only saves main RAM. Including ROM area would speed up tests.
+- **`loadSidewaysRam(slot, data)`**: convenience method to avoid the
+  *SRLOAD dance.

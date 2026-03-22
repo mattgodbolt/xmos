@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main, testing]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check-rom:
+    name: Verify ROM assembly
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install beebasm
+        run: |
+          git clone --depth 1 https://github.com/stardot/beebasm.git /tmp/beebasm
+          cd /tmp/beebasm/src
+          make
+          sudo cp beebasm /usr/local/bin/
+      - name: Check ROM matches original
+        run: ./check.sh
+
+  test:
+    name: Run tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm install
+      - run: npm test

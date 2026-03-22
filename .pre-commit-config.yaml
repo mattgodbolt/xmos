@@ -11,3 +11,9 @@ repos:
         language: script
         files: '\.asm$'
         pass_filenames: false
+      - id: tests
+        name: run tests
+        entry: npm test
+        language: system
+        pass_filenames: false
+        always_run: true
