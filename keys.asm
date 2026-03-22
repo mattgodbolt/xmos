@@ -167,62 +167,64 @@
 \ -1 for shifted), patch them into the handler, copy the handler to RAM,
 \ and point KEYV at the copy.
 .keyon_setup
-    LDA keyon_active
-    BNE keyon_already_msg
-    LDA #&01
-    STA keyon_active
-    LDA keyv_lo
-    STA key_remap_jmp1 + 1
-    STA key_remap_jmp2 + 1
-    STA key_remap_jmp3 + 1
-    STA key_remap_jsr + 1
-    STA saved_keyv_lo
-    LDA keyv_hi
-    STA key_remap_jmp1 + 2
-    STA key_remap_jmp2 + 2
-    STA key_remap_jmp3 + 2
-    STA key_remap_jsr + 2
-    STA saved_keyv_hi
-    SEC : LDA #&00 : SBC key_codes
-    STA kr_scan_ldx_0 + 1
-    SEC : LDA #&00 : SBC key_codes + 1
-    STA kr_scan_ldx_1 + 1
-    SEC : LDA #&00 : SBC key_codes + 2
-    STA kr_scan_ldx_2 + 1
-    SEC : LDA #&00 : SBC key_codes + 3
-    STA kr_scan_ldx_3 + 1
-    SEC : LDA #&00 : SBC key_codes + 4
-    STA kr_scan_ldx_4 + 1
-    CLC : LDA key_codes : ADC #&7f
-    STA kr_kbd_ldx_0 + 1
-    CLC : LDA key_codes + 1 : ADC #&7f
-    STA kr_kbd_ldx_1 + 1
-    CLC : LDA key_codes + 2 : ADC #&7f
-    STA kr_kbd_ldx_2 + 1
-    CLC : LDA key_codes + 3 : ADC #&7f
-    STA kr_kbd_ldx_3 + 1
-    CLC : LDA key_codes + 4 : ADC #&7f
-    STA kr_kbd_ldx_4 + 1
-    SEC : LDA key_codes : SBC #&01
-    STA kr_shift_cpx_0 + 1
-    SEC : LDA key_codes + 1 : SBC #&01
-    STA kr_shift_cpx_1 + 1
-    SEC : LDA key_codes + 2 : SBC #&01
-    STA kr_shift_cpx_2 + 1
-    SEC : LDA key_codes + 3 : SBC #&01
-    STA kr_shift_cpx_3 + 1
-    SEC : LDA key_codes + 4 : SBC #&01
-    STA kr_shift_cpx_4 + 1
-    LDX #&00
-.keyon_copy_handler
-    LDA key_remap_handler,X
-    STA keyon_handler_dest,X
-    INX
-    BNE keyon_copy_handler
-    LDA #&00 : STA keyv_lo
-    LDA #&d1
-    STA keyv_hi
-    RTS
+{
+        LDA keyon_active
+        BNE keyon_already_msg
+        LDA #&01
+        STA keyon_active
+        LDA keyv_lo
+        STA key_remap_jmp1 + 1
+        STA key_remap_jmp2 + 1
+        STA key_remap_jmp3 + 1
+        STA key_remap_jsr + 1
+        STA saved_keyv_lo
+        LDA keyv_hi
+        STA key_remap_jmp1 + 2
+        STA key_remap_jmp2 + 2
+        STA key_remap_jmp3 + 2
+        STA key_remap_jsr + 2
+        STA saved_keyv_hi
+        SEC : LDA #&00 : SBC key_codes
+        STA kr_scan_ldx_0 + 1
+        SEC : LDA #&00 : SBC key_codes + 1
+        STA kr_scan_ldx_1 + 1
+        SEC : LDA #&00 : SBC key_codes + 2
+        STA kr_scan_ldx_2 + 1
+        SEC : LDA #&00 : SBC key_codes + 3
+        STA kr_scan_ldx_3 + 1
+        SEC : LDA #&00 : SBC key_codes + 4
+        STA kr_scan_ldx_4 + 1
+        CLC : LDA key_codes : ADC #&7f
+        STA kr_kbd_ldx_0 + 1
+        CLC : LDA key_codes + 1 : ADC #&7f
+        STA kr_kbd_ldx_1 + 1
+        CLC : LDA key_codes + 2 : ADC #&7f
+        STA kr_kbd_ldx_2 + 1
+        CLC : LDA key_codes + 3 : ADC #&7f
+        STA kr_kbd_ldx_3 + 1
+        CLC : LDA key_codes + 4 : ADC #&7f
+        STA kr_kbd_ldx_4 + 1
+        SEC : LDA key_codes : SBC #&01
+        STA kr_shift_cpx_0 + 1
+        SEC : LDA key_codes + 1 : SBC #&01
+        STA kr_shift_cpx_1 + 1
+        SEC : LDA key_codes + 2 : SBC #&01
+        STA kr_shift_cpx_2 + 1
+        SEC : LDA key_codes + 3 : SBC #&01
+        STA kr_shift_cpx_3 + 1
+        SEC : LDA key_codes + 4 : SBC #&01
+        STA kr_shift_cpx_4 + 1
+        LDX #&00
+.loop
+        LDA key_remap_handler,X
+        STA keyon_handler_dest,X
+        INX
+        BNE loop
+        LDA #&00 : STA keyv_lo
+        LDA #&d1
+        STA keyv_hi
+        RTS
+}
 \ *KEYON — Activate key remapping with the current key_codes definitions
 .cmd_keyon
     JSR keyon_setup
@@ -276,45 +278,47 @@
 \ internal key numbers; other codes are translated via the OS key table
 \ before searching the name table. Falls through to OSWRCH for unknown keys.
 .keyname_lookup
-    CMP #&00
-    BNE keyname_check_caps
-    LDA #&03
-    BNE keyname_search
-.keyname_check_caps
-    CMP #&01
-    BNE keyname_from_table
-    LDA #&04
-    BNE keyname_search
-.keyname_from_table
-    LDX os_key_trans
-    STX zp_ptr_lo
-    LDX os_key_trans_hi
-    STX zp_ptr_hi
-    TAY
-    LDA (zp_ptr_lo),Y
-.keyname_search
-    LDX #&f1
-    STX zp_ptr_lo
-    LDX #&8d
-    STX zp_ptr_hi
-    LDY #&00
-.keyname_scan_loop
-    CMP (&a8),Y
-    BEQ keyname_found
-    FOR n, 1, 10 : INY : NEXT   \ skip 10-byte entry (keycode + 9-char name)
-    CPY #&96
-    BCC keyname_scan_loop
-    JMP oswrch
-.keyname_found
-    LDX #&09
-    INY
-.keyname_print_loop
-    LDA (zp_ptr_lo),Y
-    JSR oswrch
-    INY
-    DEX
-    BNE keyname_print_loop
-    RTS
+{
+        CMP #&00
+        BNE check_caps
+        LDA #&03
+        BNE search
+.check_caps
+        CMP #&01
+        BNE from_table
+        LDA #&04
+        BNE search
+.from_table
+        LDX os_key_trans
+        STX zp_ptr_lo
+        LDX os_key_trans_hi
+        STX zp_ptr_hi
+        TAY
+        LDA (zp_ptr_lo),Y
+.search
+        LDX #&f1
+        STX zp_ptr_lo
+        LDX #&8d
+        STX zp_ptr_hi
+        LDY #&00
+.scan_loop
+        CMP (&a8),Y
+        BEQ found
+        FOR n, 1, 10 : INY : NEXT  \ skip 10-byte entry (keycode + 9-char name)
+        CPY #&96
+        BCC scan_loop
+        JMP oswrch
+.found
+        LDX #&09
+        INY
+.print_loop
+        LDA (zp_ptr_lo),Y
+        JSR oswrch
+        INY
+        DEX
+        BNE print_loop
+        RTS
+}
 \ --- DEFKEYS joystick direction labels (12 chars each) ---
 .defkeys_direction_labels
     EQUS "     Left : "         \ 12 bytes each
@@ -331,38 +335,40 @@
 \ Print the current remapping state: if active, show each direction label
 \ followed by the name of the key assigned to it from key_codes.
 .cmd_kstatus
-    LDA keyon_active
-    BEQ kstatus_not_active
-    STROUT msg_keys_on
-    LDA #&d0
-    STA zp_work_lo
-    LDA #&8e
-    STA zp_work_hi
-    LDX #&00
-.kstatus_entry_loop
-    LDY #&00
-.kstatus_print_dir
-    LDA (zp_work_lo),Y
-    JSR oswrch
-    INY
-    CPY #&0c
-    BNE kstatus_print_dir
-    CLC : LDA zp_work_lo : ADC #&0c
-    STA zp_work_lo
-    LDA zp_work_hi
-    ADC #&00
-    STA zp_work_hi
-    LDA key_codes,X
-    PHX
-    DEC A
-    JSR keyname_lookup
-    JSR osnewl
-    PLX
-    INX
-    CPX #&05
-    BNE kstatus_entry_loop
-    JSR osnewl
-    JMP keyon_rts
+{
+        LDA keyon_active
+        BEQ kstatus_not_active
+        STROUT msg_keys_on
+        LDA #&d0
+        STA zp_work_lo
+        LDA #&8e
+        STA zp_work_hi
+        LDX #&00
+.loop
+        LDY #&00
+.print_dir
+        LDA (zp_work_lo),Y
+        JSR oswrch
+        INY
+        CPY #&0c
+        BNE print_dir
+        CLC : LDA zp_work_lo : ADC #&0c
+        STA zp_work_lo
+        LDA zp_work_hi
+        ADC #&00
+        STA zp_work_hi
+        LDA key_codes,X
+        PHX
+        DEC A
+        JSR keyname_lookup
+        JSR osnewl
+        PLX
+        INX
+        CPX #&05
+        BNE loop
+        JSR osnewl
+        JMP keyon_rts
+}
 .msg_key_redefiner
     EQUS "KEY REDEFINER", 13, "-------------", 13, 0
 \ ============================================================================
@@ -373,104 +379,110 @@
 \ key numbers into key_codes, then calls keyon_setup to activate them.
 \ ============================================================================
 .cmd_defkeys
-    LDA keyon_active
-    BEQ defkeys_start
-    LDA #&00 : STA keyon_active
-    LDA saved_keyv_lo : STA keyv_lo
-    LDA saved_keyv_hi : STA keyv_hi
-.defkeys_start
-    LDA #&81
-    LDX #&b6
-    LDY #&ff
-    JSR osbyte
-    CPX #&ff
-    BEQ defkeys_start
-    JSR osnewl
-    STROUT msg_key_redefiner
-    JSR osnewl
-    LDA #&d0
-    STA zp_work_lo
-    LDA #&8e
-    STA zp_work_hi
-    LDX #&00
-.defkeys_header_y
-    LDY #&00
-.defkeys_header_loop
-    LDA (zp_work_lo),Y
-    JSR oswrch
-    INY
-    CPY #&0c
-    BNE defkeys_header_loop
-    CLC : LDA zp_work_lo : ADC #&0c
-    STA zp_work_lo
-    LDA zp_work_hi
-    ADC #&00
-    STA zp_work_hi
-    JSR defkeys_wait_key
-    INX
-    CPX #&05
-    BNE defkeys_header_y
-    JSR osnewl
-    LDA #&0f
-    JSR osbyte
-    JMP keyon_setup
+{
+        LDA keyon_active
+        BEQ start
+        LDA #&00 : STA keyon_active
+        LDA saved_keyv_lo : STA keyv_lo
+        LDA saved_keyv_hi : STA keyv_hi
+.start
+        LDA #&81
+        LDX #&b6
+        LDY #&ff
+        JSR osbyte
+        CPX #&ff
+        BEQ start
+        JSR osnewl
+        STROUT msg_key_redefiner
+        JSR osnewl
+        LDA #&d0
+        STA zp_work_lo
+        LDA #&8e
+        STA zp_work_hi
+        LDX #&00
+.header_y
+        LDY #&00
+.header_loop
+        LDA (zp_work_lo),Y
+        JSR oswrch
+        INY
+        CPY #&0c
+        BNE header_loop
+        CLC : LDA zp_work_lo : ADC #&0c
+        STA zp_work_lo
+        LDA zp_work_hi
+        ADC #&00
+        STA zp_work_hi
+        JSR defkeys_wait_key
+        INX
+        CPX #&05
+        BNE header_y
+        JSR osnewl
+        LDA #&0f
+        JSR osbyte
+        JMP keyon_setup
+}
 \ Wait for a keypress using negative INKEY scanning: scans key numbers
 \ &81..&FF until one returns a match, converts it to an internal key number,
 \ stores it in key_codes, prints the key name, then waits for key release.
 .defkeys_wait_key
-    PHX
-.defkeys_read_key
-    LDX #&81
-.defkeys_store_key
-    PHX
-    LDA #&81
-    LDY #&ff
-    JSR osbyte
-    CPX #&ff
-    BEQ defkeys_check_match
-    PLX
-    INX
-    BNE defkeys_store_key
-    BEQ defkeys_read_key
-.defkeys_check_match
-    PLA
-    EOR #&ff
-    INC A
-    PLX
-    STA key_codes,X
-    DEC A
-    PHX
-    PHA
-    JSR keyname_lookup
-    JSR osnewl
-    PLA
-    EOR #&ff
-    TAX
-    PHX
-.defkeys_next_entry
-    PLX
-    PHX
-    LDA #&81
-    LDY #&ff
-    JSR osbyte
-    CPX #&ff
-    BEQ defkeys_next_entry
-    PLX
-    PLX
-    RTS
+{
+        PHX
+.read_key
+        LDX #&81
+.store_key
+        PHX
+        LDA #&81
+        LDY #&ff
+        JSR osbyte
+        CPX #&ff
+        BEQ check_match
+        PLX
+        INX
+        BNE store_key
+        BEQ read_key
+.check_match
+        PLA
+        EOR #&ff
+        INC A
+        PLX
+        STA key_codes,X
+        DEC A
+        PHX
+        PHA
+        JSR keyname_lookup
+        JSR osnewl
+        PLA
+        EOR #&ff
+        TAX
+        PHX
+.next_entry
+        PLX
+        PHX
+        LDA #&81
+        LDY #&ff
+        JSR osbyte
+        CPX #&ff
+        BEQ next_entry
+        PLX
+        PLX
+        RTS
+}
 \ Skip spaces and dots in the command line, leaving Y pointing at the
 \ next non-whitespace character.
 .parse_cmdline
-    LDY compare_string_y
-    DEY
-.parse_skip_spaces
-    INY
-    LDA (cmd_line_lo),Y
-    CMP #' '
-    BEQ parse_skip_spaces
-    CMP #'.'
-    BEQ parse_skip_spaces
-    STY compare_string_y
-    RTS
+{
+        LDY compare_string_y
+        DEY
+.skip
+        INY
+        LDA (cmd_line_lo),Y
+        CMP #' '
+        BEQ skip
+        CMP #'.'
+        BEQ skip
+        STY compare_string_y
+        RTS
+}
 .alias_semicolon_flag
     EQUB &ff
