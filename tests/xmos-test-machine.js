@@ -80,6 +80,24 @@ export async function typeText(machine, text) {
 }
 
 /**
+ * Read Mode 7 screen memory (&7C00, 40×25) and return it as an array
+ * of 25 strings. Teletext control codes (0x00-0x1F) are replaced with
+ * spaces. Characters 0x20-0x7F are kept as-is.
+ */
+export function readMode7Screen(machine) {
+    const lines = [];
+    for (let row = 0; row < 25; row++) {
+        let line = "";
+        for (let col = 0; col < 40; col++) {
+            const ch = machine.readbyte(0x7c00 + row * 40 + col);
+            line += ch >= 0x20 && ch < 0x7f ? String.fromCharCode(ch) : " ";
+        }
+        lines.push(line.trimEnd());
+    }
+    return lines;
+}
+
+/**
  * Install a text capture hook that intercepts characters at WRCHV.
  * Re-reads WRCHV on every instruction so it stays correct even if
  * the vector changes. Collects only printable ASCII (0x20-0x7E).
