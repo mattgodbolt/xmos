@@ -2,12 +2,10 @@
  * Shared test helper: boots a BBC Master with XMOS loaded into SWRAM slot 7.
  *
  * Usage:
- *   import { bootWithXmos, captureOutput } from "./xmos-test-machine.js";
+ *   import { bootWithXmos, runCommand } from "./xmos-test-machine.js";
  *   const machine = await bootWithXmos();
- *   const getOutput = captureOutput(machine);
- *   await machine.type("*HELP XMOS");
- *   await machine.runFor(4_000_000);
- *   expect(getOutput()).toContain("MOS Extension");
+ *   const output = await runCommand(machine, "*HELP XMOS");
+ *   expect(output).toContain("MOS Extension");
  */
 
 import { TestMachine } from "jsbeeb/tests/test-machine.js";
@@ -51,20 +49,33 @@ export async function bootWithXmos() {
 }
 
 /**
- * Install a text capture hook on the machine.
- * Returns a function that, when called, returns all captured text so far.
+ * Install a text capture hook that intercepts characters at WRCHV.
+ * Re-reads WRCHV on every instruction so it stays correct even if
+ * the vector changes. Collects only printable ASCII (0x20-0x7E).
+ * Returns a function that returns the captured text so far.
+ *
+ * Safe to call multiple times on the same machine — each hook is
+ * independent and stateless (no VDU state machine to get confused).
  */
 export function captureOutput(machine) {
-    let output = "";
-    machine.captureText((elem) => (output += elem.text));
-    return () => output;
+    let chars = [];
+    machine.processor.debugInstruction.add((addr) => {
+        const wrchv = machine.readword(0x20e);
+        if (addr === wrchv) {
+            const ch = machine.processor.a;
+            if (ch >= 0x20 && ch < 0x7f) {
+                chars.push(ch);
+            }
+        }
+        return false;
+    });
+    return () => chars.map((c) => String.fromCharCode(c)).join("");
 }
 
 /**
  * Type a command, run until output settles, and return the response text.
- * Captures everything (including the typed echo) then strips the echo prefix.
- * The capture hook must be installed *before* type() because type() runs
- * the CPU and the MOS may start producing output during keystroke processing.
+ * The capture hook is installed before type() because type() runs the CPU
+ * and the MOS may start producing output during keystroke processing.
  *
  * SHIFT is held during the output phase so the MOS doesn't pause with
  * "Shift for more" when output fills the screen.
@@ -77,9 +88,7 @@ export async function runCommand(machine, command, cycles = 8_000_000) {
     await machine.runFor(cycles);
     machine.processor.sysvia.keyUp(16);
     const raw = getOutput();
-    // Strip the typed echo (command + RETURN) from the start of the output.
-    // The echo appears as the command text (without the leading ">") followed
-    // by the response. Find the command text and skip past it.
+    // Strip the typed echo from the start of the output
     const echoEnd = raw.indexOf(command);
     if (echoEnd >= 0) {
         return raw.slice(echoEnd + command.length);

@@ -5,7 +5,8 @@ describe("*ALIAS / *ALIASES / *ALICLR", () => {
     it("*ALIASES should be silent when no aliases defined", async () => {
         const machine = await bootWithXmos();
         const output = await runCommand(machine, "*ALIASES");
-        expect(output.trim()).toBe("");
+        // Only the next prompt ">" remains after echo stripping
+        expect(output.replace(/>/g, "").trim()).toBe("");
     });
 
     it("*ALIAS should define an alias visible in *ALIASES", async () => {
@@ -31,11 +32,14 @@ describe("*ALIAS / *ALIASES / *ALICLR", () => {
         await runCommand(machine, "*ALIAS BAR *DIR");
         await runCommand(machine, "*ALICLR");
         const output = await runCommand(machine, "*ALIASES");
-        expect(output.trim()).toBe("");
+        expect(output.replace(/>/g, "").trim()).toBe("");
     });
 
-    // TODO: alias expansion test — *LS expanding to *CAT works (verified
-    // interactively via MCP screenshot) but the text capture doesn't pick up
-    // output from the nested OSCLI call. Needs investigation into how
-    // captureText interacts with re-entrant command dispatch.
+    it("alias should expand to typed text at the prompt", async () => {
+        const machine = await bootWithXmos();
+        // Aliases type the expanded text at the prompt (without pressing RETURN)
+        await runCommand(machine, "*ALIAS LS *CAT");
+        const output = await runCommand(machine, "*LS");
+        expect(output).toContain("*CAT");
+    });
 });
