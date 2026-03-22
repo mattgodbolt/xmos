@@ -1,28 +1,16 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { bootWithXmos, runCommand, captureOutput } from "./xmos-test-machine.js";
 
-/**
- * Helper: load a small BASIC program into the machine.
- */
-async function loadTestProgram(machine) {
-    await runCommand(machine, '10 PRINT "HELLO"');
-    await runCommand(machine, '20 PRINT "WORLD"');
-}
-
-/**
- * Helper: press a key briefly.
- */
-async function pressKey(machine, keyCode, cycles = 80000) {
-    machine.processor.sysvia.keyDown(keyCode);
-    await machine.runFor(cycles);
-    machine.processor.sysvia.keyUp(keyCode);
-    await machine.runFor(cycles);
-}
-
 describe("*XON / *XOFF — extended input", () => {
+    let machine;
+
+    beforeEach(async () => {
+        machine = await bootWithXmos();
+        await runCommand(machine, '10 PRINT "HELLO"');
+        await runCommand(machine, '20 PRINT "WORLD"');
+    });
+
     it("without XON, TAB after a line number does nothing special", async () => {
-        const machine = await bootWithXmos();
-        await loadTestProgram(machine);
         await runCommand(machine, "*XOFF");
 
         const getOutput = captureOutput(machine);
@@ -36,8 +24,6 @@ describe("*XON / *XOFF — extended input", () => {
     });
 
     it("with XON, TAB after line number recalls that line", async () => {
-        const machine = await bootWithXmos();
-        await loadTestProgram(machine);
         await runCommand(machine, "*XON");
 
         const getOutput = captureOutput(machine);
@@ -46,14 +32,11 @@ describe("*XON / *XOFF — extended input", () => {
         await machine.runFor(4_000_000);
 
         const output = getOutput();
-        // Line 20 should be expanded: PRINT "WORLD"
-        expect(output).toContain("PRINT");
-        expect(output).toContain("WORLD");
+        // Line 20 should be expanded with its tokenised content
+        expect(output).toContain('PRINT "WORLD"');
     });
 
     it("with XON, TAB for a non-existent line does nothing", async () => {
-        const machine = await bootWithXmos();
-        await loadTestProgram(machine);
         await runCommand(machine, "*XON");
 
         const getOutput = captureOutput(machine);
@@ -68,24 +51,20 @@ describe("*XON / *XOFF — extended input", () => {
     });
 
     it("with XON, recalled line can be appended to", async () => {
-        const machine = await bootWithXmos();
-        await loadTestProgram(machine);
         await runCommand(machine, "*XON");
 
         const getOutput = captureOutput(machine);
-        // Recall line 10 then type extra text
-        await machine.type('10\t:REM EXTRA');
+        // Recall line 10 then type extra text at the end
+        await machine.type("10\t:REM EXTRA");
         await machine.runFor(4_000_000);
 
         const output = getOutput();
         // Should have the original line content AND the appended text
-        expect(output).toContain("HELLO");
+        expect(output).toContain('PRINT "HELLO"');
         expect(output).toContain("REM EXTRA");
     });
 
     it("*XOFF should disable TAB recall", async () => {
-        const machine = await bootWithXmos();
-        await loadTestProgram(machine);
         await runCommand(machine, "*XON");
         await runCommand(machine, "*XOFF");
 

@@ -8,24 +8,25 @@ describe("*LVAR", () => {
         expect(output).toBe(">");
     });
 
-    it("should list real and string variables but not integer", async () => {
+    it("should list real and string variable names", async () => {
         const machine = await bootWithXmos();
-        await runCommand(machine, 'A%=42:B$="hello":C=3.14');
+        await runCommand(machine, 'X=3.14:G$="HI"');
         const output = await runCommand(machine, "*LVAR");
 
-        // LVAR lists heap variables (real and string), not static integer vars
-        expect(output).toContain("B$");
-        expect(output).toContain("C");
-        expect(output).not.toContain("A%");
+        // LVAR prints variable names only (no values)
+        expect(output).toContain("G$");
+        expect(output).toContain("X");
     });
 
-    it("should list multiple variables", async () => {
+    it("should not list static integer variables", async () => {
         const machine = await bootWithXmos();
-        await runCommand(machine, "X=1:Y=2:Z=3");
+        await runCommand(machine, "A%=42:B%=99:SCORE=100");
         const output = await runCommand(machine, "*LVAR");
 
-        expect(output).toContain("X");
-        expect(output).toContain("Y");
-        expect(output).toContain("Z");
+        // Integer variables (%) are stored statically, not on the heap
+        expect(output).not.toContain("A%");
+        expect(output).not.toContain("B%");
+        // But the real variable should be listed
+        expect(output).toContain("SCORE");
     });
 });
