@@ -9,7 +9,7 @@ describe("*S — save with incore name", () => {
         // Disc I/O needs extra cycles
         const output = await runCommand(machine, "*S", 20_000_000);
 
-        expect(output).toContain("Program saved as 'PROG'");
+        expect(output).toContain("Program saved as 'Prog'");
     });
 
     it("should handle filenames with leading spaces", async () => {
@@ -18,6 +18,6 @@ describe("*S — save with incore name", () => {
         await runCommand(machine, "20 A=1");
         const output = await runCommand(machine, "*S", 20_000_000);
 
-        expect(output).toContain("Program saved as 'MYFILE'");
+        expect(output).toContain("Program saved as 'MyFile'");
     });
 });

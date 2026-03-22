@@ -33,7 +33,7 @@ export async function bootWithXmos() {
     machine.processor.fdc.loadDisc(0, fdc.discFor(machine.processor.fdc, "", data));
 
     await machine.runUntilInput();
-    await machine.type("*SRLOAD XMOS 8000 7Q");
+    await typeText(machine, "*SRLOAD XMOS 8000 7Q");
     await machine.runUntilInput();
 
     // Hard reset (CTRL+BREAK) so the MOS re-scans ROM slots
@@ -45,7 +45,38 @@ export async function bootWithXmos() {
     await machine.runUntilInput();
     machine.processor.fdc.loadDisc(0, fdc.discFor(machine.processor.fdc, "", data));
 
+    // Toggle CAPS LOCK off so type() produces lowercase by default.
+    // TestMachine._charToKey always sends uppercase keycodes; with
+    // CAPS LOCK on (the boot default) every letter comes out uppercase,
+    // making it impossible to type lowercase variable names.
+    machine.processor.sysvia.keyDown(20);
+    await machine.runFor(40000);
+    machine.processor.sysvia.keyUp(20);
+    await machine.runFor(40000);
+
     return machine;
+}
+
+/**
+ * Type text with correct case handling.
+ * With CAPS LOCK off (our default), TestMachine._charToKey sends
+ * uppercase keycodes without SHIFT, producing lowercase. To type
+ * an uppercase letter we need SHIFT held (which inverts CAPS LOCK).
+ * This wrapper patches the shift flag for uppercase letters.
+ */
+export async function typeText(machine, text) {
+    // Temporarily patch _charToKey to handle case correctly
+    const orig = machine._charToKey.bind(machine);
+    machine._charToKey = (ch) => {
+        const result = orig(ch);
+        // If it's an uppercase letter, add shift
+        if (ch >= "A" && ch <= "Z") {
+            result.shift = true;
+        }
+        return result;
+    };
+    await machine.type(text);
+    machine._charToKey = orig;
 }
 
 /**
@@ -82,7 +113,7 @@ export function captureOutput(machine) {
  */
 export async function runCommand(machine, command, cycles = 8_000_000) {
     const getOutput = captureOutput(machine);
-    await machine.type(command);
+    await typeText(machine, command);
     // Hold SHIFT so paged output scrolls without pausing
     machine.processor.sysvia.keyDown(16);
     await machine.runFor(cycles);

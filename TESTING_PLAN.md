@@ -119,6 +119,13 @@ xmos/
 
 ## jsbeeb TestMachine improvements needed
 
+- **`type()` cannot produce lowercase**: `_charToKey` does
+  `ch.toUpperCase()` and sends `shift: false`, so every letter is
+  uppercase. With CAPS LOCK on (default), SHIFT inverts case — so
+  lowercase input should set `shift: true`. This is a real bug: any
+  test involving lowercase variable names, strings, or keywords that
+  collide when uppercased (e.g. `total` → `TOTAL` → `TO` token) will
+  fail silently.
 - **`keyDown()`/`keyUp()` methods**: currently have to reach through
   `processor.sysvia.keyDown(keyCode)` with raw key codes. TestMachine
   should expose these directly, ideally accepting key names.

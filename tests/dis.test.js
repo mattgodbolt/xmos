@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { bootWithXmos, captureOutput } from "./xmos-test-machine.js";
+import { bootWithXmos, captureOutput, typeText } from "./xmos-test-machine.js";
 
 describe("*DIS", () => {
     it("should disassemble the ROM service entry point", async () => {
@@ -7,7 +7,7 @@ describe("*DIS", () => {
         const getOutput = captureOutput(machine);
 
         // DIS shows one line then waits for a keypress
-        await machine.type("*DIS 802B");
+        await typeText(machine,"*DIS 802B");
         await machine.runFor(4_000_000);
 
         const output = getOutput();
@@ -21,7 +21,7 @@ describe("*DIS", () => {
         const machine = await bootWithXmos();
         const getOutput = captureOutput(machine);
 
-        await machine.type("*DIS 802B");
+        await typeText(machine,"*DIS 802B");
         // Hold space to scroll through multiple lines
         machine.processor.sysvia.keyDown(32); // SPACE
         await machine.runFor(8_000_000);
@@ -37,7 +37,7 @@ describe("*DIS", () => {
         const machine = await bootWithXmos();
         const getOutput = captureOutput(machine);
 
-        await machine.type("*DIS 8003");
+        await typeText(machine,"*DIS 8003");
         await machine.runFor(4_000_000);
 
         const output = getOutput();

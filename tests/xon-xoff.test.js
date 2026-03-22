@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { bootWithXmos, runCommand, captureOutput } from "./xmos-test-machine.js";
+import { bootWithXmos, runCommand, captureOutput, typeText } from "./xmos-test-machine.js";
 
 describe("*XON / *XOFF — extended input", () => {
     let machine;
@@ -15,7 +15,7 @@ describe("*XON / *XOFF — extended input", () => {
 
         const getOutput = captureOutput(machine);
         // Type "10" then TAB — without XON, TAB is just a regular key
-        await machine.type("10\t");
+        await typeText(machine,"10\t");
         await machine.runFor(4_000_000);
 
         const output = getOutput();
@@ -28,7 +28,7 @@ describe("*XON / *XOFF — extended input", () => {
 
         const getOutput = captureOutput(machine);
         // Type "20" then TAB — should recall line 20
-        await machine.type("20\t");
+        await typeText(machine,"20\t");
         await machine.runFor(4_000_000);
 
         const output = getOutput();
@@ -41,7 +41,7 @@ describe("*XON / *XOFF — extended input", () => {
 
         const getOutput = captureOutput(machine);
         // Type "15" then TAB — line 15 doesn't exist
-        await machine.type("15\t");
+        await typeText(machine,"15\t");
         await machine.runFor(4_000_000);
 
         const output = getOutput();
@@ -55,7 +55,7 @@ describe("*XON / *XOFF — extended input", () => {
 
         const getOutput = captureOutput(machine);
         // Recall line 10 then type extra text at the end
-        await machine.type("10\t:REM EXTRA");
+        await typeText(machine,"10\t:REM EXTRA");
         await machine.runFor(4_000_000);
 
         const output = getOutput();
@@ -69,7 +69,7 @@ describe("*XON / *XOFF — extended input", () => {
         await runCommand(machine, "*XOFF");
 
         const getOutput = captureOutput(machine);
-        await machine.type("10\t");
+        await typeText(machine,"10\t");
         await machine.runFor(4_000_000);
 
         const output = getOutput();
