@@ -358,13 +358,6 @@ GUARD &C000
 .xi_temp
     EQUB &08                   \ temp for number parsing
 
-\ ============================================================================
-\ Post-reset handler (service call &27)
-\ ============================================================================
-\ ============================================================================
-\ Post-reset handler (service call &27) — restore XMOS state after BREAK
-\ ============================================================================
-
 INCLUDE "input.asm"
 INCLUDE "util.asm"
 INCLUDE "basic.asm"
