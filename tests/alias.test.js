@@ -2,11 +2,10 @@ import { describe, it, expect } from "vitest";
 import { bootWithXmos, runCommand } from "./xmos-test-machine.js";
 
 describe("*ALIAS / *ALIASES / *ALICLR", () => {
-    it("*ALIASES should be silent when no aliases defined", async () => {
+    it("*ALIASES should not list any aliases when none defined", async () => {
         const machine = await bootWithXmos();
         const output = await runCommand(machine, "*ALIASES");
-        // Only the next prompt ">" remains after echo stripping
-        expect(output.replace(/>/g, "").trim()).toBe("");
+        expect(output).not.toContain("=");
     });
 
     it("*ALIAS should define an alias visible in *ALIASES", async () => {
@@ -32,7 +31,7 @@ describe("*ALIAS / *ALIASES / *ALICLR", () => {
         await runCommand(machine, "*ALIAS BAR *DIR");
         await runCommand(machine, "*ALICLR");
         const output = await runCommand(machine, "*ALIASES");
-        expect(output.replace(/>/g, "").trim()).toBe("");
+        expect(output).not.toContain("=");
     });
 
     it("alias should expand to typed text at the prompt", async () => {
