@@ -12,7 +12,7 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/stardot/beebasm.git /tmp/beebasm
           cd /tmp/beebasm/src
-          make
+          make code
           sudo cp beebasm /usr/local/bin/
       - name: Check ROM matches original
         run: ./check.sh
