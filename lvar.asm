@@ -64,16 +64,16 @@
 .mem_page_size
     EQUB &03
 .mem_column
-    EQUB &02                   \ MEM column counter (0-7)
+    EQUB &02                    \ MEM column counter (0-7)
 .mem_key_codes
-    EQUB &88, &89, &8A, &8B   \ Key codes: left, right, down, up
-    EQUB &09                   \ TAB key
+    EQUB &88, &89, &8A, &8B     \ Key codes: left, right, down, up
+    EQUB &09                    \ TAB key
 .mem_routine_table
-    EQUW mem_cursor_up                 \ Address of cursor-up routine
-    EQUW mem_cursor_down                 \ Address of cursor-down routine
-    EQUW mem_page_down                 \ Address of page-down routine
-    EQUW mem_page_up                 \ Address of page-up routine
-    EQUW mem_toggle_mode                 \ Address of hex/ascii toggle
+    EQUW mem_cursor_up          \ Address of cursor-up routine
+    EQUW mem_cursor_down        \ Address of cursor-down routine
+    EQUW mem_page_down          \ Address of page-down routine
+    EQUW mem_page_up            \ Address of page-up routine
+    EQUW mem_toggle_mode        \ Address of hex/ascii toggle
 \ --- MEM editor header display (uses VDU control codes) ---
 .mem_header
     EQUB &82 : EQUS "ADDR " : EQUB &94
@@ -237,7 +237,7 @@
     STA alias_end_hi
 .xi_supp_copy_loop
     LDA (zp_src_lo)
-    EQUB &92, &AC  \ STA (&ac)
+    EQUB &92, &AC               \ STA (&ac)
     SEC
     LDA &AC
     SBC #&01
@@ -418,4 +418,4 @@
     EQUB &00
 .dec_digit_count
     EQUB &00
-    EQUB &00                   \ padding
+    EQUB &00                    \ padding

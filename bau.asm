@@ -118,8 +118,8 @@
     SBC #&00
     STA zp_work_hi
 .bau_copy_byte
-    EQUB &B2, &AA  \ LDA (0xaa)
-    EQUB &92, &AC  \ STA (0xac)
+    EQUB &B2, &AA               \ LDA (0xaa)
+    EQUB &92, &AC               \ STA (0xac)
     SEC
     LDA zp_tmp_lo
     SBC #&01
@@ -177,7 +177,7 @@
     LDY #&89
     JMP osbyte
 .cmd_space_key9
-    EQUS "KEY9REN.|F|K|M"     \ *KEY9 definition for renumber
+    EQUS "KEY9REN.|F|K|M"       \ *KEY9 definition for renumber
     EQUB &0D
 .cmd_space
     LDA os_mode
@@ -398,8 +398,8 @@
     SBC #&00
     STA zp_work_hi
 .space_copy_loop
-    EQUB &B2, &AA  \ LDA (0xaa)
-    EQUB &92, &AC  \ STA (0xac)
+    EQUB &B2, &AA               \ LDA (0xaa)
+    EQUB &92, &AC               \ STA (0xac)
     SEC
     LDA zp_tmp_lo
     SBC #&01

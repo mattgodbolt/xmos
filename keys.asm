@@ -8,7 +8,7 @@
     BEQ key_remap_keyboard
     PLP
 .key_remap_jmp1
-    JMP &FFFF                  \ Patched: original KEYV address
+    JMP &FFFF                   \ Patched: original KEYV address
 \ Scan handler: remap key codes for OSBYTE &81
 \ Each CPX/LDX pair is patched by KEYON with the configured key codes
 .key_remap_scan
@@ -46,7 +46,7 @@
 .key_remap_pass2
     PLP
 .key_remap_jmp2
-    JMP &FFFF                  \ Patched: original KEYV address
+    JMP &FFFF                   \ Patched: original KEYV address
 
 \ Keyboard handler: remap key codes for OSBYTE &79
 .key_remap_keyboard
@@ -84,13 +84,13 @@
 .kr_kbd_pass
     PLP
 .key_remap_jmp3
-    JMP &FFFF                  \ Patched: original KEYV address
+    JMP &FFFF                   \ Patched: original KEYV address
 
 \ Shifted handler: call original KEYV then remap results
 .key_remap_shifted
     PLP
 .key_remap_jsr
-    JSR &FFFF                  \ Patched: call original KEYV
+    JSR &FFFF                   \ Patched: call original KEYV
     PHP
 .kr_shift_cpx_0
     CPX #&40
@@ -146,7 +146,7 @@
     EQUB &00
 .keyon_active
     EQUB &00
-.key_codes                     \ 5-byte table of key scan codes to remap
+.key_codes                      \ 5-byte table of key scan codes to remap
     EQUB &41, &02, &49, &69, &4A
 .keyon_already_msg
     STROUT msg_keyon_already
@@ -281,7 +281,7 @@
 .keyname_scan_loop
     CMP (&a8),Y
     BEQ keyname_found
-    FOR n, 1, 10 : INY : NEXT  \ skip 10-byte entry (keycode + 9-char name)
+    FOR n, 1, 10 : INY : NEXT   \ skip 10-byte entry (keycode + 9-char name)
     CPY #&96
     BCC keyname_scan_loop
     JMP oswrch
@@ -297,7 +297,7 @@
     RTS
 \ --- DEFKEYS joystick direction labels (12 chars each) ---
 .defkeys_direction_labels
-    EQUS "     Left : "  \ 12 bytes each
+    EQUS "     Left : "         \ 12 bytes each
     EQUS "    Right : "
     EQUS "       Up : "
     EQUS "     Down : "
