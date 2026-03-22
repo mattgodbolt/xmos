@@ -283,15 +283,28 @@ missing the first few characters.
 **Paged output**: The MOS pauses long output with "Shift for more".
 Tests hold SHIFT during `runFor()` to prevent this.
 
+**Alias expansion**: XMOS aliases type the expanded text at the
+prompt without pressing RETURN. `*ALIAS LS *CAT` followed by `*LS`
+produces `>*CAT` with the cursor waiting — the user can edit or
+press RETURN to execute. This is the intended behaviour (confirmed
+on real hardware). The test verifies the expanded text appears.
+
+**captureText() limitations**: TestMachine's `captureText()` installs
+a VDU state machine per call. Calling it multiple times on the same
+machine causes independent state machines to desync on control codes,
+silently dropping output. The test helper uses a simpler raw WRCHV
+hook that just collects printable characters. A TestMachine
+improvement to support reusable capture would be cleaner.
+
 ### Test results
-16 tests across 3 files, all passing in ~7s:
+17 tests across 3 files, all passing in ~9s:
 - `help.test.js` — *HELP XMOS, *HELP, *HELP FEATURES, dot-abbreviation
 - `xon-xoff.test.js` — *XON, *XOFF, *KEYON, *KEYOFF, *KSTATUS
-- `alias.test.js` — *ALIAS define, *ALIASES list, multiple aliases, *ALICLR
+- `alias.test.js` — *ALIAS define/list/clear, multiple aliases, expansion
 
-### Open issues
-- Alias expansion works (verified via MCP screenshots) but text capture
-  doesn't pick up output from nested OSCLI calls. Needs investigation.
+### Future improvements
 - Each test boots a fresh Master (~1s overhead). jsbeeb supports
   `snapshotState()`/`restoreState()` but doesn't include SWRAM in the
   snapshot — extending this would make tests much faster.
+- TestMachine could benefit from a reusable capture API that avoids
+  the multi-hook state machine issue.
