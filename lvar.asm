@@ -10,11 +10,11 @@
     LDX #&00
 .lvar_var_loop
     LDA os_fkey_buf,X
-    STA &a8
+    STA zp_ptr_lo
     INX
     LDA os_fkey_buf,X
     DEX
-    STA &a9
+    STA zp_ptr_hi
     CMP #&00
     BEQ lvar_next_var
 .lvar_check_type
@@ -26,21 +26,21 @@
     LDY #&01
 .lvar_skip_name
     INY
-    LDA (&a8),Y
+    LDA (zp_ptr_lo),Y
     BEQ lvar_print_newline
     JSR oswrch
     BRA lvar_skip_name
 .lvar_print_newline
     JSR osnewl
     LDY #&01
-    LDA (&a8),Y
+    LDA (zp_ptr_lo),Y
     BEQ lvar_next_var
-    STA &ac
+    STA zp_tmp_lo
     DEY
-    LDA (&a8),Y
-    STA &a8
-    LDA &ac
-    STA &a9
+    LDA (zp_ptr_lo),Y
+    STA zp_ptr_lo
+    LDA zp_tmp_lo
+    STA zp_ptr_hi
     BRA lvar_check_type
 .lvar_next_var
     INX
@@ -90,7 +90,7 @@
 .lvar_parse_token
     LDA #&00
     STA lvar_indent
-    LDA (&a8),Y
+    LDA (zp_ptr_lo),Y
     CMP #&0d
     BNE lvar_check_dot
     JMP lvar_end_of_line
@@ -99,12 +99,12 @@
     BNE lvar_check_string
 .lvar_scan_name
     INY
-    LDA (&a8),Y
+    LDA (zp_ptr_lo),Y
     CMP #&0d
     BNE lvar_check_space
     JMP lvar_end_of_line
 .lvar_check_space
-    CMP #&20
+    CMP #' '
     BEQ lvar_next_token
     CMP #&3a
     BNE lvar_scan_name
@@ -116,7 +116,7 @@
     BNE lvar_lookup_token
 .lvar_string_loop
     INY
-    LDA (&a8),Y
+    LDA (zp_ptr_lo),Y
     CMP #&0d
     BEQ lvar_end_of_line
     CMP #&22
@@ -139,7 +139,7 @@
     BNE lvar_set_indent
 .lvar_skip_backslash
     INY
-    LDA (&a8),Y
+    LDA (zp_ptr_lo),Y
     CMP #&3a
     BEQ lvar_skip_and_continue
     CMP #&0d
@@ -153,7 +153,7 @@
     STA lvar_indent
 .lvar_print_token
     INY
-    LDA (&a8),Y
+    LDA (zp_ptr_lo),Y
     CMP #&5d
     BEQ lvar_done
     CMP #&0d
@@ -162,15 +162,15 @@
     BNE lvar_print_token
     CMP #&3a
     BEQ lvar_parse_token
-    CMP #&20
+    CMP #' '
     BEQ lvar_print_char
     DEY
     JSR space_shift_up
     PHY
     LDY #&03
-    LDA (&a8),Y
+    LDA (zp_ptr_lo),Y
     INC A
-    STA (&a8),Y
+    STA (zp_ptr_lo),Y
     PLY
     CLC
     LDA &00
@@ -181,10 +181,10 @@
     STA &01
     LDA #&20
     INY
-    STA (&a8),Y
+    STA (zp_ptr_lo),Y
 .lvar_print_char
     INY
-    LDA (&a8),Y
+    LDA (zp_ptr_lo),Y
     CMP #&0d
     BEQ lvar_end_of_line
     CMP #&3a
@@ -194,15 +194,15 @@
 .lvar_end_of_line
     LDY #&03
     CLC
-    LDA (&a8),Y
-    ADC &a8
-    STA &a8
-    LDA &a9
+    LDA (zp_ptr_lo),Y
+    ADC zp_ptr_lo
+    STA zp_ptr_lo
+    LDA zp_ptr_hi
     ADC #&00
-    STA &a9
+    STA zp_ptr_hi
     JSR print_backspace
     LDY #&01
-    LDA (&a8),Y
+    LDA (zp_ptr_lo),Y
     CMP #&ff
     BNE lvar_continuation
     JMP space_save_top
@@ -236,7 +236,7 @@
     LDA #&ff
     STA alias_end_hi
 .xi_supp_copy_loop
-    EQUB &B2, &AE  \ LDA (&ae)
+    LDA (zp_src_lo)
     EQUB &92, &AC  \ STA (&ac)
     SEC
     LDA &AC
@@ -262,7 +262,7 @@
     BEQ xi_supp_save_cr
     LDY #&00
 .xi_supp_save_loop
-    LDA (&a8),Y
+    LDA (zp_ptr_lo),Y
     STA alias_buffer,Y
     INY
     CPY xi_cursor_pos
@@ -296,7 +296,7 @@
     BNE xi_supp_check_end
 .xi_supp_clear_and_load
     JSR xi_do_clear
-    EQUB &B2, &AE  \ LDA (&ae)
+    LDA (zp_src_lo)
     CMP #&0d
     BNE xi_supp_find_cr
     JMP xi_read_loop
@@ -304,7 +304,7 @@
     LDY #&ff
 .xi_supp_find_loop
     INY
-    LDA (&ae),Y
+    LDA (zp_src_lo),Y
     STA xi_char
     CMP #&0d
     BNE xi_supp_insert_char
@@ -317,7 +317,7 @@
 .xi_supp_check_end
     LDY #&00
 .xi_supp_check_loop
-    LDA (&ae),Y
+    LDA (zp_src_lo),Y
     CMP #&0d
     BEQ xi_supp_advance
     INY
