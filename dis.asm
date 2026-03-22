@@ -47,36 +47,36 @@
     BRA dis_print_header
 .dis_display_line
     LDA mem_vdu_1
-    STA &ae
+    STA zp_src_lo
     LDA mem_vdu_2
-    STA &af
+    STA zp_src_hi
 .dis_print_header
     LDA #&82
     JSR oswrch
     JSR oswrch
-    LDA &af
+    LDA zp_src_hi
     JSR dis_print_hex_word
-    LDA &ae
+    LDA zp_src_lo
     JSR dis_print_hex_word
     LDA #&20
     JSR oswrch
     LDY #&00
     STY &ad
-    LDA (&ae),Y                 \ opcode × 4 to get table offset
+    LDA (zp_src_lo),Y                 \ opcode × 4 to get table offset
     ASL A : ROL &ad
     ASL A : ROL &ad
     CLC : ADC #&56 : STA &ac   \ add table base low byte
-    LDA &ad
+    LDA zp_tmp_hi
     ADC #&a1
-    STA &ad
+    STA zp_tmp_hi
     LDY #&03
-    LDA (&ac),Y
+    LDA (zp_tmp_lo),Y
     BEQ dis_get_mode
     LDA #&83
     JSR oswrch
     LDY #&00
 .dis_print_opcode
-    LDA (&ac),Y
+    LDA (zp_tmp_lo),Y
     JSR oswrch
     INY
     CPY #&03
@@ -85,18 +85,18 @@
     JSR oswrch
 .dis_get_mode
     LDY #&03
-    LDA (&ac),Y
+    LDA (zp_tmp_lo),Y
     PHA
     ASL A
     TAX
     LDA dis_addr_mode_ptrs,X
-    STA &ac
+    STA zp_tmp_lo
     LDA dis_addr_mode_ptrs + 1,X
-    STA &ad
+    STA zp_tmp_hi
     LDY #&ff
 .dis_format_loop
     INY
-    LDA (&ac),Y
+    LDA (zp_tmp_lo),Y
     BEQ dis_print_addr
     CMP #&68
     BNE dis_check_lo
@@ -124,7 +124,7 @@
     TAX
     LDY #&00
 .dis_print_byte
-    LDA (&ae),Y
+    LDA (zp_src_lo),Y
     PHX
     JSR dis_print_hex_word
     PLX
@@ -143,9 +143,9 @@
     PHX
     LDY #&00
 .dis_ascii_char
-    LDA (&ae),Y
+    LDA (zp_src_lo),Y
     AND #&7f
-    CMP #&20
+    CMP #' '
     BCS dis_check_del
     LDA #&2e
 .dis_check_del
@@ -160,18 +160,18 @@
     JSR osnewl
     PLA
     CLC
-    ADC &ae
-    STA &ae
+    ADC zp_src_lo
+    STA zp_src_lo
     BCC dis_wait_key
-    INC &af
+    INC zp_src_hi
 .dis_wait_key
     JSR osrdch
     BCS dis_save_state
     JMP dis_print_header
 .dis_save_state
-    LDA &ae
+    LDA zp_src_lo
     STA mem_vdu_1
-    LDA &af
+    LDA zp_src_hi
     STA mem_vdu_2
     LDA #&00
     STA &ff
@@ -179,14 +179,14 @@
 .dis_check_up
     PHY
     LDY #&02
-    LDA (&ae),Y
+    LDA (zp_src_lo),Y
     JSR dis_print_hex_word
     PLY
     JMP dis_format_loop
 .dis_check_down
     PHY
     LDY #&01
-    LDA (&ae),Y
+    LDA (zp_src_lo),Y
     JSR dis_print_hex_word
     PLY
     JMP dis_format_loop
@@ -194,13 +194,13 @@
     PHY
     LDY #&01
     CLC
-    LDA &ae
+    LDA zp_src_lo
     ADC #&02
     STA &a8
-    LDA &af
+    LDA zp_src_hi
     ADC #&00
     STA &a9
-    LDA (&ae),Y
+    LDA (zp_src_lo),Y
     BMI dis_advance
     CLC
     ADC &a8
