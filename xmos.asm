@@ -216,7 +216,7 @@ GUARD &C000
     BNE pad_loop_2
     INY : INY : INY             \ skip handler address + offset
 .print_help_text                \ Print the help description
-    LDA (&a8),Y
+    LDA (zp_ptr_lo),Y
     BEQ done_3
     JSR osasci
     INY
@@ -235,12 +235,12 @@ GUARD &C000
 .*handle_command
     PHA : PHX : PHY
     LDA #LO(command_table)
-    STA &a8
+    STA zp_ptr_lo
     LDA #HI(command_table)
-    STA &a9
+    STA zp_ptr_hi
 .cmd_try_next
     PHY
-    LDA (&a8)
+    LDA (zp_ptr_lo)
     CMP #&FF                   \ End of command table?
     BEQ cmd_not_found
     JSR compare_string
@@ -248,21 +248,21 @@ GUARD &C000
     LDY #&00
 .skip_name_2                      \ Skip command name
     INY
-    LDA (&a8),Y
+    LDA (zp_ptr_lo),Y
     BNE skip_name_2
     INY : INY : INY             \ skip null + handler address
 .skip_help                      \ Skip help text
     INY
-    LDA (&a8),Y
+    LDA (zp_ptr_lo),Y
     BNE skip_help
     INY                         \ Advance past help text null terminator
     TYA
     CLC
-    ADC &a8
-    STA &a8
-    LDA &a9
+    ADC zp_ptr_lo
+    STA zp_ptr_lo
+    LDA zp_ptr_hi
     ADC #&00
-    STA &a9
+    STA zp_ptr_hi
     PLY
     JMP cmd_try_next
 
@@ -275,13 +275,13 @@ GUARD &C000
     LDY #&00
 .skip_cmd_name                      \ Skip past command name to handler address
     INY
-    LDA (&a8),Y
+    LDA (zp_ptr_lo),Y
     BNE skip_cmd_name
     INY
-    LDA (&a8),Y                \ Load handler address low byte
+    LDA (zp_ptr_lo),Y                \ Load handler address low byte
     STA cmd_dispatch_addr + 1
     INY
-    LDA (&a8),Y                \ Load handler address high byte
+    LDA (zp_ptr_lo),Y                \ Load handler address high byte
     STA cmd_dispatch_addr + 2
     JSR cmd_dispatch
     PLY : PLX : PLA
