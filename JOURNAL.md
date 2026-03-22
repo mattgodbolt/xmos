@@ -194,10 +194,9 @@ All code blocks are now disassembled into proper 6502 instructions:
 - [x] **Scoping pass**: 26 `{ }` blocks with clean local labels
 
 ### Remaining work
-- [ ] **More scoping**: ~260 more labels could be scoped (mostly single-reference branch targets)
+- [ ] **Scoping review**: existing `{ }` usage is inconsistent — many scopes wrap a single loop label mid-routine instead of wrapping the whole routine. Should mirror C-like scoping: one `{ }` per function, not per branch target. See util.asm `print_inline` and `copy_inline_to_stack` for examples of the problem.
 - [ ] **Tail data annotation**: key/alias buffer regions could be labelled further
 - [ ] **Comment pass**: add high-level comments explaining each routine's purpose
-- [ ] **Instruction compaction**: put simple instruction pairs on one line with `:` separator (e.g. `ASL A : ROL A : ASL A : ROL A`, `LDA #&00 : STA &xx`) — see frogman source for style
 - [ ] **ZP workarounds**: 23 &00xx absolute addressing EQUB instructions (fix in improvements phase)
 - [ ] **Second macro pass**: find more repeated patterns after full annotation
 
