@@ -338,16 +338,18 @@ Findings:
   service call &27 fires during the reset sequence, alias_init copies
   the data back, then the MOS continues and overwrites ANDY with
   fresh defaults.
-- Root cause found: jsbeeb doesn't split instruction fetch from data
-  access for the ANDY mapping. When ROMSEL bit 7 is set, real hardware
-  fetches instructions from the selected ROM bank but routes data
-  reads to ANDY. jsbeeb routes both to ANDY, so `*STORE`'s code
-  (which runs from the ROM at &8000+) would crash trying to fetch
-  instructions from uninitialised ANDY. In practice jsbeeb seems to
-  read ROM data rather than ANDY data. The store buffer ends up with
-  the ROM copyright string instead of function key definitions.
-- This is a jsbeeb emulation bug. `*STORE` should work on real
-  hardware. Added to the TestMachine improvements list.
+- The ifetch/data split theory was WRONG: ROMSEL bit 7 redirects
+  ALL accesses (both ifetch and data) to ANDY. This is correct
+  because `*STORE` code lives at &9346 (above the &8FFF ANDY range)
+  so instruction fetches still come from the ROM. Confirmed by
+  checking b2, BeebEm, and BBC Master documentation.
+- jsbeeb's romSelect correctly maps pages 128-143 to ANDY when bit 7
+  is set (confirmed by watching memLook changes during *STORE).
+- Despite this, the store buffer ends up with ROM data instead of
+  ANDY data. The root cause is still under investigation — the
+  mapping appears correct but reads from &8000 during the copy loop
+  return ROM bytes. Needs deeper debugging.
+- Needs verification on real hardware to confirm *STORE works there.
 
 ### MCP function key numbering
 
