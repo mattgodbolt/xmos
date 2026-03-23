@@ -313,6 +313,31 @@ wrapper that sets `shift: true` for uppercase letters.
 - `lvar.test.js` — empty list, heap vs integer variables
 - `bau.test.js` — *BAU line splitting, *SPACE keyword spacing
 
+### *STORE investigation (ongoing)
+
+`*STORE` help text says "Keeps function keys on break". The code
+(alias.asm lines 460-482) sets ROMSEL bit 7 (which maps &8000-&8FFF
+to ANDY — the Master's 4K private RAM) and copies &8000-&83FF to
+store buffers in HAZEL. On reset, `alias_init` copies them back.
+
+However, MOS function key definitions live at `os_fkey_buf` (&0480)
+— regular page 4 RAM, NOT in ANDY. So `*STORE` doesn't save function
+keys at all. Testing confirms: `*KEY 1 HELLO` + `*STORE` + soft
+reset = function key is lost.
+
+Open questions:
+- What DOES live in ANDY &8000-&83FF that's worth preserving?
+- Is the help text misleading, or did function keys live in ANDY on
+  an earlier MOS version?
+- `store_flag` defaults to &FF in the ROM, so `alias_init` always
+  tries to restore even without `*STORE` — is that intentional?
+
+### MCP function key numbering
+
+MCP key name `F0` maps to BBC `f1` (i.e. `*KEY 1`). The numbering
+is offset by one because the BBC has `f0` (which maps to PC's F1
+internally in jsbeeb's key tables).
+
 ### CI and pre-commit
 - `npm test` runs as a pre-commit hook alongside beebasm-fmt and check.sh
 - GitHub Actions CI runs both `check.sh` (ROM verification) and `npm test`
