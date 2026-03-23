@@ -357,18 +357,21 @@ lost without `*STORE`.
   recognise the ROM — this wipes all RAM. Something about this
   sequence may be leaving the environment in a state where *STORE
   doesn't work.
-- **Root cause found:** An interrupt fires mid-copy-loop in *STORE.
-  The interrupt handler restores ROMSEL from the &F4 shadow copy
-  (which is 7, without bit 7), so ANDY is unpaged and the remaining
-  reads hit the ROM instead. Confirmed by tracing: at &8000 (X=0)
-  ROMSEL is &87 and reads ANDY correctly, but at &8022 (X=&22)
-  ROMSEL is &07 and reads ROM data.
-- This is a bug in the original XMOS code — the copy loop should
-  disable interrupts (SEI/CLI) around the ROMSEL bit 7 section.
-  It works in the browser because interrupt timing differs (the
-  timer interrupt happens not to fire during the short loop).
-- This is a real bug we've found through testing! It could be fixed
-  in our assembly source once we drop the byte-identical constraint.
+- **Root cause found:** `*STORE` sets ROMSEL bit 7 via &FE30 to
+  page in ANDY, but never updates the &F4 shadow copy. If any
+  interrupt fires during the copy loop (~8192 cycles, against a
+  10000-cycle timer interval), the MOS interrupt handler restores
+  ROMSEL from &F4 (without bit 7), unpaging ANDY. The rest of the
+  copy reads ROM data instead of function key data. Confirmed by
+  tracing: at X=0, ROMSEL is &87 and reads ANDY; at X=&22, ROMSEL
+  has been reset to &07 by an interrupt.
+- Fix: write to &F4 before &FE30, as the rest of XMOS already does
+  (e.g. input.asm updates both when switching banks). Rich TW
+  confirmed this is the correct fix.
+- Confirmed by patching the &FE30 write to also update &F4 — with
+  the fix, `*STORE` + CTRL+BREAK correctly preserves function keys.
+- This is a real latent bug in the original 1992 ROM, found through
+  automated testing.
 
 ### MCP function key numbering
 
