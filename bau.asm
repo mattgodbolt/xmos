@@ -132,8 +132,8 @@
         SBC #&00
         STA zp_work_hi
 .copy_byte
-        EQUB &B2, &AA           \ LDA (0xaa)
-        EQUB &92, &AC           \ STA (0xac)
+        LDA (zp_work_lo)
+        STA (zp_tmp_lo)
         SEC
         LDA zp_tmp_lo
         SBC #&01
@@ -448,8 +448,8 @@
         SBC #&00
         STA zp_work_hi
 .copy_loop
-        EQUB &B2, &AA           \ LDA (0xaa)
-        EQUB &92, &AC           \ STA (0xac)
+        LDA (zp_work_lo)
+        STA (zp_tmp_lo)
         SEC
         LDA zp_tmp_lo
         SBC #&01

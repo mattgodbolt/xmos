@@ -259,7 +259,7 @@
         STA alias_end_hi
 .copy_loop
         LDA (zp_src_lo)
-        EQUB &92, &AC           \ STA (&ac)
+        STA (zp_tmp_lo)
         SEC
         LDA &AC
         SBC #&01
