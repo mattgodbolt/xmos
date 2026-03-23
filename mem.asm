@@ -49,9 +49,9 @@
         LDA os_wrch_dest : STA mem_mode
         LDA #&01
         STA os_wrch_dest
-        LDA os_disp_addr : STA mem_page_size
+        LDA os_screen_pages : STA mem_page_size
         LDA #&02
-        STA os_disp_addr
+        STA os_screen_pages
         LDA #&50
         STA zp_tmp_lo
         LDA #&7c
@@ -154,7 +154,7 @@
 .mem_set_mode
 {
         LDA mem_mode : STA os_wrch_dest
-        LDA mem_page_size : STA os_disp_addr
+        LDA mem_page_size : STA os_screen_pages
         LDA #&0a
         STA crtc_addr
         LDA #&72

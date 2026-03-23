@@ -254,9 +254,9 @@
         STA &AF
         DEC xi_line_len
         LDA #&0d
-        STA alias_end_lo
+        STA xi_hist_term
         LDA #&ff
-        STA alias_end_hi
+        STA xi_hist_flag
 .copy_loop
         LDA (zp_src_lo)
         STA (zp_tmp_lo)
@@ -301,7 +301,7 @@
 .xi_history_recall
 {
         LDA #&0D
-        STA alias_end_hi
+        STA xi_hist_flag
         LDA xi_scroll_count
         CMP #&FF
         BNE check_count
