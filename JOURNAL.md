@@ -343,13 +343,22 @@ function keys across CTRL+BREAK (hard reset), not just BREAK.
 The MOS reinitialises ANDY on any reset, so function keys are always
 lost without `*STORE`.
 
-**What doesn't work in jsbeeb:**
-- After `*STORE`, the store buffer at &A655 contains ROM data (the
-  copyright string "MG 1992") instead of ANDY data (the function key
-  pointers and "HELLO"). The ANDY mapping appears correct in jsbeeb's
-  internal state, but the data reads during the copy loop return ROM
-  bytes. Root cause unknown — needs deeper debugging or testing on
-  real hardware.
+**What doesn't work in our test:**
+- After `*STORE`, the store buffer at &A655 is all zeros — `*STORE`
+  doesn't appear to write anything. But `*STORE` works correctly in
+  the browser version of jsbeeb (confirmed by Matt). So the bug is
+  in our test setup, not in jsbeeb itself.
+- The store buffers live in SWRAM (inside the XMOS ROM's own sideways
+  RAM slot), not in HAZEL as previously assumed. With ROMSEL = 0x87
+  during *STORE, &A655 maps to slot 7 SWRAM which is writable.
+- CTRL+BREAK in the test is simulated by holding CTRL during
+  `processor.reset(false)`, but `bootWithXmos()` uses
+  `processor.reset(true)` (power-on reset) to get the MOS to
+  recognise the ROM — this wipes all RAM. Something about this
+  sequence may be leaving the environment in a state where *STORE
+  doesn't work.
+- Next step: add logging to jsbeeb's readmem/writemem during the
+  *STORE copy loop to trace exactly where reads/writes go.
 
 ### MCP function key numbering
 
