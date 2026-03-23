@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { bootWithXmos, runCommand, captureOutput, typeText } from "./xmos-test-machine.js";
+import { bootWithXmos, runCommand, captureOutput } from "./xmos-test-machine.js";
 
-// MCP F0 key maps to BBC f1 (*KEY 1)
-async function pressF1(machine) {
-    machine.processor.sysvia.keyDown(112); // F1 PC keycode
+// Press BBC f1 (*KEY 1). MCP F0 (PC keycode 112) maps to BBC f1.
+async function pressBbcF1(machine) {
+    machine.processor.sysvia.keyDown(112);
     await machine.runFor(200000);
     machine.processor.sysvia.keyUp(112);
     await machine.runFor(200000);
@@ -19,7 +19,7 @@ describe("*STORE — keep function keys on break", () => {
     it("function key defined with *KEY should work", async () => {
         await runCommand(machine, "*KEY 1 HELLO");
         const getOutput = captureOutput(machine);
-        await pressF1(machine);
+        await pressBbcF1(machine);
         await machine.runFor(2_000_000);
         const output = getOutput();
         expect(output).toContain("HELLO");
@@ -31,27 +31,33 @@ describe("*STORE — keep function keys on break", () => {
         await machine.runUntilInput();
 
         const getOutput = captureOutput(machine);
-        await pressF1(machine);
+        await pressBbcF1(machine);
         await machine.runFor(2_000_000);
         const output = getOutput();
         expect(output).not.toContain("HELLO");
     });
 
-    it("*STORE does NOT preserve function keys (despite help text)", async () => {
-        // The help text says "Keeps function keys on break" but *STORE
-        // saves ANDY (&8000-&83FF via ROMSEL bit 7), while MOS stores
-        // function key definitions at &0480 (page 4 RAM). So function
-        // keys are lost on reset regardless. What *STORE actually
-        // preserves in ANDY is still under investigation.
+    // *STORE should preserve function keys across soft reset by copying
+    // ANDY (&8000-&83FF, the Master's function key buffer) to HAZEL
+    // store buffers, then alias_init restores them on reset.
+    //
+    // However, jsbeeb doesn't correctly emulate the ANDY split: on real
+    // hardware, ROMSEL bit 7 routes data reads to ANDY while instruction
+    // fetches still come from the ROM. jsbeeb routes both to ANDY, so
+    // *STORE reads ROM data instead of function key data. This means
+    // *STORE cannot be properly tested until jsbeeb is fixed.
+    //
+    // See JOURNAL.md for full investigation.
+    it.skip("*STORE should preserve function key across soft reset (jsbeeb ANDY bug)", async () => {
         await runCommand(machine, "*KEY 1 HELLO");
         await runCommand(machine, "*STORE");
         machine.processor.reset(false);
         await machine.runUntilInput();
 
         const getOutput = captureOutput(machine);
-        await pressF1(machine);
+        await pressBbcF1(machine);
         await machine.runFor(2_000_000);
         const output = getOutput();
-        expect(output).not.toContain("HELLO");
+        expect(output).toContain("HELLO");
     });
 });

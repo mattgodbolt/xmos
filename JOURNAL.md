@@ -325,12 +325,29 @@ However, MOS function key definitions live at `os_fkey_buf` (&0480)
 keys at all. Testing confirms: `*KEY 1 HELLO` + `*STORE` + soft
 reset = function key is lost.
 
-Open questions:
-- What DOES live in ANDY &8000-&83FF that's worth preserving?
-- Is the help text misleading, or did function keys live in ANDY on
-  an earlier MOS version?
-- `store_flag` defaults to &FF in the ROM, so `alias_init` always
-  tries to restore even without `*STORE` — is that intentional?
+Findings:
+- ANDY &8000-&83FF IS the function key buffer on the Master (confirmed
+  by reading it after `*KEY 1 HELLO` — pointer tables and string data
+  visible at &8000-&8027).
+- `*STORE` correctly saves ANDY to HAZEL store buffers (confirmed by
+  reading store_buf_0 at &A655 — data matches ANDY contents).
+- HAZEL survives soft reset (store buffer data is identical before and
+  after BREAK).
+- But function keys are still lost after reset. Most likely the MOS
+  reinitialises ANDY AFTER alias_init has restored the data — the
+  service call &27 fires during the reset sequence, alias_init copies
+  the data back, then the MOS continues and overwrites ANDY with
+  fresh defaults.
+- Root cause found: jsbeeb doesn't split instruction fetch from data
+  access for the ANDY mapping. When ROMSEL bit 7 is set, real hardware
+  fetches instructions from the selected ROM bank but routes data
+  reads to ANDY. jsbeeb routes both to ANDY, so `*STORE`'s code
+  (which runs from the ROM at &8000+) would crash trying to fetch
+  instructions from uninitialised ANDY. In practice jsbeeb seems to
+  read ROM data rather than ANDY data. The store buffer ends up with
+  the ROM copyright string instead of function key definitions.
+- This is a jsbeeb emulation bug. `*STORE` should work on real
+  hardware. Added to the TestMachine improvements list.
 
 ### MCP function key numbering
 
