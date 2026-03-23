@@ -459,7 +459,7 @@
 \ that a ROM image has been saved, so alias_init can restore it later.
 .cmd_store
 {
-        EQUB &AD, &F4, &00      \ LDA 0x00f4
+        LDA sheila_romsel
         ORA #&80
         STA sheila_romsel
         LDX #&00
@@ -474,7 +474,7 @@
         STA alias_exec_buf,X
         INX
         BNE copy_loop
-        EQUB &AD, &F4, &00      \ LDA 0x00f4
+        LDA sheila_romsel
         AND #&7f
         STA sheila_romsel
         LDA #&ff
@@ -489,7 +489,7 @@
 {
         LDA store_flag
         BEQ done
-        EQUB &AD, &F4, &00      \ LDA 0x00f4
+        LDA sheila_romsel
         ORA #&80
         STA sheila_romsel
         LDX #&00
@@ -502,7 +502,7 @@
         STA &8200,X
         INX
         BNE restore_loop
-        EQUB &AD, &F4, &00      \ LDA 0x00f4
+        LDA sheila_romsel
         AND #&7f
         STA sheila_romsel
 .done

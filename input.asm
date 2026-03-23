@@ -782,7 +782,7 @@
 \ When expanding a BASIC token outside of a quoted string, look up the
 \ full keyword text and insert each character into the input buffer.
 .xi_htab_check_quote
-    EQUB &AD, &AE, &89          \ LDA xi_quote_toggle (absolute ZP workaround)
+    LDA xi_quote_toggle
     BNE xi_htab_output_char
     LDA #&55
     STA zp_src_lo
