@@ -296,7 +296,10 @@
     OP "SBC", &0a               \ &fd: SBC &hl,X
     OP "INC", &0a               \ &fe: INC &hl,X
     NOOP                        \ &ff
-\ Build *KEY9 definition from original development
+\ Runtime workspace — everything from here to alias_clear_flag is
+\ overwritten at runtime. Initial values are development artifacts.
+\ See the workspace overlay after SAVE in xmos.asm for the layout.
+.workspace_start
     EQUS "KEY9 *SRSAVE XMos 8000+4000 7Q|M", 13, "M", 13
 
 \ Overwritten workspace
