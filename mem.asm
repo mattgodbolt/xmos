@@ -166,7 +166,7 @@
         LDA #&18
         JSR oswrch
         LDA #&00
-        STA &ff
+        STA os_escape_effect
         RTS
 }
 \ Move cursor one byte backward. If already at column 0, wrap to column 7

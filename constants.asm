@@ -44,7 +44,13 @@ basic_str_hi = &B3              \ BASIC string pointer high
 basic_page_hi = &18             \ PAGE high byte (start of BASIC program)
 basic_top_lo = &12              \ TOP low byte (end of BASIC program)
 basic_top_hi = &13              \ TOP high byte
-basic_lomem  = &00              \ LOMEM (varies)
+basic_lomem_lo = &00            \ LOMEM low (start of variable heap)
+basic_lomem_hi = &01            \ LOMEM high
+basic_vartop_lo = &02           \ VARTOP low (end of variable heap)
+basic_vartop_hi = &03           \ VARTOP high
+basic_listo  = &1F              \ LISTO option (LIST formatting control)
+
+os_escape_effect = &FF          \ Escape key effect flag (0 = normal escape)
 
 \ --- OS zero page ---
 cmd_line_lo  = &F2              \ Command line pointer low (set by MOS)
@@ -93,7 +99,6 @@ os_fkey_buf  = &0480            \ Function key buffer start
 os_rs423_buf = &0900            \ RS423 output buffer
 
 \ --- BASIC zero page ---
-basic_flags  = &1F              \ BASIC internal flags byte
 
 \ --- Display memory ---
 mode7_screen = &7C00            \ Start of MODE 7 screen memory

@@ -59,7 +59,7 @@
 .compare_string
 {
         LDX #&00
-        LDA &a8                 \ Self-modify the CMP and LDA absolute,X below
+        LDA zp_ptr_lo           \ Self-modify the CMP and LDA absolute,X below
         STA cmp_str_addr + 1
         STA lda_str_addr + 1
         LDA zp_ptr_hi

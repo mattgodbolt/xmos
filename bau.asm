@@ -13,7 +13,7 @@
         EQUS &5C, "BAU must be called from BASIC", 0
 .splitting
         STROUT msg_now_splitting
-        LDA &18
+        LDA basic_page_hi
         STA zp_ptr_hi
         LDA #&00
         STA zp_ptr_lo
@@ -117,18 +117,18 @@
         STA zp_ptr_hi
 \ Shift the program body upward by 3 bytes (room for new line header).
 \ Copies from TOP downward to avoid overwriting data.
-        LDA &00
+        LDA basic_lomem_lo
         CLC
         ADC #&02
         STA zp_tmp_lo
-        LDA &01
+        LDA basic_lomem_hi
         ADC #&00
         STA zp_tmp_hi
         SEC
-        LDA &00
+        LDA basic_lomem_lo
         SBC #&01
         STA zp_work_lo
-        LDA &01
+        LDA basic_lomem_hi
         SBC #&00
         STA zp_work_hi
 .copy_byte
@@ -148,10 +148,10 @@
         LDA zp_work_hi
         SBC #&00
         STA zp_work_hi
-        CMP &a9
+        CMP zp_ptr_hi
         BNE copy_byte
         LDA zp_work_lo
-        CMP &a8
+        CMP zp_ptr_lo
         BNE copy_byte
 \ Write the new line header: line number 0, then stored length
         LDA #&00
@@ -163,12 +163,12 @@
         INY
         STA (zp_ptr_lo),Y       \ line length
         CLC
-        LDA &00
+        LDA basic_lomem_lo
         ADC #&03
-        STA &00                 \ adjust TOP pointer
-        LDA &01
+        STA basic_lomem_lo      \ adjust TOP pointer
+        LDA basic_lomem_hi
         ADC #&00
-        STA &01
+        STA basic_lomem_hi
         JMP check_line          \ re-scan from this new line
 \ Advance pointer to next BASIC line (add line length to pointer)
 .next_line
@@ -214,7 +214,7 @@
         JSR copy_inline_to_stack  \ BRK error: "Must be called from BASIC!"
         EQUS &5C, "Must be called from BASIC!", 0
 .setup
-        LDA &18
+        LDA basic_page_hi
         STA zp_ptr_hi
         STZ &a8
         STROUT msg_now_spacing
@@ -343,12 +343,12 @@
         STA (zp_ptr_lo),Y
         PLY
         CLC
-        LDA &00
+        LDA basic_lomem_lo
         ADC #&01
-        STA &00
-        LDA &01
+        STA basic_lomem_lo
+        LDA basic_lomem_hi
         ADC #&00
-        STA &01
+        STA basic_lomem_hi
         LDA #' '
         INY
         STA (zp_ptr_lo),Y       \ write space byte
@@ -389,10 +389,10 @@
 }
 \ Save the new TOP pointer (program may have grown) and finish
 .space_save_top
-    LDA &00
-    STA &12
-    LDA &01
-    STA &13
+    LDA basic_lomem_lo
+    STA basic_top_lo
+    LDA basic_lomem_hi
+    STA basic_top_hi
     JSR osnewl
     RTS
 
@@ -408,12 +408,12 @@
         STA (zp_ptr_lo),Y
         PLY
         CLC
-        LDA &00
+        LDA basic_lomem_lo
         ADC #&01
-        STA &00
-        LDA &01
+        STA basic_lomem_lo
+        LDA basic_lomem_hi
         ADC #&00
-        STA &01
+        STA basic_lomem_hi
         LDA #' '
         INY
         STA (zp_ptr_lo),Y
@@ -436,15 +436,15 @@
         LDA zp_ptr_hi
         ADC #&00
         STA zp_ptr_hi
-        LDA &00
+        LDA basic_lomem_lo
         STA zp_tmp_lo
-        LDA &01
+        LDA basic_lomem_hi
         STA zp_tmp_hi
         SEC
-        LDA &00
+        LDA basic_lomem_lo
         SBC #&01
         STA zp_work_lo
-        LDA &01
+        LDA basic_lomem_hi
         SBC #&00
         STA zp_work_hi
 .copy_loop
@@ -464,10 +464,10 @@
         LDA zp_work_hi
         SBC #&00
         STA zp_work_hi
-        CMP &a9
+        CMP zp_ptr_hi
         BNE copy_loop
         LDA zp_work_lo
-        CMP &a8
+        CMP zp_ptr_lo
         BNE copy_loop
         PLA
         STA zp_ptr_hi

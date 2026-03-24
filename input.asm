@@ -742,7 +742,7 @@
     TAX
     LDA #&00
     STA xi_quote_toggle
-    LDA basic_flags
+    LDA basic_listo
     AND #&01
     BEQ xi_htab_found_space
     PHY

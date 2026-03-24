@@ -16,7 +16,7 @@
         CPY #&12
         BNE copy_template
         JSR find_incore_name    \ Find and validate the incore filename
-        LDA &b2                 \ Save BASIC string pointer
+        LDA basic_str_lo        \ Save BASIC string pointer
         PHA
         LDA basic_str_hi
         PHA

@@ -205,7 +205,7 @@
         LDA zp_src_hi
         STA mem_vdu_2
         LDA #&00
-        STA &ff
+        STA os_escape_effect
         RTS
 }
 \ Print the high byte of a two-byte operand (byte at PC+2).
@@ -233,20 +233,20 @@
     CLC
     LDA zp_src_lo
     ADC #&02
-    STA &a8
+    STA zp_ptr_lo
     LDA zp_src_hi
     ADC #&00
-    STA &a9
+    STA zp_ptr_hi
     LDA (zp_src_lo),Y
     BMI dis_advance
     CLC
     ADC &a8
-    STA &a8
-    LDA &a9
+    STA zp_ptr_lo
+    LDA zp_ptr_hi
     ADC #&00
-    STA &a9
+    STA zp_ptr_hi
     JSR dis_print_hex_word
-    LDA &a8
+    LDA zp_ptr_lo
     JSR dis_print_hex_word
     PLY
     JMP dis_format_loop
@@ -255,12 +255,12 @@
 .dis_advance
     CLC
     ADC &a8
-    STA &a8
-    LDA &a9
+    STA zp_ptr_lo
+    LDA zp_ptr_hi
     ADC #&ff
-    STA &a9
+    STA zp_ptr_hi
     JSR dis_print_hex_word
-    LDA &a8
+    LDA zp_ptr_lo
     JSR dis_print_hex_word
     PLY
     JMP dis_format_loop

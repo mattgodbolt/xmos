@@ -190,12 +190,12 @@
         STA (zp_ptr_lo),Y
         PLY
         CLC
-        LDA &00
+        LDA basic_lomem_lo
         ADC #&01
-        STA &00
-        LDA &01
+        STA basic_lomem_lo
+        LDA basic_lomem_hi
         ADC #&00
-        STA &01
+        STA basic_lomem_hi
         LDA #' '
         INY
         STA (zp_ptr_lo),Y
