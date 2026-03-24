@@ -14,19 +14,15 @@
         CMP #&0d
         BEQ mem_setup_display
         JSR parse_hex_word
-        LDA zp_src_lo
-        STA mem_edit_lo
-        LDA zp_src_hi
-        STA mem_edit_hi
+        LDA zp_src_lo : STA mem_edit_lo
+        LDA zp_src_hi : STA mem_edit_hi
 }
 \ Set up the Mode 7 display: switch video mode, align the start address
 \ to an 8-byte boundary, and initialise the column cursor position.
 .mem_setup_display
 {
-        LDA mem_edit_lo
-        STA zp_ptr_lo
-        LDA mem_edit_hi
-        STA zp_ptr_hi
+        LDA mem_edit_lo : STA zp_ptr_lo
+        LDA mem_edit_hi : STA zp_ptr_hi
         LDA zp_ptr_lo
         AND #&07
         STA mem_column
@@ -36,26 +32,19 @@
         JSR oswrch
         LDA #&07
         JSR oswrch
-        LDA #&0a
-        STA crtc_addr
-        LDA #' '
-        STA crtc_data
+        LDA #&0a : STA crtc_addr
+        LDA #' ' : STA crtc_data
         LDX #&27
 .loop
-        LDA mem_header,X
-        STA mode7_screen,X
+        LDA mem_header,X : STA mode7_screen,X
         DEX
         BPL loop
         LDA os_wrch_dest : STA mem_mode
-        LDA #&01
-        STA os_wrch_dest
+        LDA #&01 : STA os_wrch_dest
         LDA os_screen_pages : STA mem_page_size
-        LDA #&02
-        STA os_screen_pages
-        LDA #&50
-        STA zp_tmp_lo
-        LDA #&7c
-        STA zp_tmp_hi
+        LDA #&02 : STA os_screen_pages
+        LDA #&50 : STA zp_tmp_lo
+        LDA #&7c : STA zp_tmp_hi
         LDX #&16
 }
 \ Write Mode 7 colour control codes at the start, middle, and end of
@@ -143,10 +132,8 @@
         TXA
         ASL A
         TAX
-        LDA mem_routine_table,X
-        STA cmd_dispatch_addr + 1
-        LDA mem_routine_table + 1,X
-        STA cmd_dispatch_addr + 2
+        LDA mem_routine_table,X : STA cmd_dispatch_addr + 1
+        LDA mem_routine_table + 1,X : STA cmd_dispatch_addr + 2
         JSR cmd_dispatch
         JMP mem_adjust_ptr
 }
@@ -155,18 +142,15 @@
 {
         LDA mem_mode : STA os_wrch_dest
         LDA mem_page_size : STA os_screen_pages
-        LDA #&0a
-        STA crtc_addr
-        LDA #&72
-        STA crtc_data
+        LDA #&0a : STA crtc_addr
+        LDA #&72 : STA crtc_data
         LDA #&1f
         JSR oswrch
         LDA #&00
         JSR oswrch
         LDA #&18
         JSR oswrch
-        LDA #&00
-        STA os_escape_effect
+        LDA #&00 : STA os_escape_effect
         RTS
 }
 \ Move cursor one byte backward. If already at column 0, wrap to column 7
@@ -175,8 +159,7 @@
 {
         DEC mem_column
         BPL mem_cursor_rts
-        LDA #&07
-        STA mem_column
+        LDA #&07 : STA mem_column
         SEC
         LDA &A8
         SBC #&08
@@ -196,8 +179,7 @@
         STA mem_column
         CMP #&08
         BNE mem_cursor_rts
-        LDA #&00
-        STA mem_column
+        LDA #&00 : STA mem_column
         CLC
         LDA zp_ptr_lo
         ADC #&08
@@ -277,12 +259,9 @@
 \ Also draws bracket markers around the currently selected column.
 .dis_setup
 {
-        LDA #&16
-        STA counter
-        LDA #&51
-        STA zp_tmp_lo
-        LDA #&7c
-        STA zp_tmp_hi
+        LDA #&16 : STA counter
+        LDA #&51 : STA zp_tmp_lo
+        LDA #&7c : STA zp_tmp_hi
 .line_loop
         LDA zp_src_hi
         JSR dis_print_hex_byte
@@ -353,10 +332,8 @@
         ASL A
         ADC mem_column
         TAY
-        LDA #']'
-        STA mode7_screen + &1E6,Y
-        LDA #'['
-        STA mode7_screen + &1E9,Y
+        LDA #']' : STA mode7_screen + &1E6,Y
+        LDA #'[' : STA mode7_screen + &1E9,Y
         RTS
 .counter
         EQUB &00
@@ -376,8 +353,7 @@
         LDA #&88
         AND #&0f
         TAX
-        LDA hex_digits,X
-        STA (zp_tmp_lo)
+        LDA hex_digits,X : STA (zp_tmp_lo)
         INC zp_tmp_lo
         BNE rts
         INC zp_tmp_hi

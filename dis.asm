@@ -107,10 +107,8 @@
     PHA
     ASL A
     TAX
-    LDA dis_addr_mode_ptrs,X
-    STA zp_tmp_lo
-    LDA dis_addr_mode_ptrs + 1,X
-    STA zp_tmp_hi
+    LDA dis_addr_mode_ptrs,X : STA zp_tmp_lo
+    LDA dis_addr_mode_ptrs + 1,X : STA zp_tmp_hi
     LDY #&ff
 \ Walk the format string character by character. Literal chars are printed
 \ directly; 'h' (high byte), 'l' (low byte), and 'b' (branch target)
@@ -269,8 +267,7 @@
         BMI rts
         STA dec_value_hi
         LDY #&02
-        LDA (&a8),Y
-        STA dec_value_lo
+        LDA (&a8),Y : STA dec_value_lo
         PHX
         PHY
         JSR print_decimal

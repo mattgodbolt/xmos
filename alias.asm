@@ -48,8 +48,7 @@
         STA zp_work_hi
         LDY #&00
 .copy_loop
-        LDA (zp_work_lo),Y
-        STA (zp_ptr_lo),Y
+        LDA (zp_work_lo),Y : STA (zp_ptr_lo),Y
         CMP #&ff
         BNE copy_next
         STA (zp_ptr_lo),Y
@@ -131,8 +130,7 @@
         BNE skip_ws
 \ Null-terminate the alias name, then store the expansion text and length
 .terminate
-        LDA #&00
-        STA (zp_ptr_lo),Y
+        LDA #&00 : STA (zp_ptr_lo),Y
         INY
         SEC
         LDA cmd_line_lo
@@ -153,8 +151,7 @@
 .store_arg
         STA (zp_ptr_lo),Y
         INY
-        LDA #&ff
-        STA (zp_ptr_lo),Y
+        LDA #&ff : STA (zp_ptr_lo),Y
         TYA
         LDY compare_string_y
         STA (zp_ptr_lo),Y
@@ -203,8 +200,7 @@
 \ Delete alias — write &FF sentinel at current position to remove the entry.
 \ Only valid if an existing alias was found (alias_semicolon_flag set).
 .alias_clear_entry
-    LDA #&ff
-    STA (zp_ptr_lo)
+    LDA #&ff : STA (zp_ptr_lo)
     LDA alias_semicolon_flag
     BEQ alias_syntax_error
     RTS
@@ -503,9 +499,7 @@
 \ into a 16-bit value stored at &AE/&AF. Stops at CR or space.
 .parse_hex_word
 {
-        LDA #&00
-        STA zp_src_lo
-        STA zp_src_hi
+        LDA #&00 : STA zp_src_lo : STA zp_src_hi
 .loop
         LDA (cmd_line_lo),Y
         CMP #&0d

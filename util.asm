@@ -44,8 +44,7 @@
         STA &0100,Y             \ Store null at start of stack page
 .loop
         INY
-        LDA (zp_ptr_lo),Y       \ Copy bytes to stack page
-        STA &0100,Y
+        LDA (zp_ptr_lo),Y : STA &0100,Y  \ Copy bytes to stack page
         BNE loop
         JMP &0100               \ Execute the copied code
 }
@@ -59,12 +58,8 @@
 .compare_string
 {
         LDX #&00
-        LDA zp_ptr_lo           \ Self-modify the CMP and LDA absolute,X below
-        STA cmp_str_addr + 1
-        STA lda_str_addr + 1
-        LDA zp_ptr_hi
-        STA cmp_str_addr + 2
-        STA lda_str_addr + 2
+        LDA zp_ptr_lo : STA cmp_str_addr + 1 : STA lda_str_addr + 1  \ Self-modify the CMP and LDA absolute,X below
+        LDA zp_ptr_hi : STA cmp_str_addr + 2 : STA lda_str_addr + 2
 .loop
         LDA (cmd_line_lo),Y     \ Get next character from command line
         CMP #'.'

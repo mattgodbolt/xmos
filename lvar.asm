@@ -16,8 +16,7 @@
 .start
         LDX #&00
 .var_loop
-        LDA os_fkey_buf,X
-        STA zp_ptr_lo
+        LDA os_fkey_buf,X : STA zp_ptr_lo
         INX
         LDA os_fkey_buf,X
         DEX
@@ -44,10 +43,8 @@
         BEQ next_var            \ null = end of chain
         STA zp_tmp_lo
         DEY
-        LDA (zp_ptr_lo),Y
-        STA zp_ptr_lo
-        LDA zp_tmp_lo
-        STA zp_ptr_hi
+        LDA (zp_ptr_lo),Y : STA zp_ptr_lo
+        LDA zp_tmp_lo : STA zp_ptr_hi
         BRA check_type
 .next_var
         INX                     \ advance to next bucket (2 bytes per entry)
@@ -101,8 +98,7 @@
 {
         INY
 .parse_token
-        LDA #&00
-        STA lvar_indent
+        LDA #&00 : STA lvar_indent
         LDA (zp_ptr_lo),Y
         CMP #&0d
         BNE check_dot
@@ -164,8 +160,7 @@
         INY
         BRA parse_token
 .set_indent
-        LDA #&03                \ default: skip 3 chars (opcode + operand)
-        STA lvar_indent
+        LDA #&03 : STA lvar_indent  \ default: skip 3 chars (opcode + operand)
 \ Skip past the operand bytes (counted by lvar_indent), then insert a
 \ space before the next item if one isn't already there.
 .skip_operand
@@ -190,12 +185,8 @@
         STA (zp_ptr_lo),Y
         PLY
         CLC
-        LDA basic_lomem_lo
-        ADC #&01
-        STA basic_lomem_lo
-        LDA basic_lomem_hi
-        ADC #&00
-        STA basic_lomem_hi
+        LDA basic_lomem_lo : ADC #&01 : STA basic_lomem_lo
+        LDA basic_lomem_hi : ADC #&00 : STA basic_lomem_hi
         LDA #' '
         INY
         STA (zp_ptr_lo),Y
@@ -234,15 +225,12 @@
 \ buffer and shifts the existing alias history down to make room.
 .xi_history_save
 {
-        LDA #LO(xi_hist_flag)
-        STA zp_tmp_lo
-        LDA #HI(xi_hist_flag)
-        STA zp_tmp_hi
+        LDA #LO(xi_hist_flag) : STA zp_tmp_lo
+        LDA #HI(xi_hist_flag) : STA zp_tmp_hi
         INC xi_alias_count
         LDA xi_alias_count
         BNE inc_cursor
-        LDA #&ff
-        STA xi_alias_count
+        LDA #&ff : STA xi_alias_count
 .inc_cursor
         INC xi_line_len
         SEC
@@ -253,13 +241,10 @@
         SBC #&00
         STA &AF
         DEC xi_line_len
-        LDA #&0d
-        STA xi_hist_term
-        LDA #&ff
-        STA xi_hist_flag
+        LDA #&0d : STA xi_hist_term
+        LDA #&ff : STA xi_hist_flag
 .copy_loop
-        LDA (zp_src_lo)
-        STA (zp_tmp_lo)
+        LDA (zp_src_lo) : STA (zp_tmp_lo)
         SEC
         LDA &AC
         SBC #&01
@@ -284,14 +269,12 @@
         BEQ save_cr
         LDY #&00
 .save_loop
-        LDA (zp_ptr_lo),Y
-        STA alias_buffer,Y
+        LDA (zp_ptr_lo),Y : STA alias_buffer,Y
         INY
         CPY xi_line_len
         BNE save_loop
 .save_cr
-        LDA #&0d
-        STA alias_buffer,Y
+        LDA #&0d : STA alias_buffer,Y
         RTS
 }
 .xi_scroll_count
@@ -300,13 +283,11 @@
 \ alias history buffer, scrolling through entries by index.
 .xi_history_recall
 {
-        LDA #&0D
-        STA xi_hist_flag
+        LDA #&0D : STA xi_hist_flag
         LDA xi_scroll_count
         CMP #&FF
         BNE check_count
-        LDA #&00
-        STA xi_scroll_count
+        LDA #&00 : STA xi_scroll_count
 .check_count
         CMP xi_alias_count
         BCC set_ptr
@@ -314,10 +295,8 @@
         DEC A
         STA xi_scroll_count
 .set_ptr
-        LDA #LO(xi_hist_buffer)
-        STA zp_src_lo
-        LDA #HI(xi_hist_buffer)
-        STA zp_src_hi
+        LDA #LO(xi_hist_buffer) : STA zp_src_lo
+        LDA #HI(xi_hist_buffer) : STA zp_src_hi
         LDX xi_scroll_count
         BNE check_end
 .clear_and_load
@@ -330,8 +309,7 @@
         LDY #&ff
 .find_loop
         INY
-        LDA (zp_src_lo),Y
-        STA xi_char
+        LDA (zp_src_lo),Y : STA xi_char
         CMP #&0d
         BNE insert_char
         JMP xi_read_loop
@@ -348,8 +326,7 @@
         BEQ advance
         INY
         BNE check_loop
-        LDA #&00
-        STA xi_scroll_count
+        LDA #&00 : STA xi_scroll_count
         JMP xi_history_recall
 .advance
         INY
@@ -367,8 +344,7 @@
         LDA &AE
         CMP #&55
         BCC check_end
-        LDA #&00
-        STA xi_scroll_count
+        LDA #&00 : STA xi_scroll_count
         JMP xi_history_recall
 }
 \ token_classify — identifies assembler-context tokens and sets lvar_indent
@@ -382,26 +358,22 @@
 {
         CMP #&45
         BNE check_80
-        LDA #&04
-        STA lvar_indent
+        LDA #&04 : STA lvar_indent
         BRA found
 .check_80
         CMP #&80
         BNE check_82
-        LDA #&01
-        STA lvar_indent
+        LDA #&01 : STA lvar_indent
         BRA found
 .check_82
         CMP #&82
         BNE check_84
-        LDA #&01
-        STA lvar_indent
+        LDA #&01 : STA lvar_indent
         BRA found
 .check_84
         CMP #&84
         BNE not_found
-        LDA #&02
-        STA lvar_indent
+        LDA #&02 : STA lvar_indent
         BRA found
 .not_found
         CLC                     \ not recognised

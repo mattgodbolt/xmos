@@ -10,8 +10,7 @@
 {
         LDY #&00
 .copy_template                  \ Copy OSFILE parameter block template
-        LDA osfile_template,Y
-        STA osfile_block,Y
+        LDA osfile_template,Y : STA osfile_block,Y
         INY
         CPY #&12
         BNE copy_template
@@ -20,13 +19,9 @@
         PHA
         LDA basic_str_hi
         PHA
-        LDA basic_page_hi       \ PAGE = start of BASIC program
-        STA osfile_block + 3    \ Load address high byte
-        STA osfile_block + 11   \ Start address high byte
-        LDA basic_top_lo        \ TOP low byte
-        STA osfile_block + 14   \ End address low byte
-        LDA basic_top_hi        \ TOP high byte
-        STA osfile_block + 15   \ End address high byte
+        LDA basic_page_hi : STA osfile_block + 3 : STA osfile_block + 11  \ Start address high byte
+        LDA basic_top_lo : STA osfile_block + 14  \ End address low byte
+        LDA basic_top_hi : STA osfile_block + 15  \ End address high byte
         LDA #&00                \ OSFILE A=0: save file
         LDX #LO(osfile_block)
         LDY #HI(osfile_block)
@@ -135,8 +130,7 @@
     INY                         \ Skip past '>'
     STY osfile_block            \ Set filename offset in parameter block
     STY basic_str_lo
-    LDA basic_str_hi
-    STA osfile_block + 1        \ Set filename pointer high byte
+    LDA basic_str_hi : STA osfile_block + 1  \ Set filename pointer high byte
     RTS
 
 .saved_msg

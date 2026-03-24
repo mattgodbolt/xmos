@@ -106,8 +106,7 @@
     CPX #&40
     BNE kr_shift_1
 .kr_shift_ldx_0
-    LDX #&E1
-    STX &EC
+    LDX #&E1 : STX &EC
 .kr_shift_orig_0
     LDX #&61
 .kr_shift_1
@@ -115,8 +114,7 @@
     CPX #&01
     BNE kr_shift_2
 .kr_shift_ldx_1
-    LDX #&C2
-    STX &EC
+    LDX #&C2 : STX &EC
 .kr_shift_orig_1
     LDX #&42
 .kr_shift_2
@@ -124,8 +122,7 @@
     CPX #&48
     BNE kr_shift_3
 .kr_shift_ldx_2
-    LDX #&C8
-    STX &EC
+    LDX #&C8 : STX &EC
 .kr_shift_orig_2
     LDX #&48
 .kr_shift_3
@@ -133,8 +130,7 @@
     CPX #&68
     BNE kr_shift_4
 .kr_shift_ldx_3
-    LDX #&E8
-    STX &EC
+    LDX #&E8 : STX &EC
 .kr_shift_orig_3
     LDX #&68
 .kr_shift_4
@@ -142,8 +138,7 @@
     CPX #&49
     BNE kr_shift_done
 .kr_shift_ldx_4
-    LDX #&C9
-    STX &EC
+    LDX #&C9 : STX &EC
 .kr_shift_orig_4
     LDX #&49
 .kr_shift_done
@@ -171,18 +166,10 @@
         LDA keyon_active
         BNE keyon_already_msg
         LDA #&01 : STA keyon_active
-        LDA keyv_lo
-        STA key_remap_jmp1 + 1
-        STA key_remap_jmp2 + 1
-        STA key_remap_jmp3 + 1
-        STA key_remap_jsr + 1
-        STA saved_keyv_lo
-        LDA keyv_hi
-        STA key_remap_jmp1 + 2
-        STA key_remap_jmp2 + 2
-        STA key_remap_jmp3 + 2
-        STA key_remap_jsr + 2
-        STA saved_keyv_hi
+        LDA keyv_lo : STA key_remap_jmp1 + 1 : STA key_remap_jmp2 + 1
+        STA key_remap_jmp3 + 1 : STA key_remap_jsr + 1 : STA saved_keyv_lo
+        LDA keyv_hi : STA key_remap_jmp1 + 2 : STA key_remap_jmp2 + 2
+        STA key_remap_jmp3 + 2 : STA key_remap_jsr + 2 : STA saved_keyv_hi
         SEC : LDA #&00 : SBC key_codes
         STA kr_scan_ldx_0 + 1
         SEC : LDA #&00 : SBC key_codes + 1
@@ -243,10 +230,8 @@
     LDA keyon_active            \ Already disabled?
     BEQ keyoff_print_msg
     LDA #&00 : STA keyon_active
-    LDA saved_keyv_lo           \ Restore original KEYV
-    STA keyv_lo
-    LDA saved_keyv_hi
-    STA keyv_hi
+    LDA saved_keyv_lo : STA keyv_lo  \ Restore original KEYV
+    LDA saved_keyv_hi : STA keyv_hi
 .keyoff_print_msg
     STROUT msg_keys_off
     JMP keyon_rts
@@ -286,17 +271,13 @@
         LDA #&04
         BNE search
 .from_table
-        LDX os_key_trans
-        STX zp_ptr_lo
-        LDX os_key_trans_hi
-        STX zp_ptr_hi
+        LDX os_key_trans : STX zp_ptr_lo
+        LDX os_key_trans_hi : STX zp_ptr_hi
         TAY
         LDA (zp_ptr_lo),Y
 .search
-        LDX #&f1
-        STX zp_ptr_lo
-        LDX #&8d
-        STX zp_ptr_hi
+        LDX #&f1 : STX zp_ptr_lo
+        LDX #&8d : STX zp_ptr_hi
         LDY #&00
 .scan_loop
         CMP (&a8),Y
@@ -336,10 +317,8 @@
         LDA keyon_active
         BEQ kstatus_not_active
         STROUT msg_keys_on
-        LDA #&d0
-        STA zp_work_lo
-        LDA #&8e
-        STA zp_work_hi
+        LDA #&d0 : STA zp_work_lo
+        LDA #&8e : STA zp_work_hi
         LDX #&00
 .loop
         LDY #&00
@@ -392,10 +371,8 @@
         JSR osnewl
         STROUT msg_key_redefiner
         JSR osnewl
-        LDA #&d0
-        STA zp_work_lo
-        LDA #&8e
-        STA zp_work_hi
+        LDA #&d0 : STA zp_work_lo
+        LDA #&8e : STA zp_work_hi
         LDX #&00
 .header_y
         LDY #&00

@@ -6,19 +6,15 @@
 .handle_reset
 {
         PHA : PHX : PHY
-        LDA rom_workspace_table,X  \ Get our ROM's workspace page
-        STA xi_patch_workspace_hi + 1  \ Patch workspace high byte into handler
+        LDA rom_workspace_table,X : STA xi_patch_workspace_hi + 1  \ Patch workspace high byte into handler
         STX xi_patch_rom_slot + 1  \ Patch ROM slot number into handler
         STA zp_work_hi          \ Set up workspace pointer high
         STA os_himem_hi         \ Set OSHWM high byte
-        LDA #&00
-        STA zp_work_lo          \ Workspace pointer low = 0
-        STA os_himem_lo         \ OSHWM low byte = 0
+        LDA #&00 : STA zp_work_lo : STA os_himem_lo  \ OSHWM low byte = 0
         JSR alias_init          \ Initialise alias system
         LDA keyon_active
         BEQ reset_skip_keyon
-        LDA #&00
-        STA keyon_active
+        LDA #&00 : STA keyon_active
         JSR keyon_setup         \ Re-enable KEYON if it was active
 .reset_skip_keyon
         LDA xon_flag
@@ -33,8 +29,7 @@
 .reset_skip_xon
         LDY #&00                \ Copy extended input handler code to workspace
 .copy_loop
-        LDA extended_input_code,Y
-        STA (zp_work_lo),Y
+        LDA extended_input_code,Y : STA (zp_work_lo),Y
         INY
         CPY #&D0                \ Copy &D0 (208) bytes
         BNE copy_loop
@@ -60,27 +55,19 @@
     STX zp_src_lo
     STY zp_src_hi
 .*xi_patch_workspace_hi
-    LDA #&db                    \ patched by handle_reset with workspace page
-    STA zp_work_hi
-    LDA #&e0
-    STA zp_work_lo
+    LDA #&db : STA zp_work_hi   \ patched by handle_reset with workspace page
+    LDA #&e0 : STA zp_work_lo
     LDY #&0f
 .xi_save_regs_loop
-    LDA (zp_src_lo),Y
-    STA (zp_work_lo),Y
+    LDA (zp_src_lo),Y : STA (zp_work_lo),Y
     DEY
     BPL xi_save_regs_loop
-    LDA rom_number
-    STA saved_language_rom
+    LDA rom_number : STA saved_language_rom
 .*xi_patch_rom_slot
-    LDA #&07                    \ patched by handle_reset with actual ROM slot
-    STA sheila_romsel
-    STA rom_number
+    LDA #&07 : STA sheila_romsel : STA rom_number  \ patched by handle_reset with actual ROM slot
     JSR xi_check_xon
     PHP
-    LDA saved_language_rom
-    STA sheila_romsel
-    STA rom_number
+    LDA saved_language_rom : STA sheila_romsel : STA rom_number
     LDA #&00
     PLP
     RTS
@@ -99,17 +86,12 @@
 \ Reset editor state and begin reading a new input line.
 \ Fetches the caller's buffer address from the register block.
 .xi_init_state
-    LDA #&00
-    STA xi_scroll_count
-    LDA #&00
-    STA xi_line_len
-    STA xi_cursor_pos
+    LDA #&00 : STA xi_scroll_count
+    LDA #&00 : STA xi_line_len : STA xi_cursor_pos
     TAY
-    LDA (zp_work_lo),Y
-    STA zp_ptr_lo
+    LDA (zp_work_lo),Y : STA zp_ptr_lo
     INY
-    LDA (zp_work_lo),Y
-    STA zp_ptr_hi
+    LDA (zp_work_lo),Y : STA zp_ptr_hi
 \ Main input loop: read a character and dispatch it.
 \ Escape is echoed and re-read; all other keys are dispatched by type.
 .xi_read_loop
@@ -203,8 +185,7 @@
     BNE xi_do_insert_setup
     JMP xi_read_loop
 .xi_do_insert_setup
-    LDA #&00
-    STA xi_insert_mode
+    LDA #&00 : STA xi_insert_mode
     JSR xi_do_insert
     JMP xi_read_loop
 .xi_insert_mode
@@ -367,8 +348,7 @@
     LDA saved_language_rom
     PHA
     JSR cmd_s
-    LDA #&0d
-    STA (zp_ptr_lo)
+    LDA #&0d : STA (zp_ptr_lo)
     LDY #&00
     PLA
     STA saved_language_rom
@@ -388,8 +368,7 @@
 .xi_cr_finish
     JSR xi_history_save
     LDY xi_line_len
-    LDA #&0d
-    STA (zp_ptr_lo),Y
+    LDA #&0d : STA (zp_ptr_lo),Y
     JSR osnewl
     CLC
     LDX #&00
@@ -444,9 +423,7 @@
         JSR oswrch
         DEX
         BNE del_char
-        LDA #&00
-        STA xi_cursor_pos
-        STA xi_line_len
+        LDA #&00 : STA xi_cursor_pos : STA xi_line_len
 .done
         RTS
 }
@@ -460,8 +437,7 @@
     JSR cmd_xoff
     JSR osnewl
     LDY #&00
-    LDA #&0d
-    STA (zp_ptr_lo),Y
+    LDA #&0d : STA (zp_ptr_lo),Y
     CLC
     RTS
 \ Copy-up (cursor up in copy mode): if no key is pending in the buffer,
@@ -478,8 +454,7 @@
     BNE xi_copy_up_inc
     LDA xi_insert_mode
     BNE xi_copy_up_inc
-    LDA #&ff
-    STA xi_insert_mode
+    LDA #&ff : STA xi_insert_mode
     LDA xi_line_len
     BEQ xi_copy_up_jmp
     JSR xi_history_save
@@ -516,8 +491,7 @@
     JSR oswrch
     DEX
     BNE xi_copy_up_bs_loop
-    LDA #&00
-    STA xi_cursor_pos
+    LDA #&00 : STA xi_cursor_pos
     JMP xi_read_loop
 \ Copy-down (cursor down in copy mode): if no key is pending, enter
 \ insert/scroll mode and scroll down. If a key is pending, move the
@@ -533,8 +507,7 @@
     BNE xi_copy_down_dec
     LDA xi_insert_mode
     BNE xi_copy_down_dec
-    LDA #&ff
-    STA xi_insert_mode
+    LDA #&ff : STA xi_insert_mode
     JSR xi_history_save
 .xi_copy_down_dec
     DEC xi_scroll_count
@@ -571,8 +544,7 @@
     DEX
     BNE xi_copy_down_fwd_loop
 .xi_copy_down_set_pos
-    LDA xi_line_len
-    STA xi_cursor_pos
+    LDA xi_line_len : STA xi_cursor_pos
     JMP xi_read_loop
 \ Temporarily disable cursor editing mode and re-inject a cursor key,
 \ allowing normal screen-level cursor movement for one keypress.
@@ -663,11 +635,8 @@
     DEX
     BNE xi_htab_fwd_loop
 .xi_htab_set_pos
-    LDA xi_line_len
-    STA xi_cursor_pos
-    LDY #&00
-    STY xi_char
-    STY xi_temp
+    LDA xi_line_len : STA xi_cursor_pos
+    LDY #&00 : STY xi_char : STY xi_temp
 .xi_htab_parse_loop
     LDA (zp_ptr_lo),Y
     CMP #'0'
@@ -720,10 +689,8 @@
 \ the parsed number, then expand its tokens into the input buffer.
 .xi_htab_lookup
     LDY xi_line_len
-    LDA #&00
-    STA zp_tmp_lo
-    LDA basic_page_hi
-    STA zp_tmp_hi
+    LDA #&00 : STA zp_tmp_lo
+    LDA basic_page_hi : STA zp_tmp_hi
 .xi_htab_search_loop
     LDY #&01
     LDA (zp_tmp_lo),Y
@@ -740,14 +707,12 @@
     SEC
     SBC #&04
     TAX
-    LDA #&00
-    STA xi_quote_toggle
+    LDA #&00 : STA xi_quote_toggle
     LDA basic_listo
     AND #&01
     BEQ xi_htab_found_space
     PHY
-    LDA #' '
-    STA xi_char
+    LDA #' ' : STA xi_char
     JSR xi_do_insert
     PLY
 .xi_htab_found_space
@@ -790,10 +755,8 @@
 .xi_htab_check_quote
     LDA xi_quote_toggle
     BNE xi_htab_output_char
-    LDA #LO(basic_keyword_table)
-    STA zp_src_lo
-    LDA #HI(basic_keyword_table)
-    STA zp_src_hi
+    LDA #LO(basic_keyword_table) : STA zp_src_lo
+    LDA #HI(basic_keyword_table) : STA zp_src_hi
 .xi_htab_keyword_loop
     LDY #&00
     LDA (zp_src_lo),Y

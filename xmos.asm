@@ -248,10 +248,8 @@ GUARD &C000
 {
 .*handle_command
         PHA : PHX : PHY
-        LDA #LO(command_table)
-        STA zp_ptr_lo
-        LDA #HI(command_table)
-        STA zp_ptr_hi
+        LDA #LO(command_table) : STA zp_ptr_lo
+        LDA #HI(command_table) : STA zp_ptr_hi
 .cmd_try_next
         PHY
         LDA (zp_ptr_lo)
@@ -292,11 +290,9 @@ GUARD &C000
         LDA (zp_ptr_lo),Y
         BNE skip_cmd_name
         INY
-        LDA (zp_ptr_lo),Y       \ Load handler address low byte
-        STA cmd_dispatch_addr + 1
+        LDA (zp_ptr_lo),Y : STA cmd_dispatch_addr + 1  \ Load handler address low byte
         INY
-        LDA (zp_ptr_lo),Y       \ Load handler address high byte
-        STA cmd_dispatch_addr + 2
+        LDA (zp_ptr_lo),Y : STA cmd_dispatch_addr + 2  \ Load handler address high byte
         JSR cmd_dispatch
         PLY : PLX : PLA
         LDA #&00                \ Claim the service call
@@ -341,8 +337,7 @@ GUARD &C000
 \ Sets the XON flag and switches cursor keys to editing mode via OSBYTE 4.
 \ ============================================================================
 .cmd_xon
-    LDA #&FF
-    STA xon_flag
+    LDA #&FF : STA xon_flag
     LDA #&04                    \ OSBYTE 4: set cursor key status
     LDX #&01                    \ X=1: cursor editing mode
     LDY #&00
@@ -353,8 +348,7 @@ GUARD &C000
 \ Clears the XON flag and resets cursor keys to normal mode via OSBYTE 4.
 \ ============================================================================
 .cmd_xoff
-    LDA #&00
-    STA xon_flag
+    LDA #&00 : STA xon_flag
     LDA #&04                    \ OSBYTE 4: set cursor key status
     LDX #&00                    \ X=0: normal cursor keys
     LDY #&00
