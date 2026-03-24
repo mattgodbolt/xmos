@@ -52,6 +52,8 @@ cmd_line_hi  = &F3              \ Command line pointer high
 rom_number   = &F4              \ Current paged ROM number
 
 \ --- XMOS workspace (zero page, temporary for * commands) ---
+\ &70 is used as scratch during alias operations
+zp_scratch   = &70              \ Scratch byte
 \ &A8-&AF are reserved by MOS for sideways ROM use during commands
 zp_ptr_lo    = &A8              \ General pointer low
 zp_ptr_hi    = &A9              \ General pointer high

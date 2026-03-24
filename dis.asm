@@ -80,11 +80,11 @@
     LDA #' '
     JSR oswrch
     LDY #&00
-    STY &ad
+    STY zp_tmp_hi
     LDA (zp_src_lo),Y           \ opcode × 4 to get table offset
-    ASL A : ROL &ad
-    ASL A : ROL &ad
-    CLC : ADC #LO(dis_opcode_table) : STA &ac
+    ASL A : ROL zp_tmp_hi
+    ASL A : ROL zp_tmp_hi
+    CLC : ADC #LO(dis_opcode_table) : STA zp_tmp_lo
     LDA zp_tmp_hi
     ADC #HI(dis_opcode_table)
     STA zp_tmp_hi

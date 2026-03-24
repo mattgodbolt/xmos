@@ -64,19 +64,19 @@
 {
         LDA #&83
         LDY #&00
-        STA (&ac),Y
+        STA (zp_tmp_lo),Y
         LDA #&87
         LDY #&05
-        STA (&ac),Y
+        STA (zp_tmp_lo),Y
         LDA #&86
         LDY #&1f
-        STA (&ac),Y
+        STA (zp_tmp_lo),Y
         CLC
         LDA zp_tmp_lo
         ADC #&28
         STA zp_tmp_lo
         BCC skip
-        INC &ad
+        INC zp_tmp_hi
 .skip
         DEX
         BNE mem_draw_row
@@ -293,15 +293,15 @@
         ADC #&02
         STA zp_tmp_lo
         BCC hex_dump
-        INC &ad
+        INC zp_tmp_hi
 .hex_dump
         LDY #&00
 .hex_byte_loop
-        LDA (&ae),Y
+        LDA (zp_src_lo),Y
         JSR dis_print_hex_byte
-        INC &ac
+        INC zp_tmp_lo
         BNE hex_next
-        INC &ad
+        INC zp_tmp_hi
 .hex_next
         INY
         CPY #&08
@@ -311,18 +311,18 @@
         ADC #&01
         STA zp_tmp_lo
         BCC ascii_dump
-        INC &ad
+        INC zp_tmp_hi
 \ Write the ASCII representation of the 8 bytes (non-printable shown as '.').
 .ascii_dump
         LDY #&00
 .ascii_loop
-        LDA (&ae),Y
+        LDA (zp_src_lo),Y
         AND #&7f
         CMP #' '
         BCS store_byte
         LDA #'.'
 .store_byte
-        STA (&ac),Y
+        STA (zp_tmp_lo),Y
         INY
         CPY #&08
         BNE ascii_loop
@@ -331,14 +331,14 @@
         ADC #&09
         STA zp_tmp_lo
         BCC advance_ptr
-        INC &ad
+        INC zp_tmp_hi
 .advance_ptr
         CLC
         LDA zp_src_lo
         ADC #&08
         STA zp_src_lo
         BCC next_line
-        INC &af
+        INC zp_src_hi
 .next_line
         DEC counter
         BNE line_loop
@@ -369,18 +369,18 @@
         LSR A : LSR A : LSR A : LSR A  \ high nibble
         TAX : LDA hex_digits,X
         STA (zp_tmp_lo)
-        INC &ac
+        INC zp_tmp_lo
         BNE dis_print_lo_nibble
-        INC &ad
+        INC zp_tmp_hi
 .*dis_print_lo_nibble
         LDA #&88
         AND #&0f
         TAX
         LDA hex_digits,X
         STA (zp_tmp_lo)
-        INC &ac
+        INC zp_tmp_lo
         BNE rts
-        INC &ad
+        INC zp_tmp_hi
 .rts
         RTS
 }

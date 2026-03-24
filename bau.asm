@@ -106,7 +106,7 @@
         EOR #&ff
         CLC
         ADC #&04
-        STA &ae                 \ new line length for the split-off portion
+        STA zp_src_lo           \ new line length for the split-off portion
         PLA
         STA (zp_ptr_lo),Y
         CLC
@@ -159,7 +159,7 @@
         STA (zp_ptr_lo),Y       \ line number hi = 0
         INY
         STA (zp_ptr_lo),Y       \ line number lo = 0
-        LDA &ae
+        LDA zp_src_lo
         INY
         STA (zp_ptr_lo),Y       \ line length
         CLC
@@ -277,7 +277,7 @@
         BEQ space_scan_loop
         CMP #&8a                \ LINE — skip
         BEQ space_scan_loop
-        CMP #&f2                \ PROC — skip
+        CMP #cmd_line_lo        \ PROC — skip
         BEQ space_scan_loop
         CMP #&a4                \ FN — skip
         BEQ space_scan_loop

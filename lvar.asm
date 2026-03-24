@@ -278,7 +278,7 @@
         CMP #&54
         BNE copy_loop
         LDA &AF
-        CMP #&aa
+        CMP #zp_work_lo
         BNE copy_loop
         LDY xi_line_len
         BEQ save_cr
@@ -362,7 +362,7 @@
         STA &AF
         DEX
         BEQ clear_and_load
-        CMP #&ae
+        CMP #zp_src_lo
         BCC check_end
         LDA &AE
         CMP #&55
