@@ -294,8 +294,7 @@
 .do_delete
         LDA #&7f
         JSR oswrch
-        DEC xi_cursor_pos
-        DEC xi_line_len
+        DEC xi_cursor_pos : DEC xi_line_len
         LDY xi_cursor_pos
         PLA
         BEQ done
@@ -471,8 +470,7 @@
     SEC
     LDA os_win_right
     SBC os_win_left
-    CLC
-    ADC #&01
+    CLC : ADC #&01
     STA xi_char
     SEC
     LDA xi_cursor_pos
@@ -521,10 +519,8 @@
     SEC
     LDA os_win_right
     SBC os_win_left
-    CLC
-    ADC #&01
-    CLC
-    ADC xi_cursor_pos
+    CLC : ADC #&01
+    CLC : ADC xi_cursor_pos
     BCS xi_copy_down_truncate
     CMP xi_line_len
     BCS xi_copy_down_truncate
@@ -651,16 +647,14 @@
     BNE xi_htab_parse_loop
 \ Multiply the accumulated number by 10 and add the current digit.
 .xi_htab_mul10
-    ASL xi_char
-    ROL xi_temp
+    ASL xi_char : ROL xi_temp
     LDA xi_char
     ASL A
     STA zp_tmp_lo
     LDA xi_temp
     ROL A
     STA zp_tmp_hi
-    ASL zp_tmp_lo
-    ROL zp_tmp_hi
+    ASL zp_tmp_lo : ROL zp_tmp_hi
     CLC
     LDA xi_char
     ADC zp_tmp_lo
@@ -669,10 +663,8 @@
     ADC xi_temp
     STA xi_temp
     LDA (zp_ptr_lo),Y
-    SEC
-    SBC #'0'
-    CLC
-    ADC xi_char
+    SEC : SBC #'0'
+    CLC : ADC xi_char
     STA xi_char
     LDA xi_temp
     ADC #&00
@@ -704,8 +696,7 @@
     BNE xi_htab_advance_ptr
     INY
     LDA (zp_tmp_lo),Y
-    SEC
-    SBC #&04
+    SEC : SBC #&04
     TAX
     LDA #&00 : STA xi_quote_toggle
     LDA basic_listo
@@ -737,8 +728,7 @@
 .xi_htab_advance_ptr
     LDY #&03
     LDA (zp_tmp_lo),Y
-    CLC
-    ADC zp_tmp_lo
+    CLC : ADC zp_tmp_lo
     STA zp_tmp_lo
     LDA zp_tmp_hi
     ADC #&00
@@ -782,8 +772,7 @@
     INY
     INY
     TYA
-    CLC
-    ADC zp_src_lo
+    CLC : ADC zp_src_lo
     STA zp_src_lo
     LDA zp_src_hi
     ADC #&00

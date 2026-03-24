@@ -181,8 +181,7 @@
     BNE dis_ascii_char
     JSR osnewl
     PLA
-    CLC
-    ADC zp_src_lo
+    CLC : ADC zp_src_lo
     STA zp_src_lo
     BCC dis_wait_key
     INC zp_src_hi
@@ -231,8 +230,7 @@
     STA zp_ptr_hi
     LDA (zp_src_lo),Y
     BMI dis_advance
-    CLC
-    ADC &a8
+    CLC : ADC zp_ptr_lo
     STA zp_ptr_lo
     LDA zp_ptr_hi
     ADC #&00
@@ -245,8 +243,7 @@
 \ Backward branch: offset is negative, so add &FF to the high byte
 \ (sign-extend the 8-bit negative offset to 16 bits).
 .dis_advance
-    CLC
-    ADC &a8
+    CLC : ADC zp_ptr_lo
     STA zp_ptr_lo
     LDA zp_ptr_hi
     ADC #&ff
@@ -263,16 +260,14 @@
         LDA #&08
         FOR n, 1, 5 : JSR oswrch : NEXT
         LDY #&01
-        LDA (&a8),Y
+        LDA (zp_ptr_lo),Y
         BMI rts
         STA dec_value_hi
         LDY #&02
-        LDA (&a8),Y : STA dec_value_lo
-        PHX
-        PHY
+        LDA (zp_ptr_lo),Y : STA dec_value_lo
+        PHX : PHY
         JSR print_decimal
-        PLY
-        PLX
+        PLY : PLX
 .rts
         RTS
 }

@@ -26,7 +26,7 @@
         LDA zp_ptr_lo
         AND #&07
         STA mem_column
-        EOR &a8
+        EOR zp_ptr_lo
         STA zp_ptr_lo
         LDA #&16
         JSR oswrch
@@ -161,12 +161,12 @@
         BPL mem_cursor_rts
         LDA #&07 : STA mem_column
         SEC
-        LDA &A8
+        LDA zp_ptr_lo
         SBC #&08
-        STA &A8
-        LDA &A9
+        STA zp_ptr_lo
+        LDA zp_ptr_hi
         SBC #&00
-        STA &A9
+        STA zp_ptr_hi
 }
 .mem_cursor_rts
     RTS
@@ -200,21 +200,21 @@
         CPX #&ff
         BNE row_up
         SEC
-        LDA &A8
+        LDA zp_ptr_lo
         SBC #&b0
-        STA &A8
-        LDA &A9
+        STA zp_ptr_lo
+        LDA zp_ptr_hi
         SBC #&00
-        STA &A9
+        STA zp_ptr_hi
         RTS
 .row_up
         SEC
-        LDA &A8
+        LDA zp_ptr_lo
         SBC #&08
-        STA &A8
-        LDA &A9
+        STA zp_ptr_lo
+        LDA zp_ptr_hi
         SBC #&00
-        STA &A9
+        STA zp_ptr_hi
         RTS
 }
 \ Page down: if SHIFT is held, jump forward by a full page (&B0 bytes);
@@ -228,21 +228,21 @@
         CPX #&ff
         BNE row_down
         CLC
-        LDA &A8
+        LDA zp_ptr_lo
         ADC #&b0
-        STA &A8
-        LDA &A9
+        STA zp_ptr_lo
+        LDA zp_ptr_hi
         ADC #&00
-        STA &A9
+        STA zp_ptr_hi
         RTS
 .row_down
         CLC
-        LDA &A8
+        LDA zp_ptr_lo
         ADC #&08
-        STA &A8
-        LDA &A9
+        STA zp_ptr_lo
+        LDA zp_ptr_hi
         ADC #&00
-        STA &A9
+        STA zp_ptr_hi
         RTS
 }
 \ Toggle between hex-entry ('H') and ASCII-entry ('A') mode by flipping

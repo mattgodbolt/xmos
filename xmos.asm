@@ -216,8 +216,7 @@ GUARD &C000
         CMP #&00
         BNE print_name_2
         TYA                     \ Pad with spaces to column 11
-        SEC
-        SBC #&09
+        SEC : SBC #&09
         EOR #&FF : INC A        \ negate
         TAX
 .pad_loop_2
@@ -269,8 +268,7 @@ GUARD &C000
         BNE skip_help
         INY                     \ Advance past help text null terminator
         TYA
-        CLC
-        ADC zp_ptr_lo
+        CLC : ADC zp_ptr_lo
         STA zp_ptr_lo
         LDA zp_ptr_hi
         ADC #&00

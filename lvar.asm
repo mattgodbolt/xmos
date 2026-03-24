@@ -26,8 +26,7 @@
 .check_type
         TXA
         LSR A                   \ bucket index / 2
-        CLC
-        ADC #'@'                \ convert to ASCII letter ('A' onwards)
+        CLC : ADC #'@'          \ convert to ASCII letter ('A' onwards)
         JSR oswrch
         LDY #&01
 .skip_name
@@ -234,35 +233,35 @@
 .inc_cursor
         INC xi_line_len
         SEC
-        LDA &AC
+        LDA zp_tmp_lo
         SBC xi_line_len
-        STA &AE
-        LDA &AD
+        STA zp_src_lo
+        LDA zp_tmp_hi
         SBC #&00
-        STA &AF
+        STA zp_src_hi
         DEC xi_line_len
         LDA #&0d : STA xi_hist_term
         LDA #&ff : STA xi_hist_flag
 .copy_loop
         LDA (zp_src_lo) : STA (zp_tmp_lo)
         SEC
-        LDA &AC
+        LDA zp_tmp_lo
         SBC #&01
-        STA &AC
-        LDA &AD
+        STA zp_tmp_lo
+        LDA zp_tmp_hi
         SBC #&00
-        STA &AD
+        STA zp_tmp_hi
         SEC
-        LDA &AE
+        LDA zp_src_lo
         SBC #&01
-        STA &AE
-        LDA &AF
+        STA zp_src_lo
+        LDA zp_src_hi
         SBC #&00
-        STA &AF
-        LDA &AE
+        STA zp_src_hi
+        LDA zp_src_lo
         CMP #&54
         BNE copy_loop
-        LDA &AF
+        LDA zp_src_hi
         CMP #zp_work_lo
         BNE copy_loop
         LDY xi_line_len
@@ -331,17 +330,16 @@
 .advance
         INY
         TYA
-        CLC
-        ADC &AE
-        STA &AE
-        LDA &AF
+        CLC : ADC zp_src_lo
+        STA zp_src_lo
+        LDA zp_src_hi
         ADC #&00
-        STA &AF
+        STA zp_src_hi
         DEX
         BEQ clear_and_load
         CMP #zp_src_lo
         BCC check_end
-        LDA &AE
+        LDA zp_src_lo
         CMP #&55
         BCC check_end
         LDA #&00 : STA xi_scroll_count
@@ -395,8 +393,7 @@
         LDX #&10                \ 16 bits to shift
         LDA #&00
 .shift
-        ASL dec_value_lo
-        ROL dec_value_hi
+        ASL dec_value_lo : ROL dec_value_hi
         ROL A                   \ shift next bit into accumulator
         CMP #&0a
         BCC next_bit
@@ -405,8 +402,7 @@
 .next_bit
         DEX
         BNE shift
-        CLC
-        ADC #'0'                \ convert digit to ASCII
+        CLC : ADC #'0'          \ convert digit to ASCII
         PHA                     \ push digit (most significant first)
         INY
         LDA dec_value_lo

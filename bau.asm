@@ -98,15 +98,13 @@
         PHA
         SEC
         LDY #&03
-        SBC (&a8),Y
+        SBC (zp_ptr_lo),Y
         EOR #&ff
-        CLC
-        ADC #&04
+        CLC : ADC #&04
         STA zp_src_lo           \ new line length for the split-off portion
         PLA
         STA (zp_ptr_lo),Y
-        CLC
-        ADC zp_ptr_lo : STA zp_ptr_lo
+        CLC : ADC zp_ptr_lo : STA zp_ptr_lo
         LDA zp_ptr_hi : ADC #&00 : STA zp_ptr_hi
 \ Shift the program body upward by 3 bytes (room for new line header).
 \ Copies from TOP downward to avoid overwriting data.
@@ -145,8 +143,7 @@
 .next_line
         LDY #&03
         LDA (zp_ptr_lo),Y
-        CLC
-        ADC zp_ptr_lo : STA zp_ptr_lo
+        CLC : ADC zp_ptr_lo : STA zp_ptr_lo
         LDA zp_ptr_hi : ADC #&00 : STA zp_ptr_hi
         JMP line_loop
 
@@ -342,8 +339,7 @@
 .next_line
         LDY #&03
         LDA (zp_ptr_lo),Y
-        CLC
-        ADC zp_ptr_lo : STA zp_ptr_lo
+        CLC : ADC zp_ptr_lo : STA zp_ptr_lo
         LDA zp_ptr_hi : ADC #&00 : STA zp_ptr_hi
         JMP space_line_loop
 }
@@ -384,8 +380,7 @@
         LDA zp_ptr_hi
         PHA
         TYA
-        CLC
-        ADC zp_ptr_lo : STA zp_ptr_lo
+        CLC : ADC zp_ptr_lo : STA zp_ptr_lo
         LDA zp_ptr_hi : ADC #&00 : STA zp_ptr_hi
         LDA basic_lomem_lo : STA zp_tmp_lo
         LDA basic_lomem_hi : STA zp_tmp_hi

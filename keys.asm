@@ -106,7 +106,7 @@
     CPX #&40
     BNE kr_shift_1
 .kr_shift_ldx_0
-    LDX #&E1 : STX &EC
+    LDX #&E1 : STX os_last_key
 .kr_shift_orig_0
     LDX #&61
 .kr_shift_1
@@ -114,7 +114,7 @@
     CPX #&01
     BNE kr_shift_2
 .kr_shift_ldx_1
-    LDX #&C2 : STX &EC
+    LDX #&C2 : STX os_last_key
 .kr_shift_orig_1
     LDX #&42
 .kr_shift_2
@@ -122,7 +122,7 @@
     CPX #&48
     BNE kr_shift_3
 .kr_shift_ldx_2
-    LDX #&C8 : STX &EC
+    LDX #&C8 : STX os_last_key
 .kr_shift_orig_2
     LDX #&48
 .kr_shift_3
@@ -130,7 +130,7 @@
     CPX #&68
     BNE kr_shift_4
 .kr_shift_ldx_3
-    LDX #&E8 : STX &EC
+    LDX #&E8 : STX os_last_key
 .kr_shift_orig_3
     LDX #&68
 .kr_shift_4
@@ -138,7 +138,7 @@
     CPX #&49
     BNE kr_shift_done
 .kr_shift_ldx_4
-    LDX #&C9 : STX &EC
+    LDX #&C9 : STX os_last_key
 .kr_shift_orig_4
     LDX #&49
 .kr_shift_done
@@ -276,11 +276,11 @@
         TAY
         LDA (zp_ptr_lo),Y
 .search
-        LDX #&f1 : STX zp_ptr_lo
-        LDX #&8d : STX zp_ptr_hi
+        LDX #LO(key_name_table) : STX zp_ptr_lo
+        LDX #HI(key_name_table) : STX zp_ptr_hi
         LDY #&00
 .scan_loop
-        CMP (&a8),Y
+        CMP (zp_ptr_lo),Y
         BEQ found
         FOR n, 1, 10 : INY : NEXT  \ skip 10-byte entry (keycode + 9-char name)
         CPY #&96
@@ -422,8 +422,7 @@
         PLX
         STA key_codes,X
         DEC A
-        PHX
-        PHA
+        PHX : PHA
         JSR keyname_lookup
         JSR osnewl
         PLA
@@ -438,8 +437,7 @@
         JSR osbyte
         CPX #&ff
         BEQ next_entry
-        PLX
-        PLX
+        PLX : PLX
         RTS
 }
 \ Skip spaces and dots in the command line, leaving Y pointing at the

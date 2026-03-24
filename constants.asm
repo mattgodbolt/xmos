@@ -50,6 +50,7 @@ basic_vartop_lo = &02           \ VARTOP low (end of variable heap)
 basic_vartop_hi = &03           \ VARTOP high
 basic_listo  = &1F              \ LISTO option (LIST formatting control)
 
+os_last_key  = &EC              \ OS copy of last key pressed
 os_escape_effect = &FF          \ Escape key effect flag (0 = normal escape)
 
 \ --- OS zero page ---

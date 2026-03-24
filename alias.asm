@@ -40,8 +40,7 @@
         BNE skip_name
         INY
         LDA (zp_ptr_lo),Y
-        CLC
-        ADC zp_ptr_lo
+        CLC : ADC zp_ptr_lo
         STA zp_work_lo
         LDA zp_ptr_hi
         ADC #&00
@@ -73,8 +72,7 @@
         BNE find_loop
         INY
         LDA (zp_ptr_lo),Y
-        CLC
-        ADC zp_ptr_lo
+        CLC : ADC zp_ptr_lo
         STA zp_ptr_lo
         LDA zp_ptr_hi : ADC #&00 : STA zp_ptr_hi
         JMP check_end
@@ -90,10 +88,8 @@
         CMP #&0d
         BNE exec_copy
         TYA
-        SEC
-        SBC compare_string_y
-        CLC
-        ADC zp_ptr_lo
+        SEC : SBC compare_string_y
+        CLC : ADC zp_ptr_lo
         BCC exec_run
         LDA zp_ptr_hi
         CMP #&be
@@ -189,8 +185,7 @@
         BNE value
         INY
         TYA
-        CLC
-        ADC zp_ptr_lo
+        CLC : ADC zp_ptr_lo
         STA zp_ptr_lo
         LDA zp_ptr_hi : ADC #&00 : STA zp_ptr_hi
         JMP check
@@ -283,8 +278,7 @@
         JMP write_header
 \ %0-%9: Find the Nth space-delimited parameter from the original command line
 .get_param_num
-        SEC
-        SBC #'0'
+        SEC : SBC #'0'
         PHX
         TAX
         LDY compare_string_y
@@ -480,14 +474,12 @@
         BCC bad
         CMP #'G'
         BCS bad
-        SEC
-        SBC #'0'
+        SEC : SBC #'0'
         CMP #&0a
         BCC ok
         CMP #&11
         BCC bad
-        SEC
-        SBC #&07
+        SEC : SBC #&07
 .ok
         CLC
         RTS
@@ -512,16 +504,11 @@
         EQUS &EB, "Invalid hex digit", 0
 \ Shift existing value left by 4 bits and OR in the new digit
 .shift
-        ASL zp_src_lo
-        ROL zp_src_hi
-        ASL zp_src_lo
-        ROL zp_src_hi
-        ASL zp_src_lo
-        ROL zp_src_hi
-        ASL zp_src_lo
-        ROL zp_src_hi
-        CLC
-        ADC zp_src_lo
+        ASL zp_src_lo : ROL zp_src_hi
+        ASL zp_src_lo : ROL zp_src_hi
+        ASL zp_src_lo : ROL zp_src_hi
+        ASL zp_src_lo : ROL zp_src_hi
+        CLC : ADC zp_src_lo
         STA zp_src_lo
         LDA zp_src_hi
         ADC #&00
