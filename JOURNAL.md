@@ -197,7 +197,7 @@ All code blocks are now disassembled into proper 6502 instructions:
 - [x] **Scoping review**: all functions wrapped with label outside braces — many scopes wrap a single loop label mid-routine instead of wrapping the whole routine. Should mirror C-like scoping: one `{ }` per function, not per branch target. See util.asm `print_inline` and `copy_inline_to_stack` for examples of the problem.
 - [x] **Tail data annotation**: all sections labelled — build artifacts, ghost code, key/alias buffers, stored key defs, build scripts. Remaining EQUB is dead code with corrupt boundaries (ghost help handler) and structured data tables (OSFILE template, key_codes, NOOP macro).
 - [x] **Comment pass**: all routines documented across all 10 code files
-- [ ] **ZP workarounds**: 23 &00xx absolute addressing EQUB instructions (fix in improvements phase)
+- [x] **ZP workarounds**: all EQUB instruction workarounds removed — Rich's B-Em patches restored to original `LDA &FE30`, and all 65C02 indirect addressing now uses real instructions
 - [x] **Second macro pass**: reviewed — remaining patterns are standard 6502 idioms (16-bit pointer arithmetic, OSBYTE setup) that are better left explicit. Existing macros (STROUT, OP, NOOP, KW) cover the domain-specific patterns well.
 
 ## 2026-03-21: Label pass and absolute address elimination
@@ -243,9 +243,10 @@ All are legitimate and cannot be converted:
 - 1× &C000: GUARD directive
 
 ### Current state
-- 0 unnamed labels, ~520 named labels
-- 26 `{ }` scoped blocks with clean local names
-- 46 legitimate absolute addresses remaining
+- 0 unnamed labels, 0 unnamed hex addresses in instruction operands
+- 0 EQUB instruction workarounds — all real 65C02 mnemonics
+- All LDA/STA, ASL/ROL, CLC/ADC pairs compacted per STYLE.md
+- Workspace overlay defines labels for all runtime buffers
 - Assembly byte-identical: `check.sh` passes at every commit
 
 ## 2026-03-22: Automated testing with jsbeeb
