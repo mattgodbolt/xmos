@@ -61,10 +61,8 @@
 }
 .dis_display_line
 {
-        LDA mem_vdu_1
-        STA zp_src_lo
-        LDA mem_vdu_2
-        STA zp_src_hi
+        LDA mem_vdu_1 : STA zp_src_lo
+        LDA mem_vdu_2 : STA zp_src_hi
 }
 \ Print one disassembled line: address, mnemonic, operand, raw bytes, ASCII.
 \ The opcode is multiplied by 4 to index into a 1024-byte lookup table that
@@ -79,8 +77,7 @@
     JSR dis_print_hex_word
     LDA #' '
     JSR oswrch
-    LDY #&00
-    STY zp_tmp_hi
+    LDY #&00 : STY zp_tmp_hi
     LDA (zp_src_lo),Y           \ opcode × 4 to get table offset
     ASL A : ROL zp_tmp_hi
     ASL A : ROL zp_tmp_hi
@@ -200,12 +197,9 @@
         JMP dis_print_header
 \ Save current address so *DIS with no argument can resume here.
 .save_state
-        LDA zp_src_lo
-        STA mem_vdu_1
-        LDA zp_src_hi
-        STA mem_vdu_2
-        LDA #&00
-        STA os_escape_effect
+        LDA zp_src_lo : STA mem_vdu_1
+        LDA zp_src_hi : STA mem_vdu_2
+        LDA #&00 : STA os_escape_effect
         RTS
 }
 \ Print the high byte of a two-byte operand (byte at PC+2).

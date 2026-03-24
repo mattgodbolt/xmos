@@ -170,8 +170,7 @@
 {
         LDA keyon_active
         BNE keyon_already_msg
-        LDA #&01
-        STA keyon_active
+        LDA #&01 : STA keyon_active
         LDA keyv_lo
         STA key_remap_jmp1 + 1
         STA key_remap_jmp2 + 1
@@ -216,13 +215,11 @@
         STA kr_shift_cpx_4 + 1
         LDX #&00
 .loop
-        LDA key_remap_handler,X
-        STA keyon_handler_dest,X
+        LDA key_remap_handler,X : STA keyon_handler_dest,X
         INX
         BNE loop
         LDA #LO(keyon_handler_dest) : STA keyv_lo
-        LDA #HI(keyon_handler_dest)
-        STA keyv_hi
+        LDA #HI(keyon_handler_dest) : STA keyv_hi
         RTS
 }
 \ *KEYON — Activate key remapping with the current key_codes definitions

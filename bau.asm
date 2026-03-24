@@ -13,10 +13,8 @@
         EQUS &5C, "BAU must be called from BASIC", 0
 .splitting
         STROUT msg_now_splitting
-        LDA basic_page_hi
-        STA zp_ptr_hi
-        LDA #&00
-        STA zp_ptr_lo
+        LDA basic_page_hi : STA zp_ptr_hi
+        LDA #&00 : STA zp_ptr_lo
 .line_loop
         JSR print_backspace
 .check_line
@@ -163,12 +161,8 @@
         INY
         STA (zp_ptr_lo),Y       \ line length
         CLC
-        LDA basic_lomem_lo
-        ADC #&03
-        STA basic_lomem_lo      \ adjust TOP pointer
-        LDA basic_lomem_hi
-        ADC #&00
-        STA basic_lomem_hi
+        LDA basic_lomem_lo : ADC #&03 : STA basic_lomem_lo
+        LDA basic_lomem_hi : ADC #&00 : STA basic_lomem_hi
         JMP check_line          \ re-scan from this new line
 \ Advance pointer to next BASIC line (add line length to pointer)
 .next_line
@@ -389,10 +383,8 @@
 }
 \ Save the new TOP pointer (program may have grown) and finish
 .space_save_top
-    LDA basic_lomem_lo
-    STA basic_top_lo
-    LDA basic_lomem_hi
-    STA basic_top_hi
+    LDA basic_lomem_lo : STA basic_top_lo
+    LDA basic_lomem_hi : STA basic_top_hi
     JSR osnewl
     RTS
 

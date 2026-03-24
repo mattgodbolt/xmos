@@ -90,18 +90,14 @@
 \ ============================================================================
 .find_incore_name
 {
-        LDA basic_page_hi       \ PAGE high byte
-        STA basic_str_hi
-        LDA #&01                \ Check byte at PAGE+1 (program present?)
-        STA basic_str_lo
+        LDA basic_page_hi : STA basic_str_hi
+        LDA #&01 : STA basic_str_lo  \ Check byte at PAGE+1 (program present?)
         LDY #&00
         LDA (basic_str_lo),Y
         CMP #&ff
         BEQ error_no_basic
-        LDA basic_page_hi       \ Point to PAGE+0
-        STA basic_str_hi
-        LDA #&00
-        STA basic_str_lo
+        LDA basic_page_hi : STA basic_str_hi
+        LDA #&00 : STA basic_str_lo  \ Point to PAGE+0
         LDY #&03                \ Offset 3 = line length in first line
         LDA (basic_str_lo),Y
         TAY                     \ Y = end of first line
