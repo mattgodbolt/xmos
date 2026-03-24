@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { bootWithXmos, runCommand, captureOutput, typeText } from "./xmos-test-machine.js";
+import { bootWithXmos, runCommand, captureOutput } from "./xmos-test-machine.js";
 
 const CAPS_LOCK = 20;
 
@@ -15,10 +15,10 @@ describe("KEYON remapping behaviour", () => {
 
     async function runWithKeyHeld(keyCode) {
         const getOutput = captureOutput(machine);
-        await typeText(machine, "RUN");
-        machine.processor.sysvia.keyDown(keyCode);
+        await machine.type("RUN");
+        machine.keyDown(keyCode);
         await machine.runFor(20_000_000);
-        machine.processor.sysvia.keyUp(keyCode);
+        machine.keyUp(keyCode);
         return getOutput();
     }
 

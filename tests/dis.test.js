@@ -1,12 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { bootWithXmos, captureOutput, typeText } from "./xmos-test-machine.js";
+import { bootWithXmos, captureOutput } from "./xmos-test-machine.js";
 
 describe("*DIS", () => {
     it("should disassemble the ROM service entry point", async () => {
         const machine = await bootWithXmos();
         const getOutput = captureOutput(machine);
 
-        await typeText(machine, "*DIS 802B");
+        await machine.type("*DIS 802B");
         await machine.runFor(4_000_000);
 
         const output = getOutput();
@@ -20,7 +20,7 @@ describe("*DIS", () => {
         const machine = await bootWithXmos();
         const getOutput = captureOutput(machine);
 
-        await typeText(machine, "*DIS 8003");
+        await machine.type("*DIS 8003");
         await machine.runFor(4_000_000);
 
         const output = getOutput();
@@ -33,11 +33,11 @@ describe("*DIS", () => {
         const machine = await bootWithXmos();
         const getOutput = captureOutput(machine);
 
-        await typeText(machine, "*DIS 802B");
+        await machine.type("*DIS 802B");
         // Hold space to scroll through multiple lines
-        machine.processor.sysvia.keyDown(32); // SPACE
+        machine.keyDown(32); // SPACE
         await machine.runFor(8_000_000);
-        machine.processor.sysvia.keyUp(32);
+        machine.keyUp(32);
 
         const output = getOutput();
         // Should have advanced past &802B to show several instructions
@@ -50,7 +50,7 @@ describe("*DIS", () => {
         const getOutput = captureOutput(machine);
 
         // Zero page will contain whatever values are there, but &00 = BRK
-        await typeText(machine, "*DIS 0000");
+        await machine.type("*DIS 0000");
         await machine.runFor(4_000_000);
 
         const output = getOutput();
@@ -62,7 +62,7 @@ describe("*DIS", () => {
         const getOutput = captureOutput(machine);
 
         // &FFE3 is OSASCI — CMP #&0D (check for carriage return)
-        await typeText(machine, "*DIS FFE3");
+        await machine.type("*DIS FFE3");
         await machine.runFor(4_000_000);
 
         const output = getOutput();

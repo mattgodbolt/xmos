@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { bootWithXmos, runCommand, readMode7Screen, typeText } from "./xmos-test-machine.js";
+import { bootWithXmos, runCommand, readMode7Screen } from "./xmos-test-machine.js";
 
 const CAPS_LOCK = 20;
 
@@ -7,16 +7,16 @@ const CAPS_LOCK = 20;
  * Press a key briefly.
  */
 async function pressKey(machine, keyCode, cycles = 200000) {
-    machine.processor.sysvia.keyDown(keyCode);
+    machine.keyDown(keyCode);
     await machine.runFor(cycles);
-    machine.processor.sysvia.keyUp(keyCode);
+    machine.keyUp(keyCode);
     await machine.runFor(cycles);
 }
 
 describe("*DEFKEYS — interactive key definition", () => {
     it("should show the key redefiner screen", async () => {
         const machine = await bootWithXmos();
-        await typeText(machine, "*DEFKEYS");
+        await machine.type("*DEFKEYS");
         await machine.runFor(4_000_000);
 
         const screen = readMode7Screen(machine);
@@ -26,7 +26,7 @@ describe("*DEFKEYS — interactive key definition", () => {
 
     it("should accept 5 keypresses and activate KEYON", async () => {
         const machine = await bootWithXmos();
-        await typeText(machine, "*DEFKEYS");
+        await machine.type("*DEFKEYS");
         await machine.runFor(4_000_000);
 
         // Press 5 keys for left, right, up, down, fire
