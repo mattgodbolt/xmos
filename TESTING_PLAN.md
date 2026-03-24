@@ -77,3 +77,16 @@ tests/
   would allow snapshotting after boot+load for much faster tests.
 - **`loadSidewaysRam(slot, data)`**: convenience method to write ROM
   data directly into a SWRAM slot, avoiding the *SRLOAD dance.
+
+### Performance improvements
+The bottleneck for typing-heavy tests is the sheer number of
+emulated cycles per keystroke. With holdCycles=40000 in type(),
+each character needs ~80000 cycles (down + up). A 240-char command
+therefore costs ~19.2M emulated cycles per runCommand call.
+- **Direct keyboard buffer injection**: instead of simulating physical
+  keypresses (80000 cycles per character), write directly via INSV
+  (OSBYTE &8A). This bypasses key timing entirely.
+- **Configurable key timing**: the 40000 cycle holdCycles per key
+  event is generous. Reducing to 10000 would 4x typing speed.
+- **Boot snapshot**: boot + SRLOAD + reset takes ~1s. Snapshotting
+  after this and restoring for each test would eliminate the overhead.
