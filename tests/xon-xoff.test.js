@@ -133,6 +133,39 @@ describe("*XON / *XOFF — extended input", () => {
         expect(output).toContain("99");
     });
 
+    it("cursor key on blank line enters split cursor mode", async () => {
+        await runCommand(machine, "*XON");
+
+        // Press cursor right on a blank line — enters BBC cursor editing
+        // for one keypress, then returns to extended input
+        const getOutput = captureOutput(machine);
+        machine.keyDown(39); // RIGHT
+        await machine.runFor(200000);
+        machine.keyUp(39);
+        await machine.runFor(2_000_000);
+
+        // Extended input is still active — TAB still recalls lines
+        await machine.type("20\t");
+        await machine.runFor(4_000_000);
+
+        const output = getOutput();
+        expect(output).toContain("WORLD");
+    });
+
+    it("typing SAVE in BASIC should execute *S", async () => {
+        await runCommand(machine, "NEW");
+        await runCommand(machine, "10 REM > Test");
+        await runCommand(machine, '20 PRINT "HI"');
+        await runCommand(machine, "*XON");
+
+        const getOutput = captureOutput(machine);
+        await machine.type("SAVE");
+        await machine.runFor(20_000_000);
+
+        const output = getOutput();
+        expect(output).toContain("Program saved as");
+    });
+
     it("*XOFF should disable TAB recall", async () => {
         await runCommand(machine, "*XON");
         await runCommand(machine, "*XOFF");

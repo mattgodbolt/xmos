@@ -44,3 +44,16 @@ describe("*DEFKEYS — interactive key definition", () => {
         expect(output).toContain("Redefined keys on, and are:");
     });
 });
+
+describe("*L — mode 128 setup", () => {
+    it("should set up function key 0 and return to BASIC", async () => {
+        const machine = await bootWithXmos();
+        await runCommand(machine, "*L");
+
+        // *L programs *KEY0 with a mode setup sequence and calls
+        // OSBYTE &8A. Verify the machine is still responsive.
+        const output = await runCommand(machine, "*HELP XMOS");
+        expect(output).toContain("MOS Extension commands:");
+    });
+});
+

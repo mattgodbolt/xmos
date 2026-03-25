@@ -59,4 +59,40 @@ describe("*MEM — memory editor", () => {
         const output = getOutput();
         expect(output).toContain("MOS Extension commands:");
     });
+
+    it("cursor keys should navigate the display", async () => {
+        const machine = await bootWithXmos();
+        await machine.type("*MEM 8000");
+        await machine.runFor(8_000_000);
+
+        const screenBefore = readMode7Screen(machine);
+
+        // Press cursor down to move to next row
+        machine.keyDown(40); // DOWN
+        await machine.runFor(200000);
+        machine.keyUp(40);
+        await machine.runFor(2_000_000);
+
+        const screenAfter = readMode7Screen(machine);
+        // The screen should have changed (cursor moved)
+        expect(screenAfter).not.toEqual(screenBefore);
+    });
+
+    it("TAB should toggle between hex and ASCII mode", async () => {
+        const machine = await bootWithXmos();
+        await machine.type("*MEM 8000");
+        await machine.runFor(8_000_000);
+
+        const screenBefore = readMode7Screen(machine);
+
+        // Press TAB to switch mode
+        machine.keyDown(9); // TAB
+        await machine.runFor(200000);
+        machine.keyUp(9);
+        await machine.runFor(2_000_000);
+
+        const screenAfter = readMode7Screen(machine);
+        // The mode indicator should change (H → A or vice versa)
+        expect(screenAfter).not.toEqual(screenBefore);
+    });
 });
