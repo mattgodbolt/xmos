@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { bootWithXmos, runCommand, captureOutput, typeText } from "./xmos-test-machine.js";
+import { bootWithXmos, runCommand, captureOutput } from "./xmos-test-machine.js";
 
 /**
  * Install a BRK error capture hook. Returns a function that returns
@@ -140,10 +140,10 @@ describe("*DIS across page boundaries", () => {
     it("should disassemble across a page boundary", async () => {
         const machine = await bootWithXmos();
         const getOutput = captureOutput(machine);
-        await typeText(machine, "*DIS 80F0");
-        machine.processor.sysvia.keyDown(32);
+        await machine.type("*DIS 80F0");
+        machine.keyDown(32);
         await machine.runFor(20_000_000);
-        machine.processor.sysvia.keyUp(32);
+        machine.keyUp(32);
         const output = getOutput();
         expect(output).toContain("80F");
         expect(output).toContain("810");

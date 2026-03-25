@@ -10,7 +10,6 @@
 
 import { TestMachine } from "jsbeeb/tests/test-machine.js";
 import { setNodeBasePath } from "jsbeeb/src/utils.js";
-import * as fdc from "jsbeeb/src/fdc.js";
 import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath } from "url";
@@ -19,7 +18,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const jsbeebBase = path.join(__dirname, "..", "node_modules", "jsbeeb");
 setNodeBasePath(jsbeebBase);
 
-const ssdPath = path.join(__dirname, "..", "original.ssd");
+const ssdData = fs.readFileSync(path.join(__dirname, "..", "original.ssd"));
 
 /**
  * Boot a BBC Master with XMOS loaded and active.
@@ -29,54 +28,20 @@ export async function bootWithXmos() {
     const machine = new TestMachine("Master");
     await machine.initialise();
 
-    const data = fs.readFileSync(ssdPath);
-    machine.processor.fdc.loadDisc(0, fdc.discFor(machine.processor.fdc, "", data));
-
+    machine.loadDiscData(ssdData);
     await machine.runUntilInput();
-    await typeText(machine, "*SRLOAD XMOS 8000 7Q");
+    await machine.type("*SRLOAD XMOS 8000 7Q");
     await machine.runUntilInput();
 
     // Hard reset (CTRL+BREAK) so the MOS re-scans ROM slots
     // and recognises the newly loaded SWRAM contents.
-    // A soft reset (BREAK) skips the ROM scan.
     // The hard reset calls fdc.powerOnReset() which clears the disc,
     // so we re-load it afterwards for commands that need disc access.
-    machine.processor.reset(true);
+    machine.reset(true);
     await machine.runUntilInput();
-    machine.processor.fdc.loadDisc(0, fdc.discFor(machine.processor.fdc, "", data));
-
-    // Toggle CAPS LOCK off so type() produces lowercase by default.
-    // TestMachine._charToKey always sends uppercase keycodes; with
-    // CAPS LOCK on (the boot default) every letter comes out uppercase,
-    // making it impossible to type lowercase variable names.
-    machine.processor.sysvia.keyDown(20);
-    await machine.runFor(40000);
-    machine.processor.sysvia.keyUp(20);
-    await machine.runFor(40000);
+    machine.loadDiscData(ssdData);
 
     return machine;
-}
-
-/**
- * Type text with correct case handling.
- * With CAPS LOCK off (our default), TestMachine._charToKey sends
- * uppercase keycodes without SHIFT, producing lowercase. To type
- * an uppercase letter we need SHIFT held (which inverts CAPS LOCK).
- * This wrapper patches the shift flag for uppercase letters.
- */
-export async function typeText(machine, text) {
-    // Temporarily patch _charToKey to handle case correctly
-    const orig = machine._charToKey.bind(machine);
-    machine._charToKey = (ch) => {
-        const result = orig(ch);
-        // If it's an uppercase letter, add shift
-        if (ch >= "A" && ch <= "Z") {
-            result.shift = true;
-        }
-        return result;
-    };
-    await machine.type(text);
-    machine._charToKey = orig;
 }
 
 /**
@@ -158,11 +123,11 @@ export function captureOutput(machine) {
  */
 export async function runCommand(machine, command, cycles = 8_000_000) {
     const getOutput = captureOutput(machine);
-    await typeText(machine, command);
+    await machine.type(command);
     // Hold SHIFT so paged output scrolls without pausing
-    machine.processor.sysvia.keyDown(16);
+    machine.keyDown(16);
     await machine.runFor(cycles);
-    machine.processor.sysvia.keyUp(16);
+    machine.keyUp(16);
     const raw = getOutput();
     // Strip the typed echo from the start of the output
     const echoEnd = raw.indexOf(command);

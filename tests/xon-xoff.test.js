@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { bootWithXmos, runCommand, captureOutput, typeText } from "./xmos-test-machine.js";
+import { bootWithXmos, runCommand, captureOutput } from "./xmos-test-machine.js";
 
 describe("*XON / *XOFF — extended input", () => {
     let machine;
@@ -15,7 +15,7 @@ describe("*XON / *XOFF — extended input", () => {
 
         const getOutput = captureOutput(machine);
         // Type "10" then TAB — without XON, TAB is just a regular key
-        await typeText(machine,"10\t");
+        await machine.type("10\t");
         await machine.runFor(4_000_000);
 
         const output = getOutput();
@@ -28,7 +28,7 @@ describe("*XON / *XOFF — extended input", () => {
 
         const getOutput = captureOutput(machine);
         // Type "20" then TAB — should recall line 20
-        await typeText(machine,"20\t");
+        await machine.type("20\t");
         await machine.runFor(4_000_000);
 
         const output = getOutput();
@@ -41,7 +41,7 @@ describe("*XON / *XOFF — extended input", () => {
 
         const getOutput = captureOutput(machine);
         // Type "15" then TAB — line 15 doesn't exist
-        await typeText(machine,"15\t");
+        await machine.type("15\t");
         await machine.runFor(4_000_000);
 
         const output = getOutput();
@@ -55,7 +55,7 @@ describe("*XON / *XOFF — extended input", () => {
 
         const getOutput = captureOutput(machine);
         // Recall line 10 then type extra text at the end
-        await typeText(machine,"10\t:REM EXTRA");
+        await machine.type("10\t:REM EXTRA");
         await machine.runFor(4_000_000);
 
         const output = getOutput();
@@ -69,15 +69,15 @@ describe("*XON / *XOFF — extended input", () => {
 
         const getOutput = captureOutput(machine);
         // Recall line 10, press left arrow, then type X
-        await typeText(machine, "10\t");
+        await machine.type("10\t");
         await machine.runFor(2_000_000);
         // Press left arrow
-        machine.processor.sysvia.keyDown(37);
+        machine.keyDown(37);
         await machine.runFor(80000);
-        machine.processor.sysvia.keyUp(37);
+        machine.keyUp(37);
         await machine.runFor(80000);
         // Type X — should insert before the last character
-        await typeText(machine, "X");
+        await machine.type("X");
         await machine.runFor(2_000_000);
 
         const output = getOutput();
@@ -90,19 +90,19 @@ describe("*XON / *XOFF — extended input", () => {
         await runCommand(machine, "*XON");
 
         // Recall line 10
-        await typeText(machine, "10\t");
+        await machine.type("10\t");
         await machine.runFor(2_000_000);
         // Press COPY (END key = 35) — should delete character at cursor
-        machine.processor.sysvia.keyDown(35);
+        machine.keyDown(35);
         await machine.runFor(80000);
-        machine.processor.sysvia.keyUp(35);
+        machine.keyUp(35);
         await machine.runFor(80000);
 
         // Submit the modified line and LIST to see the result
         const getOutput = captureOutput(machine);
-        await typeText(machine, "");
+        await machine.type("");
         await machine.runFor(4_000_000);
-        await typeText(machine, "LIST");
+        await machine.type("LIST");
         await machine.runFor(4_000_000);
 
         const output = getOutput();
@@ -115,17 +115,17 @@ describe("*XON / *XOFF — extended input", () => {
 
         // Start typing something
         const getOutput = captureOutput(machine);
-        await typeText(machine, "PRINT 42");
+        await machine.type("PRINT 42");
         await machine.runFor(2_000_000);
         // Press Ctrl-U (character code 21, keycode for U=85 with CTRL)
-        machine.processor.sysvia.keyDown(17); // CTRL
-        machine.processor.sysvia.keyDown(85); // U
+        machine.keyDown(17); // CTRL
+        machine.keyDown(85); // U
         await machine.runFor(80000);
-        machine.processor.sysvia.keyUp(85);
-        machine.processor.sysvia.keyUp(17);
+        machine.keyUp(85);
+        machine.keyUp(17);
         await machine.runFor(2_000_000);
         // Now type something else and submit
-        await typeText(machine, "PRINT 99");
+        await machine.type("PRINT 99");
         await machine.runFor(4_000_000);
 
         const output = getOutput();
@@ -138,7 +138,7 @@ describe("*XON / *XOFF — extended input", () => {
         await runCommand(machine, "*XOFF");
 
         const getOutput = captureOutput(machine);
-        await typeText(machine,"10\t");
+        await machine.type("10\t");
         await machine.runFor(4_000_000);
 
         const output = getOutput();

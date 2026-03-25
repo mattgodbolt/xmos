@@ -19,7 +19,7 @@
   },
   "homepage": "https://github.com/mattgodbolt/xmos#readme",
   "dependencies": {
-    "jsbeeb": "^1.7.0",
+    "jsbeeb": "^1.8.0",
     "vitest": "^4.1.0"
   }
 }

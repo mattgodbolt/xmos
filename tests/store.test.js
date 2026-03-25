@@ -5,18 +5,18 @@ const CTRL = 17;
 
 // Press BBC f1 (*KEY 1). MCP F0 (PC keycode 112) maps to BBC f1.
 async function pressBbcF1(machine) {
-    machine.processor.sysvia.keyDown(112);
+    machine.keyDown(112);
     await machine.runFor(200000);
-    machine.processor.sysvia.keyUp(112);
+    machine.keyUp(112);
     await machine.runFor(200000);
 }
 
 // Simulate CTRL+BREAK: hold CTRL during a soft reset.
 async function ctrlBreak(machine) {
-    machine.processor.sysvia.keyDown(CTRL);
-    machine.processor.reset(false);
+    machine.keyDown(CTRL);
+    machine.reset(false);
     await machine.runFor(2_000_000);
-    machine.processor.sysvia.keyUp(CTRL);
+    machine.keyUp(CTRL);
     await machine.runUntilInput();
 }
 
