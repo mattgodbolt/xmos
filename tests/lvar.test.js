@@ -11,30 +11,23 @@ describe("*LVAR", () => {
     it("should list real and string variable names", async () => {
         const machine = await bootWithXmos();
         await runCommand(machine, 'X=3.14:G$="HI"');
-        const output = await runCommand(machine, "*LVAR");
-
-        // LVAR prints variable names only (no values)
-        expect(output).toContain("G$");
-        expect(output).toContain("X");
+        const output = await runCommand(machine, "*LVAR", { raw: true });
+        // LVAR prints variable names only (no values), one per line
+        expect(output).toBe("\nG$\nX\n>");
     });
 
     it("should not list static integer variables", async () => {
         const machine = await bootWithXmos();
         await runCommand(machine, "A%=42:B%=99:SCORE=100");
-        const output = await runCommand(machine, "*LVAR");
-
-        // Integer variables (%) are stored statically, not on the heap
-        expect(output).not.toContain("A%");
-        expect(output).not.toContain("B%");
-        // But the real variable should be listed
-        expect(output).toContain("SCORE");
+        const output = await runCommand(machine, "*LVAR", { raw: true });
+        // Only heap variables listed — integer vars (A%, B%) excluded
+        expect(output).toBe("\nSCORE\n>");
     });
 
     it("should list array variables", async () => {
         const machine = await bootWithXmos();
         await runCommand(machine, "DIM D(10)");
-        const output = await runCommand(machine, "*LVAR");
-
-        expect(output).toContain("D(");
+        const output = await runCommand(machine, "*LVAR", { raw: true });
+        expect(output).toBe("\nD(\n>");
     });
 });

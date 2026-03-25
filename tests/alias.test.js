@@ -110,7 +110,7 @@ describe("*ALISV / *ALILD — save and load alias files", () => {
         await runCommand(machine, "*ALIAS BAR *DIR");
 
         // Save to file
-        await runCommand(machine, "*ALISV Aliases", 20_000_000);
+        await runCommand(machine, "*ALISV Aliases", { cycles: 20_000_000 });
 
         // Clear and verify they're gone
         await runCommand(machine, "*ALICLR");
@@ -118,7 +118,7 @@ describe("*ALISV / *ALILD — save and load alias files", () => {
         expect(cleared).toBe(">");
 
         // Reload and verify they're back
-        await runCommand(machine, "*ALILD Aliases", 20_000_000);
+        await runCommand(machine, "*ALILD Aliases", { cycles: 20_000_000 });
         const reloaded = await runCommand(machine, "*ALIASES");
         expect(reloaded).toContain("FOO = *CAT");
         expect(reloaded).toContain("BAR = *DIR");

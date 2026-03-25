@@ -6,7 +6,7 @@ describe("*S — save with incore name", () => {
         const machine = await bootWithXmos();
         await runCommand(machine, "10 REM > Prog");
         await runCommand(machine, '20 PRINT "HELLO"');
-        const output = await runCommand(machine, "*S", 20_000_000);
+        const output = await runCommand(machine, "*S", { cycles: 20_000_000 });
 
         expect(output).toContain("Program saved as 'Prog'");
     });
@@ -15,7 +15,7 @@ describe("*S — save with incore name", () => {
         const machine = await bootWithXmos();
         await runCommand(machine, "10 REM >   MyFile");
         await runCommand(machine, "20 A=1");
-        const output = await runCommand(machine, "*S", 20_000_000);
+        const output = await runCommand(machine, "*S", { cycles: 20_000_000 });
 
         expect(output).toContain("Program saved as 'MyFile'");
     });
