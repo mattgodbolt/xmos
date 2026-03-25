@@ -18,6 +18,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const jsbeebBase = path.join(__dirname, "..", "node_modules", "jsbeeb");
 setNodeBasePath(jsbeebBase);
 
+const romData = new Uint8Array(fs.readFileSync(path.join(__dirname, "..", "original.rom")));
 const ssdData = fs.readFileSync(path.join(__dirname, "..", "original.ssd"));
 
 /**
@@ -28,17 +29,15 @@ export async function bootWithXmos() {
     const machine = new TestMachine("Master");
     await machine.initialise();
 
-    machine.loadDiscData(ssdData);
-    await machine.runUntilInput();
-    await machine.type("*SRLOAD XMOS 8000 7Q");
-    await machine.runUntilInput();
+    // Load ROM directly into sideways RAM slot 7
+    machine.loadSidewaysRam(7, romData);
 
-    // Hard reset (CTRL+BREAK) so the MOS re-scans ROM slots
-    // and recognises the newly loaded SWRAM contents.
-    // The hard reset calls fdc.powerOnReset() which clears the disc,
-    // so we re-load it afterwards for commands that need disc access.
+    // Hard reset so the MOS re-scans ROM slots and recognises XMOS.
     machine.reset(true);
     await machine.runUntilInput();
+
+    // Re-load disc (hard reset clears the FDC) for commands that
+    // need disc access (e.g. *CAT, *S, *ALISV/*ALILD).
     machine.loadDiscData(ssdData);
 
     return machine;

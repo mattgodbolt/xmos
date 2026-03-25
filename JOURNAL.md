@@ -475,3 +475,20 @@ internally in jsbeeb's key tables).
   only saves main RAM. Including ROM area would speed up tests.
 - **`loadSidewaysRam(slot, data)`**: convenience method to avoid the
   *SRLOAD dance.
+
+## Remaining work (as of 2026-03-25)
+
+### Drop byte-identical constraint
+- Fix *STORE &F4 shadow bug (write rom_number before sheila_romsel)
+- Fix ROMSEL restore on XON-disabled path (RTS instead of JMP)
+- Remove COPY handler dead code
+- Replace workspace junk data with SKIP, remove CLEAR/ORG overlay
+- Deduplicate hex parse and OSBYTE 4 cursor setup subroutines
+
+### jsbeeb TestMachine (done in 1.8.0)
+- [x] Case-correct type() via CAPS LOCK detection
+- [x] keyDown()/keyUp() convenience methods
+- [x] loadSidewaysRam(slot, data)
+- [x] loadDiscData(data), reset(hard)
+- [ ] snapshotState/restoreState including SWRAM (for faster tests)
+- [ ] Reusable capture API (single resettable hook)
