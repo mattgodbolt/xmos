@@ -317,8 +317,8 @@
         LDA keyon_active
         BEQ kstatus_not_active
         STROUT msg_keys_on
-        LDA #&d0 : STA zp_work_lo
-        LDA #&8e : STA zp_work_hi
+        LDA #LO(defkeys_direction_labels) : STA zp_work_lo
+        LDA #HI(defkeys_direction_labels) : STA zp_work_hi
         LDX #&00
 .loop
         LDY #&00
@@ -371,8 +371,8 @@
         JSR osnewl
         STROUT msg_key_redefiner
         JSR osnewl
-        LDA #&d0 : STA zp_work_lo
-        LDA #&8e : STA zp_work_hi
+        LDA #LO(defkeys_direction_labels) : STA zp_work_lo
+        LDA #HI(defkeys_direction_labels) : STA zp_work_hi
         LDX #&00
 .header_y
         LDY #&00
