@@ -552,23 +552,23 @@ table. Replaced with `LO/HI(defkeys_direction_labels)`.
 `end_of_workspace_code - extended_input_code` instead of hardcoded
 `&D0`, so the copy size adjusts automatically.
 
-### alias_oscli_buf expansion bug — DISCOVERED
-Alias expansion writes the expanded command to `store_buf_3` (offset
-+5 in workspace) but calls OSCLI with `alias_oscli_buf` (offset 0).
-The first 5 bytes of `alias_oscli_buf` are uninitialised ROM junk
-(`"KEY9 "` in the original) that get prepended to every OSCLI call.
-In the original ROM, this causes OSCLI to fail with "Bad command"
-for the junk prefix, then the MOS tries remaining ROMs which
-eventually handles the real command. Fix: expansion should write
-starting at `alias_oscli_buf`, or OSCLI should be called with
-`store_buf_3`. Investigation needed.
+### alias_oscli_buf — NOT A BUG (corrected)
+Initially thought to be a buffer offset bug. Actually working as
+designed: `alias_oscli_buf` holds `"KEY0 "` (the `*KEY 0` OSCLI
+command prefix), and `store_buf_3` holds the expanded text. The full
+OSCLI string is `"KEY0 <expansion>"` which programs soft key 0. Then
+OSBYTE &8A inserts a byte into the keyboard buffer to trigger the
+soft key, which TYPES the expansion at the prompt. The user presses
+ENTER to execute. See USAGE.md.
+
+This means `alias_oscli_buf` must contain `"KEY0 "` at runtime.
+The workspace overlay must initialise it (the ROM image junk is
+overwritten by handle_reset or first alias use).
 
 ### Remaining
-- Fix alias_oscli_buf expansion bug (above) — prerequisite for overlay removal
 - Remove COPY handler dead code (needs analysis — may not be dead)
-- Remove CLEAR/ORG workspace overlay — labels are correct, but
-  alias_oscli_buf bug must be fixed first (zeroing the workspace
-  changes the expansion behavior)
+- Remove CLEAR/ORG workspace overlay — alias_oscli_buf must be
+  initialised to `"KEY0 "` (not zeros). Needs careful testing.
 - OSBYTE 4 dedup: 4 inline instances, saves 12 bytes but reduces readability
 
 ### jsbeeb TestMachine (done in 1.9.1)
