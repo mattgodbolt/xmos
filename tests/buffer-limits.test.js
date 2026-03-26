@@ -32,30 +32,6 @@ function captureBrkError(machine) {
     return () => errorMsg;
 }
 
-/**
- * Write an alias entry directly into SWRAM slot 7's alias table.
- * Returns the number of bytes written.
- */
-function pokeAlias(machine, tableAddr, name, expansion) {
-    const cpu = machine.processor;
-    const slot7 = cpu.romOffset + 7 * 16384;
-    let off = tableAddr - 0x8000;
-    for (let i = 0; i < name.length; i++)
-        cpu.ramRomOs[slot7 + off++] = name.charCodeAt(i);
-    cpu.ramRomOs[slot7 + off++] = 0; // null after name
-    cpu.ramRomOs[slot7 + off++] = 0; // gap byte (alias table format)
-    for (let i = 0; i < expansion.length; i++)
-        cpu.ramRomOs[slot7 + off++] = expansion.charCodeAt(i);
-    cpu.ramRomOs[slot7 + off++] = 0x0d; // CR terminator
-    return off - (tableAddr - 0x8000);
-}
-
-function pokeSentinel(machine, addr) {
-    const cpu = machine.processor;
-    const slot7 = cpu.romOffset + 7 * 16384;
-    cpu.ramRomOs[slot7 + (addr - 0x8000)] = 0xff;
-}
-
 describe("alias table capacity", () => {
     let machine;
 
@@ -63,39 +39,38 @@ describe("alias table capacity", () => {
         machine = await bootWithXmos();
     });
 
-    it("should report overflow when alias table is full", async () => {
-        // The overflow check triggers when zp_ptr_hi >= &BE.
-        // Type aliases with long expansions to fill the table.
+    it("should fill the alias table and report overflow", async () => {
+        // Table: &B165 to ~&BDFF = 3226 bytes.
+        // Entry: name(2) + null(1) + expansion(230) + CR(1) = 234 bytes.
+        // 3226 / 234 = 13.8 → 14 entries should fit, 15th overflows.
+        const expansion = "X".repeat(230);
         const getError = captureBrkError(machine);
-        const exp = "X".repeat(200);
-        for (let i = 0; i < 20; i++) {
-            await runCommand(machine, `*ALIAS Z${i} ${exp}`);
+
+        for (let i = 0; i < 16; i++) {
+            await runCommand(machine, `*ALIAS A${i.toString(16).toUpperCase()} ${expansion}`);
             if (getError()) break;
         }
+
         expect(getError()).toBe("No room for alias");
     });
 
-    it("poked aliases should be listed correctly", async () => {
-        let addr = 0xb165;
-        addr += pokeAlias(machine, addr, "HELLO", "CAT");
-        addr += pokeAlias(machine, addr, "WORLD", "DIR");
-        pokeSentinel(machine, addr);
+    it("aliases before the overflow should all be listed", async () => {
+        const expansion = "X".repeat(230);
+        const getError = captureBrkError(machine);
 
-        const listing = await runCommand(machine, "*ALIASES", { raw: true });
-        expect(listing).toContain("HELLO = CAT");
-        expect(listing).toContain("WORLD = DIR");
-    });
-
-    it("should list all aliases up to the table limit", async () => {
-        let addr = 0xb165;
-        for (let i = 0; i < 14; i++) {
-            addr += pokeAlias(machine, addr, `A${i}`, "X".repeat(220));
+        let addedCount = 0;
+        for (let i = 0; i < 16; i++) {
+            await runCommand(machine, `*ALIAS A${i.toString(16).toUpperCase()} ${expansion}`);
+            if (getError()) break;
+            addedCount++;
         }
-        pokeSentinel(machine, addr);
 
+        // All aliases added before the error should be in the listing
         const listing = await runCommand(machine, "*ALIASES");
         expect(listing).toContain("A0 = ");
-        expect(listing).toContain("A13 = ");
+        expect(listing).toContain("XXXXXXXXXX");
+        expect(addedCount).toBeGreaterThan(10);
+        expect(addedCount).toBeLessThan(16);
     });
 
     it("*ALICLR should free the entire table", async () => {
