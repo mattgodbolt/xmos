@@ -552,18 +552,19 @@ table. Replaced with `LO/HI(defkeys_direction_labels)`.
 `end_of_workspace_code - extended_input_code` instead of hardcoded
 `&D0`, so the copy size adjusts automatically.
 
-### alias_oscli_buf — NOT A BUG (corrected)
-Initially thought to be a buffer offset bug. Actually working as
-designed: `alias_oscli_buf` holds `"KEY0 "` (the `*KEY 0` OSCLI
-command prefix), and `store_buf_3` holds the expanded text. The full
-OSCLI string is `"KEY0 <expansion>"` which programs soft key 0. Then
-OSBYTE &8A inserts a byte into the keyboard buffer to trigger the
-soft key, which TYPES the expansion at the prompt. The user presses
-ENTER to execute. See USAGE.md.
+### Alias expansion mechanism — understood
+Alias expansion uses soft key f9 to type the expanded text at the
+prompt. The mechanism is a matched set of three parts:
 
-This means `alias_oscli_buf` must contain `"KEY0 "` at runtime.
-The workspace overlay must initialise it (the ROM image junk is
-overwritten by handle_reset or first alias use).
+1. `alias_oscli_buf` = `EQUS "KEY9 "` — the `*KEY 9` OSCLI prefix
+2. `store_buf_3` — the expanded text (written by `exec_expand`)
+3. OSCLI runs `*KEY 9 <expansion>` to program f9, then OSBYTE &8A
+   with X=0 Y=&89 inserts an f9 keypress into the keyboard buffer
+
+The MOS expands f9, typing the alias text at the prompt. The user
+presses ENTER to execute. The `"KEY9 "` is a required initialisation
+in the ROM image — the original source would have been
+`EQUS "KEY9 "` followed by reserving the expansion buffer.
 
 ### Remaining
 - Remove COPY handler dead code (needs analysis — may not be dead)

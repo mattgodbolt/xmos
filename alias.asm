@@ -315,16 +315,16 @@
 .skip_rest
         PLX
         JMP exec_expand
-\ Expansion complete — program soft key f0 with the expanded text,
-\ then inject an f0 keypress so the MOS types it at the prompt.
+\ Expansion complete — program soft key f9 with the expanded text,
+\ then inject an f9 keypress so the MOS types it at the prompt.
 \ The user sees the expansion and presses ENTER to execute.
 .open
-        LDX #LO(alias_oscli_buf)  \ alias_oscli_buf = "KEY0 " + expanded text
+        LDX #LO(alias_oscli_buf)  \ alias_oscli_buf = "KEY9 " + expanded text
         LDY #HI(alias_oscli_buf)
-        JSR oscli               \ *KEY 0 <expanded text>
+        JSR oscli               \ *KEY 9 <expanded text>
         LDA #&8a                \ OSBYTE &8A: insert into buffer
         LDX #&00                \ buffer 0 = keyboard
-        LDY #&89                \ &89 = f0 keypress
+        LDY #&89                \ &89 = f9 keypress
         JSR osbyte
         PLY : PLX : PLA
         LDA #&00

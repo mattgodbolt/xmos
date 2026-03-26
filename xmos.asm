@@ -395,7 +395,7 @@ SAVE "build.rom", &8000, &C000
 \ ============================================================================
 CLEAR workspace_start, &C000
 ORG workspace_start
-.alias_oscli_buf EQUS "KEY0 "   \ *KEY 0 prefix — OSCLI runs this + expanded text from store_buf_3
+.alias_oscli_buf EQUS "KEY9 "   \ *KEY 9 prefix — OSCLI runs *KEY 9 <expansion> to program f9
 .store_buf_3    SKIP 250        \ Alias expansion text / *STORE buffer: ANDY page 3
 .store_buf_0    SKIP 256        \ *STORE buffer: ANDY page 0 (&8000-&80FF)
                                 \ (overlaps last 6 bytes of store_buf_3)
