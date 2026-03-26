@@ -31,7 +31,7 @@
 .copy_loop
         LDA extended_input_code,Y : STA (zp_work_lo),Y
         INY
-        CPY #&D0                \ Copy &D0 (208) bytes
+        CPY #(end_of_workspace_code - extended_input_code)
         BNE copy_loop
         PLY : PLX : PLA
         RTS
@@ -159,6 +159,8 @@
         BNE xi_handle_printable
         JMP xi_handle_null
 }
+\ --- End of code copied to workspace RAM; everything below runs from ROM ---
+.end_of_workspace_code
 \ Handle a printable character: validate it's within the allowed range
 \ and the buffer isn't full, then insert it at the cursor position.
 .xi_handle_printable
