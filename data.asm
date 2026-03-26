@@ -297,23 +297,21 @@
     OP "INC", &0a               \ &fe: INC &hl,X
     NOOP                        \ &ff
 \ ============================================================================
-\ Runtime workspace — all overwritten at runtime.
-\
-\ alias_oscli_buf must be initialised to "KEY9 " — the *KEY 9
-\ OSCLI command prefix used by alias expansion (see alias.asm .open).
+\ Runtime workspace. Most buffers are overwritten before use; initial
+\ content doesn't matter (SKIP). Required initialisations are marked.
 \ alias_buffer and xi_hist_buffer share the same address.
 \ ============================================================================
 .workspace_start
-.alias_oscli_buf EQUS "KEY9 "   \ *KEY 9 prefix for alias expansion OSCLI call
-.store_buf_3    FOR n, 1, 250 : EQUB 0 : NEXT
-.store_buf_0    FOR n, 1, 256 : EQUB 0 : NEXT
-.store_buf_1    FOR n, 1, 256 : EQUB 0 : NEXT
-.store_buf_2    FOR n, 1, 256 : EQUB 0 : NEXT
-.alias_exec_buf FOR n, 1, 256 : EQUB 0 : NEXT
+.alias_oscli_buf EQUS "KEY9 "   \ Required: *KEY 9 prefix for alias expansion
+.store_buf_3    SKIP 250        \ Alias expansion text / *STORE buffer: ANDY page 3
+.store_buf_0    SKIP 256        \ *STORE buffer: ANDY page 0 (&8000-&80FF)
+.store_buf_1    SKIP 256        \ *STORE buffer: ANDY page 1 (&8100-&81FF)
+.store_buf_2    SKIP 256        \ *STORE buffer: ANDY page 2 (&8200-&82FF)
+.alias_exec_buf SKIP 256        \ *STORE buffer: ANDY page 3 (&8300-&83FF)
 .alias_buffer                   \ Alias expansion buffer (shares xi_hist_buffer)
-.xi_hist_buffer FOR n, 1, 1022 : EQUB 0 : NEXT
-.xi_hist_term   EQUB &0d        \ History entry terminator
-.xi_hist_flag   EQUB &ff        \ History state flag
+.xi_hist_buffer SKIP 1022       \ Command history buffer
+.xi_hist_term   SKIP 1          \ Set to &0D at runtime
+.xi_hist_flag   SKIP 1          \ Set to &FF at runtime
 .basic_keyword_table
     KW "AND", &80, &00
     KW "ABS", &94, &00

@@ -566,21 +566,22 @@ presses ENTER to execute. The `"KEY9 "` is a required initialisation
 in the ROM image — the original source would have been
 `EQUS "KEY9 "` followed by reserving the expansion buffer.
 
-### Workspace overlay removal — in progress
-Labels are correct when moved inline to data.asm. `alias_oscli_buf`
-must be `EQUS "KEY9 "`. All other workspace buffers can be SKIP
-(written before read). `alias_clear_flag` sits at the "Missing"
-keyword's &FF token byte.
+### Workspace overlay removal — DONE
+Replaced the post-SAVE CLEAR/ORG overlay with inline workspace
+definitions in data.asm. Required initialisations:
 
-Build produces identical code section but zeroed workspace. 7 tests
-fail despite code being identical — workspace content differences
-affect alias expansion and *STORE tests. Needs investigation: the
-initial SWRAM content matters more than expected, possibly because
-the `restoreOrBoot()` snapshot captures and restores SWRAM state
-including workspace content.
+- `alias_oscli_buf` = `EQUS "KEY9 "` — *KEY 9 OSCLI prefix for
+  alias expansion (programs f9, triggers via OSBYTE &8A with &89)
+- `alias_clear_flag` = the "Missing" keyword's &FF token byte
+- `xi_hist_term`, `xi_hist_flag` — set at runtime, SKIP is fine
+
+### store_flag: &FF → &00
+`store_flag` was &FF in the original ROM, we think because `*STORE`
+had been used before the ROM was saved to disc. &FF tells `alias_init` to
+restore the store buffers into ANDY on every reset. For a clean ROM,
+`store_flag` should be &00 (no `*STORE` done).
 
 ### Remaining
-- Complete workspace overlay removal (above)
 - Remove COPY handler dead code (needs analysis — may not be dead)
 - OSBYTE 4 dedup: 4 inline instances, saves 12 bytes but reduces readability
 
