@@ -566,10 +566,22 @@ presses ENTER to execute. The `"KEY9 "` is a required initialisation
 in the ROM image — the original source would have been
 `EQUS "KEY9 "` followed by reserving the expansion buffer.
 
+### Workspace overlay removal — in progress
+Labels are correct when moved inline to data.asm. `alias_oscli_buf`
+must be `EQUS "KEY9 "`. All other workspace buffers can be SKIP
+(written before read). `alias_clear_flag` sits at the "Missing"
+keyword's &FF token byte.
+
+Build produces identical code section but zeroed workspace. 7 tests
+fail despite code being identical — workspace content differences
+affect alias expansion and *STORE tests. Needs investigation: the
+initial SWRAM content matters more than expected, possibly because
+the `restoreOrBoot()` snapshot captures and restores SWRAM state
+including workspace content.
+
 ### Remaining
+- Complete workspace overlay removal (above)
 - Remove COPY handler dead code (needs analysis — may not be dead)
-- Remove CLEAR/ORG workspace overlay — alias_oscli_buf must be
-  initialised to `"KEY0 "` (not zeros). Needs careful testing.
 - OSBYTE 4 dedup: 4 inline instances, saves 12 bytes but reduces readability
 
 ### jsbeeb TestMachine (done in 1.9.1)
