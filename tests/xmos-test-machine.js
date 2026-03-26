@@ -130,11 +130,11 @@ export function captureOutput(machine, { raw = false } = {}) {
  * SHIFT is held during the output phase so the MOS doesn't pause with
  * "Shift for more" when output fills the screen.
  */
-export async function runCommand(machine, command, { cycles = 8_000_000, raw = false } = {}) {
+export async function runCommand(machine, command, { raw = false } = {}) {
     const getOutput = captureOutput(machine, { raw });
     await machine.type(command);
     machine.keyDown(16);
-    await machine.runFor(cycles);
+    await machine.runUntilInput();
     machine.keyUp(16);
     const output = getOutput();
     const echoEnd = output.indexOf(command);
