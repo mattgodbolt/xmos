@@ -18,7 +18,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const jsbeebBase = path.join(__dirname, "..", "node_modules", "jsbeeb");
 setNodeBasePath(jsbeebBase);
 
-const romData = new Uint8Array(fs.readFileSync(path.join(__dirname, "..", "original.rom")));
+const romData = new Uint8Array(fs.readFileSync(path.join(__dirname, "..", "build.rom")));
 const ssdData = fs.readFileSync(path.join(__dirname, "..", "original.ssd"));
 
 /**

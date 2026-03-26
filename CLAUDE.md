@@ -16,14 +16,14 @@ along, or for future reference in other BBC Micro reverse engineering projects.
 ## Project structure
 - `original.ssd` — original BBC Micro disc image containing the XMOS ROM
 - `original.rom` — extracted 16KB ROM binary (from sector 2 of the SSD)
-- `xmos.asm` — beebasm source that assembles to a byte-identical copy of the ROM
-- `disassemble.py` — Python script (uses capstone) that generates xmos.asm from original.rom
-- `check.sh` — verification script: assembles xmos.asm and compares against original.rom
+- `xmos.asm` — beebasm source (no longer byte-identical to original; see `original` tag)
+- `disassemble.py` — Python script (uses capstone) that generated the initial xmos.asm
 - `JOURNAL.md` — reverse engineering notes and discoveries
 
 ## Building and verifying
-Run `./check.sh` to assemble and verify. Requires `beebasm` on PATH.
-The disassembler requires a Python venv: `.venv/bin/python3 disassemble.py`.
+Run `beebasm -i xmos.asm -o build.rom` to assemble. Requires `beebasm` on PATH.
+Run `npm test` to run the automated test suite (requires Node.js).
+The original byte-identical ROM is preserved at git tag `original`.
 
 ## Assembly style
 Follow `STYLE.md` for all assembly code. Key points:
@@ -40,6 +40,4 @@ Follow `STYLE.md` for all assembly code. Key points:
 - Service-only ROM (type &82).
 - Two inline-string routines (`print_inline` and `copy_inline_to_stack`):
   after `JSR` to these, the following bytes are data, not code.
-- beebasm optimizes absolute addressing to zero-page when operand < &100.
-  Some instructions use EQUB to preserve the original 3-byte encoding.
 

@@ -512,22 +512,42 @@ terminator and the expansion text (alias.asm line 139: extra INY
 before copying expansion). Format is: name + null + gap + expansion
 + CR.
 
-## Remaining work (as of 2026-03-26)
+## Phase 2: Bug fixes and improvements
 
-### Drop byte-identical constraint
-- Fix *STORE &F4 shadow bug (write rom_number before sheila_romsel)
+Original byte-identical ROM tagged as `original`. From here on, the
+automated test suite is the source of truth — `check.sh` and the
+binary match constraint have been removed.
+
+### *STORE &F4 shadow bug — FIXED
+The `cmd_store` and `alias_init` routines wrote to `sheila_romsel`
+(&FE30) with bit 7 set (to page in ANDY) but didn't update the
+`rom_number` (&F4) shadow. If an interrupt fired during the copy loop,
+the MOS handler restored ROMSEL from &F4 (without bit 7), unpaging
+ANDY mid-copy. Fix: write to `rom_number` before `sheila_romsel`, as
+the rest of XMOS already does (e.g. input.asm). Removed the runtime
+test patch (`patchStoreF4Bug`) that was working around this.
+
+### Uninitialised RAM padding — REMOVED
+The original ROM had alternating &00/&FF junk after the code (artefact
+of BBC Master uninitialised SWRAM). Removed — beebasm's SAVE pads the
+range automatically. Tests now load `build.rom` instead of `original.rom`.
+
+### Remaining
 - Fix ROMSEL restore on XON-disabled path (RTS instead of JMP)
 - Remove COPY handler dead code
-- Replace workspace junk data with SKIP, remove CLEAR/ORG overlay
+- Remove CLEAR/ORG workspace overlay (no longer needed for byte-identical)
 - Deduplicate hex parse and OSBYTE 4 cursor setup subroutines
 
-### jsbeeb TestMachine (done in 1.8.0)
+### jsbeeb TestMachine (done in 1.9.1)
 - [x] Case-correct type() via CAPS LOCK detection
 - [x] keyDown()/keyUp() convenience methods
 - [x] loadSidewaysRam(slot, data)
 - [x] loadDiscData(data), reset(hard)
 - [x] snapshotState/restoreState including SWRAM (jsbeeb PR #606)
 - [x] Reusable capture API: startCapture/drainText (jsbeeb PR #606)
-- [x] Migrated xmos-test-machine.js to use built-in capture API — replaced
-  custom WRCHV hook with startCapture()/drainText(). All 80 tests pass,
-  suite runs in ~25s (down from 84s at the start of the session).
+- [x] ROM snapshot opt-in: snapshotState({ includeRoms }) defaults false
+  to avoid 256KB per rewind frame; TestMachine.snapshot() defaults true
+- [x] FakeVideo/FakeSoundChip snapshot fix (jsbeeb PR #607, released 1.9.1)
+- [x] Migrated xmos-test-machine.js to built-in capture API
+- [x] restoreOrBoot(): boot once per file, snapshot/restore per test
+- Test suite: 84s → 41s (capture API + snapshot/restore)

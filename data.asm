@@ -491,18 +491,4 @@
     EQUS "SPR", 0, &34, "MODE1:VDU19,1,1;0;19,2,2;0;19,3,3;0;:*SED.%0|M", 13
     EQUS "UPDATE", 0, &24, "*SRSAVE XMos 8000+4000 7Q|M", 13
     EQUS &ff, "ETUPTE", 0, &24, "*SRSAVE XMos 8000+4000 7Q|M"
-\ ============================================================================
-\ Uninitialised sideways RAM — alternating &ff/&00 blocks
-\ This is the unused portion of the 16KB ROM slot. The alternating
-\ pattern is characteristic of uninitialised BBC Master sideways RAM.
-\ ============================================================================
-.uninitialised_ram
-    EQUB &0d
-    FOR n, 1, 27 : EQUB &ff : NEXT
-FOR n, 1, 54
-        FOR m, 1, 32 : EQUB &00 : NEXT
-        FOR m, 1, 32 : EQUB &ff : NEXT
-NEXT
-    FOR n, 1, 32 : EQUB &00 : NEXT
-    FOR n, 1, 16 : EQUB &ff : NEXT
 

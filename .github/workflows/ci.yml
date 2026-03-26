@@ -3,8 +3,8 @@ name: CI
 on: [push, pull_request]
 
 jobs:
-  check-rom:
-    name: Verify ROM assembly
+  test:
+    name: Build and test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -14,14 +14,6 @@ jobs:
           cd /tmp/beebasm/src
           make code
           sudo cp /tmp/beebasm/beebasm /usr/local/bin/
-      - name: Check ROM matches original
-        run: ./check.sh
-
-  test:
-    name: Run tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
           node-version: 22

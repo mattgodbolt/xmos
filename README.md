@@ -40,12 +40,13 @@ extended input mode.
 Requires [beebasm](https://github.com/stardot/beebasm) on your PATH.
 
 ```bash
-./check.sh          # Assemble and verify against original ROM
-npm test            # Run automated tests (requires Node.js)
+beebasm -i xmos.asm -o build.rom   # Assemble the ROM
+npm test                            # Run automated tests (requires Node.js)
 ```
 
-`check.sh` assembles `xmos.asm` into `build.rom` and compares it byte-for-byte
-against `original.rom`. The build must always match.
+The original byte-identical disassembly is preserved at git tag `original`.
+Since then, bug fixes and improvements mean the output no longer matches
+the original ROM — correctness is verified by the automated test suite.
 
 ## Project structure
 
@@ -73,12 +74,12 @@ against `original.rom`. The build must always match.
 |------|-------------|
 | `original.ssd` | Original BBC Micro disc image |
 | `original.rom` | Extracted 16KB ROM binary |
-| `check.sh` | Build and verify script |
 | `USAGE.md` | Full command reference and user guide |
 | `JOURNAL.md` | Reverse engineering notes and discoveries |
 | `TESTING_PLAN.md` | Test infrastructure and jsbeeb improvement notes |
 
-## Reverse engineering status
+## Status
 
-The ROM is fully disassembled and assembles to a byte-identical copy of the
-original. See [JOURNAL.md](JOURNAL.md) for detailed notes.
+The ROM is fully disassembled and annotated. We're now fixing bugs and making
+improvements — the original byte-identical version is at git tag `original`.
+See [JOURNAL.md](JOURNAL.md) for detailed notes.

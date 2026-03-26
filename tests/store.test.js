@@ -20,38 +20,11 @@ async function ctrlBreak(machine) {
     await machine.runUntilInput();
 }
 
-// Work around a bug in the original XMOS ROM: *STORE and alias_init
-// write to &FE30 with bit 7 set but don't update the &F4 shadow.
-// If an interrupt fires mid-copy, the handler restores ROMSEL from &F4
-// (without bit 7), unpaging ANDY. Fix: intercept &FE30 writes and
-// mirror them to &F4.
-function patchStoreF4Bug(machine) {
-    const cpu = machine.processor;
-    cpu.debugInstruction.add((addr) => {
-        // *STORE: STA &FE30 at &934E (the ORA #&80 path)
-        // alias_init: STA &FE30 at &9386 (the ORA #&80 path)
-        // At these points, A has the bit-7-set value about to be
-        // written. Mirror it to &F4 so the interrupt handler
-        // restores the right value.
-        if (addr === 0x934e || addr === 0x9386) {
-            cpu.writemem(0xf4, cpu.a);
-        }
-        // *STORE: STA &FE30 at &9370 (the AND #&7F restore path)
-        // alias_init: STA &FE30 at &93a2 (the AND #&7F restore path)
-        // Restore &F4 too.
-        if (addr === 0x9370 || addr === 0x93a2) {
-            cpu.writemem(0xf4, cpu.a);
-        }
-        return false;
-    });
-}
-
 describe("*STORE — keep function keys on CTRL+BREAK", () => {
     let machine;
 
     beforeEach(async () => {
         machine = await restoreOrBoot();
-        patchStoreF4Bug(machine);
     });
 
     it("function key defined with *KEY should work", async () => {

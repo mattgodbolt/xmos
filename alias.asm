@@ -427,7 +427,7 @@
 {
         LDA sheila_romsel
         ORA #&80
-        STA sheila_romsel
+        STA rom_number : STA sheila_romsel
         LDX #&00
 .copy_loop
         LDA &8000,X : STA store_buf_0,X
@@ -436,7 +436,7 @@
         LDA &8300,X : STA alias_exec_buf,X
         INX
         BNE copy_loop
-        LDA sheila_romsel : AND #&7f : STA sheila_romsel
+        LDA sheila_romsel : AND #&7f : STA rom_number : STA sheila_romsel
         LDA #&ff : STA store_flag
         RTS
 }
@@ -450,7 +450,7 @@
         BEQ done
         LDA sheila_romsel
         ORA #&80
-        STA sheila_romsel
+        STA rom_number : STA sheila_romsel
         LDX #&00
 .restore_loop
         LDA store_buf_0,X : STA &8000,X
@@ -458,7 +458,7 @@
         LDA store_buf_2,X : STA &8200,X
         INX
         BNE restore_loop
-        LDA sheila_romsel : AND #&7f : STA sheila_romsel
+        LDA sheila_romsel : AND #&7f : STA rom_number : STA sheila_romsel
 .done
         RTS
 }

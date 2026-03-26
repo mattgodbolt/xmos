@@ -4,7 +4,8 @@
   "description": "An extension to the MOS (Machine Operating System) for the BBC Master. By Richard Talbot-Watkins and Matt Godbolt, circa 1992.",
   "main": "index.js",
   "scripts": {
-    "test": "vitest run"
+    "build": "beebasm -i xmos.asm -o build.rom",
+    "test": "npm run build && vitest run"
   },
   "repository": {
     "type": "git",
