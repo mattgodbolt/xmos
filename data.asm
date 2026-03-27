@@ -304,8 +304,7 @@
 .workspace_start
 .alias_oscli_buf EQUS "KEY9 "   \ Required: *KEY 9 prefix for alias expansion
 .alias_expand_buf SKIP 250      \ Alias expansion text (follows alias_oscli_buf for OSCLI)
-.store_buf      SKIP 768        \ *STORE: saves ANDY &8000-&82FF, restored by alias_init
-.alias_exec_buf SKIP 256        \ *STORE saves ANDY page 3 here (not restored)
+.store_buf      SKIP 1024       \ *STORE: saves ANDY &8000-&83FF (soft key buffer)
 .alias_buffer                   \ Alias expansion buffer (shares xi_hist_buffer)
 .xi_hist_buffer SKIP 1022       \ Command history buffer
 .xi_hist_term   SKIP 1          \ Set to &0D at runtime

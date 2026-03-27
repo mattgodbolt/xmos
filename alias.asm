@@ -436,7 +436,7 @@
         LDA andy+&000,X : STA store_buf+&000,X
         LDA andy+&100,X : STA store_buf+&100,X
         LDA andy+&200,X : STA store_buf+&200,X
-        LDA andy+&300,X : STA alias_exec_buf,X
+        LDA andy+&300,X : STA store_buf+&300,X
         INX
         BNE copy_loop
         LDA sheila_romsel : AND #&7f : STA rom_number : STA sheila_romsel
@@ -444,9 +444,9 @@
         RTS
 }
 \ alias_init — Called on ROM service reset. If a ROM was previously saved
-\ with *STORE (store_flag != 0), restore the first 768 bytes of the
-\ sideways ROM slot from the store buffers. This preserves ROM state
-\ across soft resets.
+\ with *STORE (store_flag != 0), restore the 1K soft key buffer from
+\ the store buffers. This preserves function key definitions across
+\ soft resets.
 .alias_init
 {
         LDA store_flag
@@ -459,6 +459,7 @@
         LDA store_buf+&000,X : STA andy+&000,X
         LDA store_buf+&100,X : STA andy+&100,X
         LDA store_buf+&200,X : STA andy+&200,X
+        LDA store_buf+&300,X : STA andy+&300,X
         INX
         BNE restore_loop
         LDA sheila_romsel : AND #&7f : STA rom_number : STA sheila_romsel
