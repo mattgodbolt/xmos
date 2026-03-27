@@ -592,7 +592,20 @@ Fix: extend `store_buf` to 1024 bytes, remove `alias_exec_buf`
 (was only written, never read), add symmetric page 3 restore.
 ANDY soft key buffer layout confirmed from Master reference docs.
 
+### Keyword table scan and "Missing" entry — issue #47
+The `xi_htab` keyword scan has no end-of-table check. It works
+because 127 of 128 tokens have entries — only &8D (line number
+reference) is missing. TAB-recalling a line with GOTO/GOSUB
+causes the scan to run past the table end, but the outer byte
+counter prevents visible damage.
+
+"Missing" (token &FF, flags &4F) is unreachable — token &FF
+matches "OSCLI" earlier in the table. It exists to provide the
+&FF byte used as the initial alias table sentinel. Could be
+removed (saving 9 bytes) with a separate sentinel byte.
+
 ### Remaining
+- Remove "Missing" KW entry and add explicit alias table sentinel (#47)
 - Remove COPY handler dead code (needs analysis — may not be dead)
 - OSBYTE 4 dedup: 4 inline instances, saves 12 bytes but reduces readability
 
