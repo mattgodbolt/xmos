@@ -52,23 +52,15 @@
         BNE var_loop
         RTS
 }
-\ --- MEM editor configuration data ---
-.mem_workspace
-    EQUB &00, &00
-.mem_edit_lo
-    EQUB &00
-.mem_edit_hi
-    EQUB &12
-.mem_vdu_1
-    EQUB &E3
-.mem_vdu_2
-    EQUB &16
-.mem_mode
-    EQUB &01
-.mem_page_size
-    EQUB &03
-.mem_column
-    EQUB &02                    \ MEM column counter (0-7)
+\ --- MEM/DIS editor workspace (all set at runtime) ---
+.mem_workspace  SKIP 2
+.mem_edit_lo    SKIP 1          \ MEM current address low byte
+.mem_edit_hi    SKIP 1          \ MEM current address high byte
+.mem_vdu_1      SKIP 1          \ DIS resume address low byte
+.mem_vdu_2      SKIP 1          \ DIS resume address high byte
+.mem_mode       SKIP 1          \ Saved WRCH destination during MEM
+.mem_page_size  SKIP 1          \ Saved screen pages during MEM
+.mem_column     SKIP 1          \ MEM column counter (0-7)
 .mem_key_codes
     EQUB &88, &89, &8A, &8B     \ Key codes: left, right, down, up
     EQUB &09                    \ TAB key

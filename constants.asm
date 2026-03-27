@@ -23,6 +23,7 @@ osrdrm       = &FFB9
 
 \ --- Hardware registers ---
 sheila_romsel = &FE30           \ ROM select latch
+andy         = &8000            \ 4K private RAM (ROMSEL bit 7)
 
 \ --- Service call numbers ---
 svc_command  = &04              \ Unrecognised * command

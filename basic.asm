@@ -59,21 +59,17 @@
 \ the incore filename pointer, PAGE (load/start), and TOP (end).
 \ ---
 .osfile_block
-    EQUB &07, &30               \ +0: Filename pointer (overwritten)
-    EQUB &00, &30               \ +2: Load address low/high (high overwritten with PAGE)
-    EQUB &ff, &ff               \ +4: Load address top word (&FFFF = host)
-    EQUB &2B, &80               \ +6: Exec address low/high
-    EQUB &ff, &ff               \ +8: Exec address top word (&FFFF = host)
-    EQUB &AC, &05               \ +10: Start address (overwritten)
-    EQUB &00, &00               \ +12: Start address top
-    EQUB &00, &00               \ +14: End address (overwritten with TOP)
-    EQUB &00, &00               \ +16: End address top
+    SKIP 18                     \ Overwritten from osfile_template on each call
 .osfile_template                \ Template copied into osfile_block on each call
-    EQUB &00, &00, &00, &00     \ Filename/load addr (zeroed)
-    EQUB &ff, &ff, &2B, &80     \ Load addr top + exec addr
-    EQUB &ff, &ff, &00, &00     \ Exec addr top + start addr
-    EQUB &ff, &ff, &00, &00     \ Start addr top + end addr
-    EQUB &ff, &ff               \ End addr top
+    EQUW &0000                  \ +0: Filename pointer (patched later)
+    EQUW &0000                  \ +2: Load address low (patched with PAGE)
+    EQUW &ffff                  \ +4: Load address high (&FFFF = host)
+    EQUW &802b                  \ +6: Exec address low (ROM entry point)
+    EQUW &ffff                  \ +8: Exec address high (&FFFF = host)
+    EQUW &0000                  \ +10: Start address low (patched with PAGE)
+    EQUW &ffff                  \ +12: Start address high (&FFFF = host)
+    EQUW &0000                  \ +14: End address low (patched with TOP)
+    EQUW &ffff                  \ +16: End address high (&FFFF = host)
 
 \ ============================================================================
 \ find_incore_name — Locate the embedded filename in the BASIC program.

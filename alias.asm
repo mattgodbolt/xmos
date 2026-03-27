@@ -236,7 +236,7 @@
 .cmd_done
         PLY : PLX : PLA
         RTS
-\ Alias matched — expand it with parameter substitution into store_buf_3.
+\ Alias matched — expand it with parameter substitution into alias_expand_buf.
 \ The expanded text becomes the argument to *KEY 0, which is then triggered
 \ to type it at the prompt (see .open below).
 .exec_entry
@@ -257,7 +257,7 @@
         LDA (zp_ptr_lo),Y
         INY
         STY alias_file_handle
-        STA store_buf_3,X
+        STA alias_expand_buf,X
         INX
         CMP #&0d
         BNE check_percent
@@ -306,7 +306,7 @@
         CMP #&0d
         BEQ next_expand
         BEQ next_expand
-        STA store_buf_3,X
+        STA alias_expand_buf,X
         INX
         INY
         BNE copy_param_loop
@@ -433,10 +433,10 @@
         STA rom_number : STA sheila_romsel
         LDX #&00
 .copy_loop
-        LDA &8000,X : STA store_buf_0,X
-        LDA &8100,X : STA store_buf_1,X
-        LDA &8200,X : STA store_buf_2,X
-        LDA &8300,X : STA alias_exec_buf,X
+        LDA andy+&000,X : STA store_buf+&000,X
+        LDA andy+&100,X : STA store_buf+&100,X
+        LDA andy+&200,X : STA store_buf+&200,X
+        LDA andy+&300,X : STA alias_exec_buf,X
         INX
         BNE copy_loop
         LDA sheila_romsel : AND #&7f : STA rom_number : STA sheila_romsel
@@ -456,9 +456,9 @@
         STA rom_number : STA sheila_romsel
         LDX #&00
 .restore_loop
-        LDA store_buf_0,X : STA &8000,X
-        LDA store_buf_1,X : STA &8100,X
-        LDA store_buf_2,X : STA &8200,X
+        LDA store_buf+&000,X : STA andy+&000,X
+        LDA store_buf+&100,X : STA andy+&100,X
+        LDA store_buf+&200,X : STA andy+&200,X
         INX
         BNE restore_loop
         LDA sheila_romsel : AND #&7f : STA rom_number : STA sheila_romsel
