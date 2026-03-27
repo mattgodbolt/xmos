@@ -437,6 +437,6 @@
     KW "LOMEM", &d2, &00
     KW "HIMEM", &d3, &00
     EQUS "Missing"
-.alias_table                    \ Start of alias table; &FF = empty (doubles as "Missing" KW token)
+.alias_table                    \ Start of alias table; &FF = empty sentinel (overwrites "Missing" KW on first alias)
     EQUB &ff, &4f
 
