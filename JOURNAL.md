@@ -581,6 +581,17 @@ had been used before the ROM was saved to disc. &FF tells `alias_init` to
 restore the store buffers into ANDY on every reset. For a clean ROM,
 `store_flag` should be &00 (no `*STORE` done).
 
+### *STORE page 3 restore bug — FIXED
+`cmd_store` saved all 4 pages of the ANDY soft key buffer
+(&8000-&83FF = 1024 bytes) but `alias_init` only restored 3
+(&8000-&82FF = 768 bytes). The fourth page was saved into
+`alias_exec_buf` but never restored, losing the top 256 bytes
+of function key definitions on CTRL+BREAK.
+
+Fix: extend `store_buf` to 1024 bytes, remove `alias_exec_buf`
+(was only written, never read), add symmetric page 3 restore.
+ANDY soft key buffer layout confirmed from Master reference docs.
+
 ### Remaining
 - Remove COPY handler dead code (needs analysis — may not be dead)
 - OSBYTE 4 dedup: 4 inline instances, saves 12 bytes but reduces readability
