@@ -382,29 +382,3 @@ INCLUDE "lvar.asm"
 INCLUDE "data.asm"
 
 SAVE "build.rom", &8000, &C000
-
-\ ============================================================================
-\ Workspace layout overlay
-\ The workspace_start region contains runtime workspace: store buffers,
-\ alias expansion buffer, command history, keyword table, and the alias
-\ table. The ROM image has development-era junk here which is preserved
-\ for byte-identical output but overwritten at runtime.
-\
-\ This overlay defines labels at the correct addresses without
-\ changing the binary output (SAVE has already captured the bytes).
-\ ============================================================================
-CLEAR workspace_start, &C000
-ORG workspace_start
-.alias_oscli_buf SKIP 5         \ OSCLI command buffer for alias expansion
-.store_buf_3    SKIP 250        \ *STORE buffer: ANDY page 3 (&8300-&83FF)
-.store_buf_0    SKIP 256        \ *STORE buffer: ANDY page 0 (&8000-&80FF)
-                                \ (overlaps last 6 bytes of store_buf_3)
-.store_buf_1    SKIP 256        \ *STORE buffer: ANDY page 1 (&8100-&81FF)
-.store_buf_2    SKIP 256        \ *STORE buffer: ANDY page 2 (&8200-&82FF)
-.alias_exec_buf SKIP 256        \ Alias execution buffer
-.xi_hist_buffer SKIP 1022       \ Command history buffer
-.xi_hist_term   SKIP 1          \ History entry terminator (set to &0D)
-.xi_hist_flag   SKIP 1          \ History state flag
-                                \ basic_keyword_table follows (label in data.asm)
-    SKIP 784                    \ Keyword table, stored key defs, alias preamble
-.alias_clear_flag               \ Alias table start (first byte = &FF sentinel)

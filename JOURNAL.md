@@ -552,10 +552,38 @@ table. Replaced with `LO/HI(defkeys_direction_labels)`.
 `end_of_workspace_code - extended_input_code` instead of hardcoded
 `&D0`, so the copy size adjusts automatically.
 
+### Alias expansion mechanism — understood
+Alias expansion uses soft key f9 to type the expanded text at the
+prompt. The mechanism is a matched set of three parts:
+
+1. `alias_oscli_buf` = `EQUS "KEY9 "` — the `*KEY 9` OSCLI prefix
+2. `store_buf_3` — the expanded text (written by `exec_expand`)
+3. OSCLI runs `*KEY 9 <expansion>` to program f9, then OSBYTE &8A
+   with X=0 Y=&89 inserts an f9 keypress into the keyboard buffer
+
+The MOS expands f9, typing the alias text at the prompt. The user
+presses ENTER to execute. The `"KEY9 "` is a required initialisation
+in the ROM image — the original source would have been
+`EQUS "KEY9 "` followed by reserving the expansion buffer.
+
+### Workspace overlay removal — DONE
+Replaced the post-SAVE CLEAR/ORG overlay with inline workspace
+definitions in data.asm. Required initialisations:
+
+- `alias_oscli_buf` = `EQUS "KEY9 "` — *KEY 9 OSCLI prefix for
+  alias expansion (programs f9, triggers via OSBYTE &8A with &89)
+- `alias_clear_flag` = the "Missing" keyword's &FF token byte
+- `xi_hist_term`, `xi_hist_flag` — set at runtime, SKIP is fine
+
+### store_flag: &FF → &00
+`store_flag` was &FF in the original ROM, we think because `*STORE`
+had been used before the ROM was saved to disc. &FF tells `alias_init` to
+restore the store buffers into ANDY on every reset. For a clean ROM,
+`store_flag` should be &00 (no `*STORE` done).
+
 ### Remaining
-- Remove COPY handler dead code
-- Remove CLEAR/ORG workspace overlay (no longer needed for byte-identical)
-- Deduplicate hex parse and OSBYTE 4 cursor setup subroutines
+- Remove COPY handler dead code (needs analysis — may not be dead)
+- OSBYTE 4 dedup: 4 inline instances, saves 12 bytes but reduces readability
 
 ### jsbeeb TestMachine (done in 1.9.1)
 - [x] Case-correct type() via CAPS LOCK detection

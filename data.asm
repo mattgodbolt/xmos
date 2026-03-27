@@ -296,63 +296,22 @@
     OP "SBC", &0a               \ &fd: SBC &hl,X
     OP "INC", &0a               \ &fe: INC &hl,X
     NOOP                        \ &ff
-\ Runtime workspace — everything from here to alias_clear_flag is
-\ overwritten at runtime. Initial values are development artifacts.
-\ See the workspace overlay after SAVE in xmos.asm for the layout.
+\ ============================================================================
+\ Runtime workspace. Most buffers are overwritten before use; initial
+\ content doesn't matter (SKIP). Required initialisations are marked.
+\ alias_buffer and xi_hist_buffer share the same address.
+\ ============================================================================
 .workspace_start
-    EQUS "KEY9 *SRSAVE XMos 8000+4000 7Q|M", 13, "M", 13
-
-\ Overwritten workspace
-    FOR n, 1, 220 : EQUB '*' : NEXT
-    FOR n, 1, 17 : EQUB '"' : NEXT
-    FOR n, 1, 17 : EQUB &80 : NEXT
-
-\ BASIC build scripts and fragments from the development environment
-    EQUS "i", &8a, &90, "~z", &a9, &19, "it", '"', 13, "&", &8a, &90, "~z", &a9, &19, "oader", '"', 13, "CH.", '"', "Medit", '"', 13, "&", &8a, &90, "~z", &a9, &19, "ader", '"', 13, "CH.", '"', "Medit", '"', 13
-    EQUS "&", &8a, &90, "~z", &a9, &19, "PAGE=&2800", 13, "LO.", '"', "SrcCode", '"', 13, "CH.", '"', "MakeMap", '"', 13, "CH.", '"', "Loader", '"', 13, "CH.", '"'
-    EQUS "Medit", '"', 13, "&", &8a, &90, "~z", &a9, &19, "akeMap", '"', 13, "CH.", '"', "Loader", '"', 13, "CH.", '"', "Medit", '"', 13, "&", &a9, &82, &85, &a9, &a0, 0, &b2, &a8, &c9, &ff, &f0, "C", &a9, " "
-    EQUS " ", &e3, &ff, " ", &e3, &ff, &b1, &a8, &f0, &06, " ", &e3, &ff, &c8, &d0, &f6, &98, "8", &e9, &09, "I", &ff, &1a, &aa, &a9, "  ", &e3, &ff, &ca, &d0, &f8, &c8, &c8, &c8, &88, &c8, &b1, &a8, &f0, &05, " ", 0, 0, 0, 0, 0, 0, 0, &c8, &18, &98, "e", &a8, &85, &a8, &a5, &a9, "i", 0
-    EQUS &85, &a9, "L", &cc, &80, "z", &fa, "h`", &a9, &86, &85, &a8, &a9, &80, &85, &a9
-
-\ Ghost code — old help/command handler from a previous build (not executed)
-    EQUB &7a, &5a, &20, &26, &8a, &90, &20, &7a, &a9, &f0, &85, &a8, &a9, &9e, &85, &a9
-    EQUB &a0, &00, &b1, &a8, &f0, &0a, &20, &e3, &ff, &c8, &d0, &f6, &e6, &a9, &80, &f2
-    EQUB &20, &e7, &ff, &7a, &fa, &68, &60, &7a, &a9, &19, &85, &a8, &a9, &82, &85, &a9
-    EQUB &5a, &20, &26, &8a, &b0, &2c, &a0, &00, &c8, &b1, &a8, &d0, &fb, &c8, &c8, &c8
-    EQUB &c8, &b1, &a8, &d0, &fb, &c8, &18, &98, &65, &a8, &85, &a8, &a5, &a9, &69, &00
-    EQUB &85, &a9, &7a, &b2, &a8, &c9, &ff, &d0, &d7, &a9, &0f, &20, &e3, &ff, &7a, &fa
-    EQUB &68, &60, &7a, &a9, &20, &20, &e3, &ff, &20, &e3, &ff, &a0, &ff, &c8, &b1, &a8
-    EQUB &20, &e3, &ff, &c9, &00, &d0, &f6, &98, &38, &e9, &09, &49, &ff, &1a, &aa, &a9
-    EQUB &20, &20, &e3, &ff, &ca, &d0, &f8, &c8, &c8, &c8, &b1, &a8, &f0, &06, &20, &e3
-    EQUB &ff, &c8, &d0, &f6, &20, &e7, &ff, &7a, &fa, &68, &60, &48, &da, &5a, &a9, &19
-    EQUB &85, &a8, &a9, &82, &85, &a9, &5a, &b2, &a8, &c9, &ff, &f0, &25, &20, &26, &8a
-    EQUB &b0, &24, &a0, &00, &c8, &b1, &a8, &d0, &fb, &c8, &c8, &c8, &c8, &b1, &a8, &d0
-    EQUB &fb, &c8, &98, &18, &65, &a8, &85, &a8, &a5, &a9, &69, &00, &85, &a9, &7a, &4c
-    EQUB &c9, &81, &7a, &4c, &b8, &91, &7a, &a0, &00, &c8, &b1, &a8, &d0, &00, &00, &00
-    EQUB &00, &00, &00, &82, &c8, &b1, &a8, &8d, &18, &82, &20, &16, &82, &7a, &fa, &68
-
-\ Ghost command table — previous version of command_table left in RAM
-    EQUS &a9, 0, "`LF", &93, "ALIAS", 0, "3", &90, "<alias name> <alias>", 0, "ALIASES", 0, "A", &91, "Shows active al"
-    EQUS "iases", 0, "ALICLR", 0, "@", &93, "Clears all aliases", 0, "ALILD", 0, &85, &92, "Loads alias file", 0, "A"
-    EQUS "LISV", 0, &e1, &92, "Saves alias file", 0, "BAU", 0, &c1, &98, "Splits to single commands", 0, "DEFK"
-    EQUS "EYS", 0, "x", &8f, "Defines new keys", 0, "DIS", 0, &05, &97, "<addr> - disassemble memory", 0, 0, 0, 0
-    FOR n, 1, 180 : EQUB 0 : NEXT
-    EQUS 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "core name", 0, "SPACE", 0, "/", &9a, "Inserts spaces into progr"
-    EQUS "ams", 0, "STORE", 0, "F", &93, "K"
-
-\ Key/alias buffer workspace
-.alias_buffer
-    EQUS "*SRSAVE XMOS 8000+4000 7 Q", 13
-    FOR n, 1, 685 : EQUB &0d : NEXT
-
-\ Stored function key definitions
-    EQUS "*KEYOFF", 13, "*KEYOF", 13, "*STORE", 13, "*H.XMOS", 13, 13, "*KEY 15", 13, "*KEY 1", 13, "*KEY 16", 13, "*KEY 1"
-    EQUS "4", 13, "*KEY 13", 13, "*KEY 12", 13, "*KEY 11", 13, "*KEY 10", 13, "*KEY 9", 13, "*KEY 8", 13, "*KEY 7", 13, "*KEY "
-    EQUS "6", 13, "*KEY 5", 13, "*KEY 4", 13, "*KEY 3", 13, "*KEY 2", 13, "*KEY 1", 13, "*KEY 0", 13, "OSCLI", '"', "Save Game "
-    EQUS "1100 ", '"', "+STR$~P%+", '"', " ", '"', "+STR$~start", 13, "*SHOW 10", 13, "*SHOW", 13, "*H.MOS", 13, "*KEYS", 13, "*K"
-    EQUS "EY"
-    FOR n, 1, 70 : EQUB &0d : NEXT
-
+.alias_oscli_buf EQUS "KEY9 "   \ Required: *KEY 9 prefix for alias expansion
+.store_buf_3    SKIP 250        \ Alias expansion text / *STORE buffer: ANDY page 3
+.store_buf_0    SKIP 256        \ *STORE buffer: ANDY page 0 (&8000-&80FF)
+.store_buf_1    SKIP 256        \ *STORE buffer: ANDY page 1 (&8100-&81FF)
+.store_buf_2    SKIP 256        \ *STORE buffer: ANDY page 2 (&8200-&82FF)
+.alias_exec_buf SKIP 256        \ *STORE buffer: ANDY page 3 (&8300-&83FF)
+.alias_buffer                   \ Alias expansion buffer (shares xi_hist_buffer)
+.xi_hist_buffer SKIP 1022       \ Command history buffer
+.xi_hist_term   SKIP 1          \ Set to &0D at runtime
+.xi_hist_flag   SKIP 1          \ Set to &FF at runtime
 .basic_keyword_table
     KW "AND", &80, &00
     KW "ABS", &94, &00
@@ -482,13 +441,7 @@
     KW "TIME", &d1, &00
     KW "LOMEM", &d2, &00
     KW "HIMEM", &d3, &00
-    KW "Missing", &ff, &4f
-
-\ Build-time *KEY definitions stored after the keyword table
-    EQUS 0, &16, "SAVE|MCH.", '"', "Core", '"', "|M", 13
-    EQUS "BREAK", 0, &1e, "*KEY10 %0||M|M*STORE|M", 13
-    EQUS "MAKE", 0, &1f, "*SSAVE %0|MCH.", '"', "CREATE", '"', "|M", 13
-    EQUS "SPR", 0, &34, "MODE1:VDU19,1,1;0;19,2,2;0;19,3,3;0;:*SED.%0|M", 13
-    EQUS "UPDATE", 0, &24, "*SRSAVE XMos 8000+4000 7Q|M", 13
-    EQUS &ff, "ETUPTE", 0, &24, "*SRSAVE XMos 8000+4000 7Q|M"
+    EQUS "Missing"
+.alias_clear_flag               \ &FF token doubles as alias table empty sentinel
+    EQUB &ff, &4f
 
