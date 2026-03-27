@@ -30,4 +30,12 @@ describe("*LVAR", () => {
         const output = await runCommand(machine, "*LVAR", { raw: true });
         expect(output).toBe("\nD(\n>");
     });
+
+    it("should still work after an alias is defined", async () => {
+        const machine = await restoreOrBoot();
+        await runCommand(machine, "*ALIAS LS *CAT");
+        await runCommand(machine, 'X=3.14:G$="HI"');
+        const output = await runCommand(machine, "*LVAR", { raw: true });
+        expect(output).toBe("\nG$\nX\n>");
+    });
 });

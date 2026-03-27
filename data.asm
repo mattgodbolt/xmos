@@ -299,13 +299,11 @@
 \ ============================================================================
 \ Runtime workspace. Most buffers are overwritten before use; initial
 \ content doesn't matter (SKIP). Required initialisations are marked.
-\ alias_buffer and xi_hist_buffer share the same address.
 \ ============================================================================
 .workspace_start
 .alias_oscli_buf EQUS "KEY9 "   \ Required: *KEY 9 prefix for alias expansion
 .alias_expand_buf SKIP 250      \ Alias expansion text (follows alias_oscli_buf for OSCLI)
 .store_buf      SKIP 1024       \ *STORE: saves ANDY &8000-&83FF (soft key buffer)
-.alias_buffer                   \ Alias expansion buffer (shares xi_hist_buffer)
 .xi_hist_buffer SKIP 1022       \ Command history buffer
 .xi_hist_term   SKIP 1          \ Set to &0D at runtime
 .xi_hist_flag   SKIP 1          \ Set to &FF at runtime
@@ -438,7 +436,7 @@
     KW "TIME", &d1, &00
     KW "LOMEM", &d2, &00
     KW "HIMEM", &d3, &00
-    EQUS "Missing"
-.alias_clear_flag               \ &FF token doubles as alias table empty sentinel
+    EQUS "Missing"              \ Unreachable KW entry (token &FF matches OSCLI first)
+.alias_table                    \ Start of alias table; &FF = empty sentinel
     EQUB &ff, &4f
 

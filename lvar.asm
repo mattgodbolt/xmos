@@ -260,12 +260,12 @@
         BEQ save_cr
         LDY #&00
 .save_loop
-        LDA (zp_ptr_lo),Y : STA alias_buffer,Y
+        LDA (zp_ptr_lo),Y : STA xi_hist_buffer,Y
         INY
         CPY xi_line_len
         BNE save_loop
 .save_cr
-        LDA #&0d : STA alias_buffer,Y
+        LDA #&0d : STA xi_hist_buffer,Y
         RTS
 }
 .xi_scroll_count

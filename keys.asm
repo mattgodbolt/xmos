@@ -456,5 +456,5 @@
         STY compare_string_y
         RTS
 }
-.alias_semicolon_flag
+.alias_found_flag
     EQUB &ff

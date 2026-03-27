@@ -12,15 +12,15 @@
 \ if found, removes it by compacting the table, then appends the new entry.
 .cmd_alias
 {
-        LDA #&00 : STA alias_semicolon_flag
+        LDA #&00 : STA alias_found_flag
         JSR parse_cmdline
         CMP #&0d
         BNE table_start
         JMP alias_syntax_error
 \ Set pointer to start of alias table and begin scanning
 .table_start
-        LDA #LO(alias_clear_flag) : STA zp_ptr_lo
-        LDA #HI(alias_clear_flag) : STA zp_ptr_hi
+        LDA #LO(alias_table) : STA zp_ptr_lo
+        LDA #HI(alias_table) : STA zp_ptr_hi
 .check_end
         LDA (zp_ptr_lo)
         CMP #&ff
@@ -32,7 +32,7 @@
         STY compare_string_y
         BCC find_end
 \ Match found — delete existing entry by compacting the table over it
-        LDA #&ff : STA alias_semicolon_flag
+        LDA #&ff : STA alias_found_flag
         LDY #&ff
 .skip_name
         INY
@@ -157,8 +157,8 @@
 \ Walks the alias table printing each entry until the &FF sentinel.
 .cmd_aliases
 {
-        LDA #LO(alias_clear_flag) : STA zp_ptr_lo
-        LDA #HI(alias_clear_flag) : STA zp_ptr_hi
+        LDA #LO(alias_table) : STA zp_ptr_lo
+        LDA #HI(alias_table) : STA zp_ptr_hi
 .check
         LDA (zp_ptr_lo)
         CMP #&ff
@@ -193,10 +193,10 @@
         RTS
 }
 \ Delete alias — write &FF sentinel at current position to remove the entry.
-\ Only valid if an existing alias was found (alias_semicolon_flag set).
+\ Only valid if an existing alias was found (alias_found_flag set).
 .alias_clear_entry
     LDA #&ff : STA (zp_ptr_lo)
-    LDA alias_semicolon_flag
+    LDA alias_found_flag
     BEQ alias_syntax_error
     RTS
 .alias_syntax_error
@@ -209,8 +209,8 @@
 \ If no match, returns to let normal command processing continue.
 .check_alias
 {
-        LDA #LO(alias_clear_flag) : STA zp_ptr_lo
-        LDA #HI(alias_clear_flag) : STA zp_ptr_hi
+        LDA #LO(alias_table) : STA zp_ptr_lo
+        LDA #HI(alias_table) : STA zp_ptr_hi
 .walk_check
         LDA (zp_ptr_lo)
         CMP #&ff
@@ -355,8 +355,8 @@
         CMP #&00
         BEQ not_found
         STA alias_file_handle
-        LDA #LO(alias_clear_flag) : STA zp_ptr_lo
-        LDA #HI(alias_clear_flag) : STA zp_ptr_hi
+        LDA #LO(alias_table) : STA zp_ptr_lo
+        LDA #HI(alias_table) : STA zp_ptr_hi
 .read_loop
         LDY alias_file_handle
         JSR osbget
@@ -394,8 +394,8 @@
         CMP #&00
         BEQ cant_open
         STA alias_file_handle
-        LDA #LO(alias_clear_flag) : STA zp_ptr_lo
-        LDA #HI(alias_clear_flag) : STA zp_ptr_hi
+        LDA #LO(alias_table) : STA zp_ptr_lo
+        LDA #HI(alias_table) : STA zp_ptr_hi
 .check_end
         LDY alias_file_handle
         LDA (zp_ptr_lo)
@@ -419,7 +419,7 @@
 \ *ALICLR — Clear all aliases by writing &FF sentinel at the start of the table.
 .cmd_aliclr
 {
-        LDA #&ff : STA alias_clear_flag
+        LDA #&ff : STA alias_table
         RTS
 }
 \ *STORE — Save the first 1K of the current sideways ROM slot to a buffer.
