@@ -436,7 +436,6 @@
     KW "TIME", &d1, &00
     KW "LOMEM", &d2, &00
     KW "HIMEM", &d3, &00
-    EQUS "Missing"              \ Unreachable KW entry (token &FF matches OSCLI first)
 .alias_table                    \ Start of alias table; &FF = empty sentinel
-    EQUB &ff, &4f
+    EQUB &ff
 
