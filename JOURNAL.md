@@ -600,14 +600,25 @@ causes the scan to run past the table end, but the outer byte
 counter prevents visible damage.
 
 "Missing" (token &FF, flags &4F) is unreachable — token &FF
-matches "OSCLI" earlier in the table. It exists to provide the
-&FF byte used as the initial alias table sentinel. Could be
-removed (saving 9 bytes) with a separate sentinel byte.
+matches "OSCLI" earlier in the table. It existed to provide the
+&FF byte used as the initial alias table sentinel.
+
+### "Missing" KW entry removed — DONE
+Removed the unreachable "Missing" entry (9 bytes) and replaced
+with an explicit `EQUB &FF` alias table sentinel. The keyword
+table scan still has no end-of-table check (token &8D has no
+entry), but the outer byte counter prevents visible damage.
 
 ### Remaining
-- Remove "Missing" KW entry and add explicit alias table sentinel (#47)
-- Remove COPY handler dead code (needs analysis — may not be dead)
-- OSBYTE 4 dedup: 4 inline instances, saves 12 bytes but reduces readability
+- ~~Remove COPY handler dead code~~ — NOT dead: the BEQ at
+  xi_copy_down_truncate handles cursor at end of line (cursor_pos
+  == line_len). The journal note was wrong — the preceding CMP
+  checks (window_width + cursor_pos) vs line_len, a different
+  comparison.
+- OSBYTE 4 dedup: 6 instances (4 enable, 2 disable), all in ROM-
+  resident code (not workspace). A shared routine saves 11 bytes
+  net. Marginal — the inline pattern is self-documenting and 11
+  bytes is negligible in a 16KB ROM with ~6.8KB free.
 
 ### jsbeeb TestMachine (done in 1.9.1)
 - [x] Case-correct type() via CAPS LOCK detection
