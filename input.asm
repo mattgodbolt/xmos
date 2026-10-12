@@ -92,11 +92,12 @@
     INY
     LDA (zp_work_lo),Y : STA zp_ptr_hi
 \ Main input loop: read a character and dispatch it.
-\ Escape is echoed and re-read; all other keys are dispatched by type.
+\ While a VDU sequence still wants bytes, the key goes to OSWRCH and is re-read;
+\ otherwise it is dispatched by type.
 .xi_read_loop
     JSR osrdch
     STA xi_char
-    LDA os_escape_flag
+    LDA os_vdu_queue_count
     BPL xi_dispatch
     LDA xi_char
     JSR oswrch
