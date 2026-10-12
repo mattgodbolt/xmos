@@ -153,9 +153,8 @@
         JSR osnewl
         LDA #&15                \ VDU 21 — disable display output
         JSR oswrch
-        LDX #' '                \ BUG: &9A20 was key9_def in the 1992 build;
-        LDY #&9a                \ the code has moved, so this now points
-        JSR oscli               \ into the code above it
+        LDX #LO(key9_def) : LDY #HI(key9_def)
+        JSR oscli
         LDA #&8a
         LDX #&00
         LDY #&89

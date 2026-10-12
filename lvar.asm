@@ -249,11 +249,9 @@
         LDA zp_src_hi
         SBC #&00
         STA zp_src_hi
-        LDA zp_src_lo           \ BUG: &AA54 was xi_hist_buffer - 1 in the 1992
-        CMP #&54                \ build; the buffer has since moved, so this
-        BNE copy_loop           \ bound is stale
-        LDA zp_src_hi
-        CMP #&aa
+        LDA zp_src_lo : CMP #LO(xi_hist_buffer - 1)
+        BNE copy_loop
+        LDA zp_src_hi : CMP #HI(xi_hist_buffer - 1)
         BNE copy_loop
         LDY xi_line_len
         BEQ save_cr
@@ -327,10 +325,9 @@
         STA zp_src_hi
         DEX
         BEQ clear_and_load
-        CMP #&ae                \ BUG: &AE55, the end of the history buffer in
-        BCC check_end           \ the 1992 build; stale since the buffer moved
-        LDA zp_src_lo
-        CMP #&55
+        CMP #HI(xi_hist_flag + 1)
+        BCC check_end
+        LDA zp_src_lo : CMP #LO(xi_hist_flag + 1)
         BCC check_end
         LDA #&00 : STA xi_hist_index
         JMP xi_history_recall

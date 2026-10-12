@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { restoreOrBoot, runCommand, captureOutput } from "./xmos-test-machine.js";
+import { restoreOrBoot, runCommand, captureOutput, label } from "./xmos-test-machine.js";
 
 describe("*XON / *XOFF — extended input", () => {
     let machine;
@@ -243,5 +243,47 @@ describe("*KEYON / *KEYOFF / *KSTATUS", () => {
         expect(output).toContain("Up : :");
         expect(output).toContain("Down : /");
         expect(output).toContain("Jump/fire : RETURN");
+    });
+});
+
+describe("XON history", () => {
+    let machine;
+
+    beforeEach(async () => {
+        machine = await restoreOrBoot();
+        await runCommand(machine, "*XON");
+    });
+
+    it("saving a line leaves *STORE's buffer alone", async () => {
+        const storeEnd = label("xi_hist_buffer");
+        const tail = Array.from({ length: 32 }, (_, i) => storeEnd - 32 + i);
+        tail.forEach((address, i) => machine.writebyte(address, i + 1));
+
+        await runCommand(machine, "P.1");
+        await runCommand(machine, "P.2");
+
+        expect(tail.map((address) => machine.readbyte(address))).toEqual(tail.map((_, i) => i + 1));
+    });
+
+    it("SHIFT-up reaches the oldest whole lines when the buffer is full", { timeout: 60000 }, async () => {
+        // Line numbers alone are harmless to BASIC and take five bytes each with their CR, so
+        // the buffer's last whole entries start in the last 17 bytes before its terminator.
+        const lines = Array.from({ length: 210 }, (_, i) => String(1000 + i));
+        for (const line of lines) await runCommand(machine, line);
+
+        const recalled = new Set();
+        machine.drainText();
+        machine.keyDown(16); // SHIFT
+        for (let press = 0; press < lines.length; press++) {
+            machine.keyDown(38); // up
+            await machine.runFor(80000);
+            machine.keyUp(38);
+            await machine.runFor(80000);
+            for (const [line] of machine.drainText().matchAll(/\b1\d{3}\b/g)) recalled.add(line);
+        }
+        machine.keyUp(16);
+
+        const oldestWhole = Math.floor((label("xi_hist_term") - label("xi_hist_buffer")) / 5) - 1;
+        expect(recalled).toContain(lines.at(-1 - oldestWhole));
     });
 });
