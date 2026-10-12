@@ -1,212 +1,214 @@
 \ keys.asm — Key system: remap handler, KEYON/OFF, KSTATUS, DEFKEYS
 
 \ ============================================================================
-\ KEYV intercept handler — dispatches keyboard vector calls
-\ Routes to the scan handler (A=&81), keyboard handler (A=&79),
-\ or falls through to the original KEYV for all other calls.
-\ This entire block is copied to RAM at &D100 by KEYON so it can
-\ self-modify the CPX/LDX pairs with the user's chosen key codes.
+\ BYTEV intercept handler — makes the five chosen keys stand in for the
+\ game keys Z, X, :, / and RETURN when a program reads the keyboard with
+\ OSBYTE &81 (INKEY) or OSBYTE &79 (keyboard scan); every other OSBYTE
+\ goes straight to the original BYTEV.
+\ This entire block is copied to RAM at &D100 by KEYON, which patches the
+\ CPX/LDX pairs with the user's chosen keys first.
 \ ============================================================================
 .key_remap_handler
     PHP
     CMP #&81
-    BEQ key_remap_scan
+    BEQ key_remap_inkey
     CMP #&79
-    BEQ key_remap_keyboard
+    BEQ key_remap_test_key
     PLP
 .key_remap_jmp1
-    JMP &FFFF                   \ Patched: original KEYV address
-\ Scan handler (A=&81): remaps negative INKEY key-scan values.
-\ Each CPX/LDX pair is patched by KEYON with the configured key codes.
-.key_remap_scan
+    JMP &FFFF                   \ Patched: original BYTEV address
+\ OSBYTE &81 with Y=&FF (negative INKEY): a test for one of the game keys
+\ becomes a test for the key chosen in its place.
+.key_remap_inkey
     CPY #&ff
-    BNE key_remap_pass2
-.kr_scan_cpx_0
+    BNE key_remap_inkey_pass
+.kr_inkey_cpx_0
     CPX #&9E
-    BNE kr_scan_1
-.kr_scan_ldx_0
+    BNE kr_inkey_1
+.kr_inkey_ldx_0
     LDX #&BF
-.kr_scan_1
-.kr_scan_cpx_1
+.kr_inkey_1
+.kr_inkey_cpx_1
     CPX #&BD
-    BNE kr_scan_2
-.kr_scan_ldx_1
+    BNE kr_inkey_2
+.kr_inkey_ldx_1
     LDX #&FE
-.kr_scan_2
-.kr_scan_cpx_2
+.kr_inkey_2
+.kr_inkey_cpx_2
     CPX #&B7
-    BNE kr_scan_3
-.kr_scan_ldx_2
+    BNE kr_inkey_3
+.kr_inkey_ldx_2
     LDX #&B7
-.kr_scan_3
-.kr_scan_cpx_3
+.kr_inkey_3
+.kr_inkey_cpx_3
     CPX #&97
-    BNE kr_scan_4
-.kr_scan_ldx_3
+    BNE kr_inkey_4
+.kr_inkey_ldx_3
     LDX #&97
-.kr_scan_4
-.kr_scan_cpx_4
+.kr_inkey_4
+.kr_inkey_cpx_4
     CPX #&B6
-    BNE key_remap_pass2
-.kr_scan_ldx_4
+    BNE key_remap_inkey_pass
+.kr_inkey_ldx_4
     LDX #&B6
-.key_remap_pass2
+.key_remap_inkey_pass
     PLP
 .key_remap_jmp2
-    JMP &FFFF                   \ Patched: original KEYV address
+    JMP &FFFF                   \ Patched: original BYTEV address
 
-\ Keyboard handler (A=&79): remaps ASCII key codes for unshifted keys.
-\ Keys above &80 are unshifted; below &80 falls through to the shifted handler.
-.key_remap_keyboard
+\ OSBYTE &79 with X>=&80 tests one key (internal key number + &80): a test
+\ for a game key becomes a test for its replacement. X<&80 is a scan from
+\ key X upward, handled below.
+.key_remap_test_key
     CPX #&80
-    BCC key_remap_shifted
-.kr_kbd_cpx_0
+    BCC key_remap_scan_from
+.kr_test_cpx_0
     CPX #&E1
-    BNE kr_kbd_1
-.kr_kbd_ldx_0
+    BNE kr_test_1
+.kr_test_ldx_0
     LDX #&C0
-.kr_kbd_1
-.kr_kbd_cpx_1
+.kr_test_1
+.kr_test_cpx_1
     CPX #&C2
-    BNE kr_kbd_2
-.kr_kbd_ldx_1
+    BNE kr_test_2
+.kr_test_ldx_1
     LDX #&81
-.kr_kbd_2
-.kr_kbd_cpx_2
+.kr_test_2
+.kr_test_cpx_2
     CPX #&C8
-    BNE kr_kbd_3
-.kr_kbd_ldx_2
+    BNE kr_test_3
+.kr_test_ldx_2
     LDX #&C8
-.kr_kbd_3
-.kr_kbd_cpx_3
+.kr_test_3
+.kr_test_cpx_3
     CPX #&E8
-    BNE kr_kbd_4
-.kr_kbd_ldx_3
+    BNE kr_test_4
+.kr_test_ldx_3
     LDX #&E8
-.kr_kbd_4
-.kr_kbd_cpx_4
+.kr_test_4
+.kr_test_cpx_4
     CPX #&C9
-    BNE kr_kbd_pass
-.kr_kbd_ldx_4
+    BNE kr_test_pass
+.kr_test_ldx_4
     LDX #&C9
-.kr_kbd_pass
+.kr_test_pass
     PLP
 .key_remap_jmp3
-    JMP &FFFF                   \ Patched: original KEYV address
+    JMP &FFFF                   \ Patched: original BYTEV address
 
-\ Shifted key handler: calls the original KEYV first, then remaps the
-\ result. Also writes to &EC (the OS copy of the last key pressed) so
-\ SHIFT+key combinations produce the correct unshifted character.
-.key_remap_shifted
+\ OSBYTE &79 scan: call the original BYTEV, then report a replacement key
+\ that the scan found as its game key, also storing the game key (+&80) in &EC,
+\ the MOS's record of the key currently pressed.
+.key_remap_scan_from
     PLP
 .key_remap_jsr
-    JSR &FFFF                   \ Patched: call original KEYV
+    JSR &FFFF                   \ Patched: call original BYTEV
     PHP
-.kr_shift_cpx_0
+.kr_scan_from_cpx_0
     CPX #&40
-    BNE kr_shift_1
-.kr_shift_ldx_0
+    BNE kr_scan_from_1
+.kr_scan_from_ldx_0
     LDX #&E1 : STX os_last_key
-.kr_shift_orig_0
+.kr_scan_from_orig_0
     LDX #&61
-.kr_shift_1
-.kr_shift_cpx_1
+.kr_scan_from_1
+.kr_scan_from_cpx_1
     CPX #&01
-    BNE kr_shift_2
-.kr_shift_ldx_1
+    BNE kr_scan_from_2
+.kr_scan_from_ldx_1
     LDX #&C2 : STX os_last_key
-.kr_shift_orig_1
+.kr_scan_from_orig_1
     LDX #&42
-.kr_shift_2
-.kr_shift_cpx_2
+.kr_scan_from_2
+.kr_scan_from_cpx_2
     CPX #&48
-    BNE kr_shift_3
-.kr_shift_ldx_2
+    BNE kr_scan_from_3
+.kr_scan_from_ldx_2
     LDX #&C8 : STX os_last_key
-.kr_shift_orig_2
+.kr_scan_from_orig_2
     LDX #&48
-.kr_shift_3
-.kr_shift_cpx_3
+.kr_scan_from_3
+.kr_scan_from_cpx_3
     CPX #&68
-    BNE kr_shift_4
-.kr_shift_ldx_3
+    BNE kr_scan_from_4
+.kr_scan_from_ldx_3
     LDX #&E8 : STX os_last_key
-.kr_shift_orig_3
+.kr_scan_from_orig_3
     LDX #&68
-.kr_shift_4
-.kr_shift_cpx_4
+.kr_scan_from_4
+.kr_scan_from_cpx_4
     CPX #&49
-    BNE kr_shift_done
-.kr_shift_ldx_4
+    BNE kr_scan_from_done
+.kr_scan_from_ldx_4
     LDX #&C9 : STX os_last_key
-.kr_shift_orig_4
+.kr_scan_from_orig_4
     LDX #&49
-.kr_shift_done
+.kr_scan_from_done
     PLP
     RTS
 
 \ --- State variables ---
-.saved_keyv_lo
+.saved_bytev_lo
     EQUB &00
-.saved_keyv_hi
+.saved_bytev_hi
     EQUB &00
 .keyon_active                   \ Non-zero when key remapping is active
     EQUB &00
-.key_codes                      \ 5 internal key numbers: left, right, up, down, fire
+.key_codes                      \ 5 keys, as negated INKEY numbers (internal key number + 1): left, right, up, down, fire
     EQUB &41, &02, &49, &69, &4A
 .keyon_already_msg
     STROUT msg_keyon_already
     JMP keyon_rts
-\ Install the key remap handler: save the current KEYV, compute remapped
-\ key codes from the key_codes table (negated for scan, +&7F for keyboard,
-\ -1 for shifted), patch them into the handler, copy the handler to RAM,
-\ and point KEYV at the copy.
+\ Install the key remap handler: save the current BYTEV, compute the forms
+\ of each key in key_codes that the handler compares against (INKEY number,
+\ internal number + &80, internal number), patch them in, copy the handler
+\ to RAM, and point BYTEV at the copy.
 .keyon_setup
 {
         LDA keyon_active
         BNE keyon_already_msg
         LDA #&01 : STA keyon_active
-        LDA keyv_lo : STA key_remap_jmp1 + 1 : STA key_remap_jmp2 + 1
-        STA key_remap_jmp3 + 1 : STA key_remap_jsr + 1 : STA saved_keyv_lo
-        LDA keyv_hi : STA key_remap_jmp1 + 2 : STA key_remap_jmp2 + 2
-        STA key_remap_jmp3 + 2 : STA key_remap_jsr + 2 : STA saved_keyv_hi
+        LDA bytev_lo : STA key_remap_jmp1 + 1 : STA key_remap_jmp2 + 1
+        STA key_remap_jmp3 + 1 : STA key_remap_jsr + 1 : STA saved_bytev_lo
+        LDA bytev_hi : STA key_remap_jmp1 + 2 : STA key_remap_jmp2 + 2
+        STA key_remap_jmp3 + 2 : STA key_remap_jsr + 2 : STA saved_bytev_hi
         SEC : LDA #&00 : SBC key_codes
-        STA kr_scan_ldx_0 + 1
+        STA kr_inkey_ldx_0 + 1
         SEC : LDA #&00 : SBC key_codes + 1
-        STA kr_scan_ldx_1 + 1
+        STA kr_inkey_ldx_1 + 1
         SEC : LDA #&00 : SBC key_codes + 2
-        STA kr_scan_ldx_2 + 1
+        STA kr_inkey_ldx_2 + 1
         SEC : LDA #&00 : SBC key_codes + 3
-        STA kr_scan_ldx_3 + 1
+        STA kr_inkey_ldx_3 + 1
         SEC : LDA #&00 : SBC key_codes + 4
-        STA kr_scan_ldx_4 + 1
+        STA kr_inkey_ldx_4 + 1
         CLC : LDA key_codes : ADC #&7f
-        STA kr_kbd_ldx_0 + 1
+        STA kr_test_ldx_0 + 1
         CLC : LDA key_codes + 1 : ADC #&7f
-        STA kr_kbd_ldx_1 + 1
+        STA kr_test_ldx_1 + 1
         CLC : LDA key_codes + 2 : ADC #&7f
-        STA kr_kbd_ldx_2 + 1
+        STA kr_test_ldx_2 + 1
         CLC : LDA key_codes + 3 : ADC #&7f
-        STA kr_kbd_ldx_3 + 1
+        STA kr_test_ldx_3 + 1
         CLC : LDA key_codes + 4 : ADC #&7f
-        STA kr_kbd_ldx_4 + 1
+        STA kr_test_ldx_4 + 1
         SEC : LDA key_codes : SBC #&01
-        STA kr_shift_cpx_0 + 1
+        STA kr_scan_from_cpx_0 + 1
         SEC : LDA key_codes + 1 : SBC #&01
-        STA kr_shift_cpx_1 + 1
+        STA kr_scan_from_cpx_1 + 1
         SEC : LDA key_codes + 2 : SBC #&01
-        STA kr_shift_cpx_2 + 1
+        STA kr_scan_from_cpx_2 + 1
         SEC : LDA key_codes + 3 : SBC #&01
-        STA kr_shift_cpx_3 + 1
+        STA kr_scan_from_cpx_3 + 1
         SEC : LDA key_codes + 4 : SBC #&01
-        STA kr_shift_cpx_4 + 1
+        STA kr_scan_from_cpx_4 + 1
         LDX #&00
 .loop
         LDA key_remap_handler,X : STA keyon_handler_dest,X
         INX
         BNE loop
-        LDA #LO(keyon_handler_dest) : STA keyv_lo
-        LDA #HI(keyon_handler_dest) : STA keyv_hi
+        LDA #LO(keyon_handler_dest) : STA bytev_lo
+        LDA #HI(keyon_handler_dest) : STA bytev_hi
         RTS
 }
 \ *KEYON — Activate key remapping with the current key_codes definitions
@@ -230,15 +232,16 @@
     LDA keyon_active            \ Already disabled?
     BEQ keyoff_print_msg
     LDA #&00 : STA keyon_active
-    LDA saved_keyv_lo : STA keyv_lo  \ Restore original KEYV
-    LDA saved_keyv_hi : STA keyv_hi
+    LDA saved_bytev_lo : STA bytev_lo  \ Restore original BYTEV
+    LDA saved_bytev_hi : STA bytev_hi
 .keyoff_print_msg
     STROUT msg_keys_off
     JMP keyon_rts
 
 \ --- Key name lookup table ---
-\ Each entry: key code byte, then 9-char padded name
-\ Used by KSTATUS to display key names
+\ Each entry: the key's code in the MOS key translation table (&03 and &04
+\ stand in for SHIFT and CTRL, which have none), then a 9-char padded name.
+\ Used by KSTATUS and DEFKEYS to display key names
 .key_name_table
     EQUB &00 : EQUS "TAB      "
     EQUB &01 : EQUS "CAPS LOCK"
@@ -255,10 +258,10 @@
     EQUB &8E : EQUS "DOWN     "
     EQUB &8F : EQUS "UP       "
     EQUB &E0 : EQUS "BREAK!!! "
-\ Look up a key code in A and print its 9-character name.
-\ Handles special cases for TAB (&00) and CAPS LOCK (&01) which use
-\ internal key numbers; other codes are translated via the OS key table
-\ before searching the name table. Falls through to OSWRCH for unknown keys.
+\ Print the name of the key whose internal key number is in A.
+\ SHIFT (&00) and CTRL (&01) map to &03 and &04; other keys are translated
+\ via the MOS key table before searching the name table. A key not in the
+\ table is printed as its character.
 .keyname_lookup
 {
         CMP #&00
@@ -359,8 +362,8 @@
         LDA keyon_active
         BEQ start
         LDA #&00 : STA keyon_active
-        LDA saved_keyv_lo : STA keyv_lo
-        LDA saved_keyv_hi : STA keyv_hi
+        LDA saved_bytev_lo : STA bytev_lo
+        LDA saved_bytev_hi : STA bytev_hi
 .start
         LDA #&81
         LDX #&b6
@@ -396,9 +399,9 @@
         JSR osbyte
         JMP keyon_setup
 }
-\ Wait for a keypress using negative INKEY scanning: scans key numbers
-\ &81..&FF until one returns a match, converts it to an internal key number,
-\ stores it in key_codes, prints the key name, then waits for key release.
+\ Wait for a keypress using negative INKEY scanning: tries INKEY numbers
+\ &81..&FF until one is pressed, stores it negated in key_codes, prints
+\ the key name, then waits for key release.
 .defkeys_wait_key
 {
         PHX

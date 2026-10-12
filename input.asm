@@ -1,16 +1,17 @@
 \ input.asm — Extended input system: handle_reset, XON handler, keyboard intercept
 
 \ Initialise the extended input system on ROM reset.
-\ Patches workspace addresses into the handler code, re-enables KEYON/XON
-\ if they were active, and copies the input handler into private workspace RAM.
+\ Patches workspace addresses into the handler code, points WORDV at the
+\ workspace page, re-enables KEYON/XON if they were active, and copies the
+\ OSWORD handler into that page.
 .handle_reset
 {
         PHA : PHX : PHY
         LDA rom_workspace_table,X : STA xi_patch_workspace_hi + 1  \ Patch workspace high byte into handler
         STX xi_patch_rom_slot + 1  \ Patch ROM slot number into handler
         STA zp_work_hi          \ Set up workspace pointer high
-        STA os_himem_hi         \ Set OSHWM high byte
-        LDA #&00 : STA zp_work_lo : STA os_himem_lo  \ OSHWM low byte = 0
+        STA wordv_hi
+        LDA #&00 : STA zp_work_lo : STA wordv_lo
         JSR alias_init          \ Initialise alias system
         LDA keyon_active
         BEQ reset_skip_keyon
@@ -20,10 +21,10 @@
         LDA xon_flag
         BEQ reset_skip_xon
         LDA #&04                \ OSBYTE 4: cursor key status
-        LDX #&01                \ Enable cursor editing
+        LDX #&01                \ Cursor keys return codes
         LDY #&00
         JSR osbyte
-        LDA #&16                \ OSBYTE &16: reset function keys?
+        LDA #&16                \ OSBYTE &16: increment ROM polling semaphore
         LDX #&01
         JSR osbyte
 .reset_skip_xon
@@ -38,18 +39,19 @@
 }
 \ ============================================================================
 \ Extended input handler code — copied to workspace RAM on reset
-\ This block runs from the ROM's private workspace page, intercepting
-\ keyboard input to provide cursor editing, insert/delete, etc.
+\ WORDV points at the copy. Only the code up to the JSR xi_check_xon runs
+\ from there; that JSR is absolute, so everything after it runs from the ROM.
 \ ============================================================================
-\ KEYV intercept entry point. If A=0 (keyboard read), handle it ourselves;
-\ otherwise fall through to the default keyboard vector handler.
+\ WORDV intercept entry point. OSWORD 0 (read line) is handled here; any
+\ other OSWORD goes to the MOS's own handler.
 .extended_input_code
     PHP
     CMP #&00
     BEQ xi_entry
     PLP
-    JMP default_keyv
-\ Save caller's register block, page in XMOS ROM, and call the main handler.
+    JMP default_wordv
+\ Copy the caller's OSWORD 0 parameter block to workspace+&E0, page in
+\ XMOS, and call the main handler.
 .xi_entry
     PLA
     STX zp_src_lo
@@ -71,21 +73,21 @@
     LDA #&00
     PLP
     RTS
-\ If XON is off, restore rom_number and pass through to default KEYV.
+\ If XON is off, restore rom_number and pass through to the MOS's OSWORD.
 \ Harmless in practice (no IRQ handler should assume which ROM is paged)
 \ but rom_number should match sheila_romsel per the MOS contract.
-\ Can't also restore sheila_romsel because this runs from workspace RAM
-\ in the sideways bank. A=0 must be preserved (keyboard read op).
+\ Can't also restore sheila_romsel because this runs from the XMOS bank
+\ itself. A=0 must be preserved (OSWORD 0).
 .xi_check_xon
     LDA xon_flag
     BNE xi_init_state
     LDX saved_language_rom : STX rom_number
     LDX zp_src_lo : LDY zp_src_hi
-    JMP default_keyv
+    JMP default_wordv
 \ Reset editor state and begin reading a new input line.
-\ Fetches the caller's buffer address from the register block.
+\ Fetches the caller's buffer address from the parameter block.
 .xi_init_state
-    LDA #&00 : STA xi_scroll_count
+    LDA #&00 : STA xi_hist_index
     LDA #&00 : STA xi_line_len : STA xi_cursor_pos
     TAY
     LDA (zp_work_lo),Y : STA zp_ptr_lo
@@ -102,8 +104,8 @@
     LDA xi_char
     JSR oswrch
     JMP xi_read_loop
-\ Dispatch table for special keys: cursor left/right, delete, CR, escape,
-\ Ctrl-U (clear), copy up/down, Tab, Ctrl-N/O, horizontal tab, and null.
+\ Dispatch on special keys: cursor left/right, delete, CR, escape,
+\ Ctrl-U (clear), cursor up/down, COPY, Ctrl-N/O, TAB, and null.
 .xi_dispatch
 {
         LDA xi_char
@@ -125,23 +127,23 @@
 .check_escape
         CMP #&1b
         BNE check_clear
-        JMP xi_cr_restore_keys
+        JMP xi_handle_escape
 .check_clear
         CMP #&15
-        BNE check_copy
+        BNE check_up
         JMP xi_handle_clear
-.check_copy
+.check_up
         CMP #&8b
         BNE check_down
-        JMP xi_handle_copy_up
+        JMP xi_handle_up
 .check_down
         CMP #&8a
-        BNE check_tab
-        JMP xi_handle_copy_down
-.check_tab
+        BNE check_copy
+        JMP xi_handle_down
+.check_copy
         CMP #&87
         BNE check_ctrl_n
-        JMP xi_handle_tab
+        JMP xi_handle_copy
 .check_ctrl_n
         CMP #&0e
         BNE check_ctrl_o
@@ -159,10 +161,11 @@
         BNE xi_handle_printable
         JMP xi_handle_null
 }
-\ --- End of code copied to workspace RAM; everything below runs from ROM ---
+\ --- End of code copied to workspace RAM ---
 .end_of_workspace_code
-\ Handle a printable character: validate it's within the allowed range
-\ and the buffer isn't full, then insert it at the cursor position.
+\ Handle any other key: control codes are echoed to OSWRCH; a printable
+\ character within the allowed range is inserted at the cursor if the buffer
+\ isn't full.
 .xi_handle_printable
     LDA xi_char
     CMP #' '
@@ -187,10 +190,10 @@
     BNE xi_do_insert_setup
     JMP xi_read_loop
 .xi_do_insert_setup
-    LDA #&00 : STA xi_insert_mode
+    LDA #&00 : STA xi_hist_browsing
     JSR xi_do_insert
     JMP xi_read_loop
-.xi_insert_mode
+.xi_hist_browsing
     EQUB &00
 \ Insert xi_char into the line buffer at the current cursor position.
 \ Shifts characters after the cursor rightward, then redraws the tail.
@@ -238,7 +241,7 @@
 .xi_insert_done
     RTS
 \ Cursor left: move insertion point one character left within the line.
-\ If already at position 0, switch to scroll mode via cursor key reset.
+\ On an empty line, hand the key to the MOS's cursor editing instead.
 .xi_handle_left
 {
         LDA xi_line_len
@@ -255,7 +258,7 @@
         JMP xi_read_loop
 }
 \ Cursor right: move insertion point one character right within the line.
-\ If already at position 0, switch to scroll mode via cursor key reset.
+\ On an empty line, hand the key to the MOS's cursor editing instead.
 .xi_handle_right
 {
         LDA xi_line_len
@@ -322,7 +325,7 @@
         JMP xi_read_loop
 }
 \ Carriage return: finalise the input line and return it to the caller.
-\ In BASIC edit mode, intercepts "SAVE" to auto-save before returning.
+\ If the caller is BASIC (ROM 12) and the line is just "SAVE", runs *S instead.
 \ Moves the cursor to end-of-line, stores CR terminator, and exits.
 .xi_handle_cr
     LDA xon_flag
@@ -376,11 +379,12 @@
     RTS
 .save_keyword
     EQUS "SAVE"
-\ Escape key handler: restore cursor keys to editing mode, move cursor
-\ to end of line, and return with carry set to indicate escape.
-.xi_cr_restore_keys
+\ Escape key handler: make the cursor keys return codes again (they may
+\ have been handed to the MOS), move cursor to end of line, and return
+\ with carry set to indicate escape.
+.xi_handle_escape
     LDA #&04                    \ OSBYTE 4: cursor key status
-    LDX #&01                    \ Enable cursor editing
+    LDX #&01                    \ Cursor keys return codes
     LDY #&00
     JSR osbyte
     SEC
@@ -441,34 +445,35 @@
     LDA #&0d : STA (zp_ptr_lo),Y
     CLC
     RTS
-\ Copy-up (cursor up in copy mode): if no key is pending in the buffer,
-\ enter insert/scroll mode and scroll the screen up. If a key is pending,
-\ move the cursor up one screen line (by subtracting the window width).
-.xi_handle_copy_up
+\ Cursor up: with SHIFT held (INKEY -1), step back through the history,
+\ saving the current line first on the first step. Without SHIFT, move the
+\ cursor up one screen line (by subtracting the window width), or on an
+\ empty line hand the key to the MOS's cursor editing.
+.xi_handle_up
     LDA #&81
     LDX #&ff
     LDY #&ff
     JSR osbyte
     CPX #&ff
-    BNE xi_copy_up_has_key
-    LDA xi_scroll_count
-    BNE xi_copy_up_inc
-    LDA xi_insert_mode
-    BNE xi_copy_up_inc
-    LDA #&ff : STA xi_insert_mode
+    BNE xi_up_no_shift
+    LDA xi_hist_index
+    BNE xi_up_inc
+    LDA xi_hist_browsing
+    BNE xi_up_inc
+    LDA #&ff : STA xi_hist_browsing
     LDA xi_line_len
-    BEQ xi_copy_up_jmp
+    BEQ xi_up_jmp
     JSR xi_history_save
-.xi_copy_up_inc
-    INC xi_scroll_count
-.xi_copy_up_jmp
+.xi_up_inc
+    INC xi_hist_index
+.xi_up_jmp
     JMP xi_history_recall
-.xi_copy_up_has_key
+.xi_up_no_shift
     LDA xi_line_len
-    BNE xi_copy_up_calc
+    BNE xi_up_calc
     LDY #&8f
     JMP xi_reset_cursor_keys
-.xi_copy_up_calc
+.xi_up_calc
     SEC
     LDA os_win_right
     SBC os_win_left
@@ -477,75 +482,76 @@
     SEC
     LDA xi_cursor_pos
     SBC xi_char
-    BCC xi_copy_up_clear
+    BCC xi_up_clear
     STA xi_cursor_pos
     LDA #&0b
     JSR oswrch
-.xi_copy_up_done
+.xi_up_done
     JMP xi_read_loop
-.xi_copy_up_clear
+.xi_up_clear
     LDX xi_cursor_pos
-    BEQ xi_copy_up_done
-.xi_copy_up_bs_loop
+    BEQ xi_up_done
+.xi_up_bs_loop
     LDA #&08
     JSR oswrch
     DEX
-    BNE xi_copy_up_bs_loop
+    BNE xi_up_bs_loop
     LDA #&00 : STA xi_cursor_pos
     JMP xi_read_loop
-\ Copy-down (cursor down in copy mode): if no key is pending, enter
-\ insert/scroll mode and scroll down. If a key is pending, move the
-\ cursor down one screen line (by adding the window width).
-.xi_handle_copy_down
+\ Cursor down: with SHIFT held, step forward through the history. Without
+\ SHIFT, move the cursor down one screen line (by adding the window width),
+\ or on an empty line hand the key to the MOS's cursor editing.
+.xi_handle_down
     LDA #&81
     LDX #&ff
     LDY #&ff
     JSR osbyte
     CPX #&ff
-    BNE xi_copy_down_has_key
-    LDA xi_scroll_count
-    BNE xi_copy_down_dec
-    LDA xi_insert_mode
-    BNE xi_copy_down_dec
-    LDA #&ff : STA xi_insert_mode
+    BNE xi_down_no_shift
+    LDA xi_hist_index
+    BNE xi_down_dec
+    LDA xi_hist_browsing
+    BNE xi_down_dec
+    LDA #&ff : STA xi_hist_browsing
     JSR xi_history_save
-.xi_copy_down_dec
-    DEC xi_scroll_count
+.xi_down_dec
+    DEC xi_hist_index
     JMP xi_history_recall
-.xi_copy_down_has_key
+.xi_down_no_shift
     LDA xi_line_len
-    BNE xi_copy_down_calc
+    BNE xi_down_calc
     LDY #&8e
     JMP xi_reset_cursor_keys
-.xi_copy_down_calc
+.xi_down_calc
     SEC
     LDA os_win_right
     SBC os_win_left
     CLC : ADC #&01
     CLC : ADC xi_cursor_pos
-    BCS xi_copy_down_truncate
+    BCS xi_down_truncate
     CMP xi_line_len
-    BCS xi_copy_down_truncate
+    BCS xi_down_truncate
     STA xi_cursor_pos
     LDA #&0a
     JSR oswrch
     JMP xi_read_loop
-.xi_copy_down_truncate
+.xi_down_truncate
     SEC
     LDA xi_line_len
     SBC xi_cursor_pos
-    BEQ xi_copy_down_set_pos
+    BEQ xi_down_set_pos
     TAX
-.xi_copy_down_fwd_loop
+.xi_down_fwd_loop
     LDA #&09
     JSR oswrch
     DEX
-    BNE xi_copy_down_fwd_loop
-.xi_copy_down_set_pos
+    BNE xi_down_fwd_loop
+.xi_down_set_pos
     LDA xi_line_len : STA xi_cursor_pos
     JMP xi_read_loop
-\ Temporarily disable cursor editing mode and re-inject a cursor key,
-\ allowing normal screen-level cursor movement for one keypress.
+\ Turn the MOS's cursor editing back on and put the key back in the
+\ keyboard buffer as its MOS code (&8C-&8F in Y), so the rest of this line
+\ uses copy-cursor editing; RETURN or Escape turns it off again.
 .xi_reset_cursor_keys
     PHY
     LDA #&04
@@ -557,71 +563,70 @@
     LDX #&00
     JSR osbyte
     JMP xi_read_loop
-\ Tab (copy key): delete the character at the current cursor position
-\ by shifting remaining characters left and redrawing. Used for
-\ character-at-a-time deletion during copy editing.
-.xi_handle_tab
+\ COPY: delete the character under the cursor by shifting the rest of
+\ the line left and redrawing it.
+.xi_handle_copy
     LDA xi_line_len
     CMP xi_cursor_pos
-    BEQ xi_tab_done
+    BEQ xi_copy_done
     SEC                         \ BUG: this subtraction repeats the
     LDA xi_line_len             \ equality test above, so the BEQ
     SBC xi_cursor_pos           \ can never fire — dead code.
     PHA
-    BEQ xi_tab_update_pos
+    BEQ xi_copy_update_pos
     TAX
     LDY xi_cursor_pos
     INY
-.xi_tab_shift_loop
+.xi_copy_shift_loop
     LDA (zp_ptr_lo),Y
     DEY
     STA (zp_ptr_lo),Y
     INY
     INY
     DEX
-    BNE xi_tab_shift_loop
-.xi_tab_update_pos
+    BNE xi_copy_shift_loop
+.xi_copy_update_pos
     DEC xi_line_len
     LDY xi_cursor_pos
     PLA
-    BEQ xi_tab_done
+    BEQ xi_copy_done
     TAX
     DEX
-    BEQ xi_tab_single
+    BEQ xi_copy_single
     PHA
-.xi_tab_redraw_loop
+.xi_copy_redraw_loop
     LDA (zp_ptr_lo),Y
     JSR oswrch
     INY
     DEX
-    BNE xi_tab_redraw_loop
+    BNE xi_copy_redraw_loop
     LDA #' '
     JSR oswrch
     PLA
     TAX
-.xi_tab_bs_loop
+.xi_copy_bs_loop
     LDA #&08
     JSR oswrch
     DEX
-    BNE xi_tab_bs_loop
-.xi_tab_done
+    BNE xi_copy_bs_loop
+.xi_copy_done
     JMP xi_read_loop
-.xi_tab_single
+.xi_copy_single
     LDA #&09
     JSR oswrch
     LDA #&7f
     JSR oswrch
-.xi_tab_finished
+.xi_copy_finished
     JMP xi_read_loop
-\ Horizontal tab (Ctrl-I): in BASIC edit mode, parse a line number from
-\ the current input, look up the corresponding BASIC program line, and
-\ expand its tokenised content into the input buffer for editing.
+\ TAB (Ctrl-I): if the caller is BASIC (ROM 12), parse the first number in
+\ the current input, look up that BASIC program line, and append its
+\ detokenised text to the input for editing.
 .xi_handle_htab
     LDA xi_line_len
-    BEQ xi_tab_finished
+    BEQ xi_copy_finished
     LDA saved_language_rom
     CMP #&0c
-    BNE xi_tab_finished
+    BNE xi_copy_finished
     SEC
     LDA xi_line_len
     SBC xi_cursor_pos
@@ -645,7 +650,7 @@
 .xi_htab_skip_nondigit
     INY
     CPY xi_line_len
-    BEQ xi_tab_finished
+    BEQ xi_copy_finished
     BNE xi_htab_parse_loop
 \ Multiply the accumulated number by 10 and add the current digit.
 .xi_htab_mul10

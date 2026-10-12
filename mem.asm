@@ -1,8 +1,8 @@
 \ mem.asm — Memory editor: *MEM command
 \
 \ Full-screen hex/ASCII memory editor displayed in Mode 7. Shows 22 rows
-\ of 8 bytes each, with address, hex dump, and ASCII columns. Cursor keys
-\ navigate byte-by-byte; SHIFT+cursor scrolls by page. TAB toggles between
+\ of 8 bytes each, with address, hex dump, and ASCII columns. Left/right
+\ move a byte, up/down a row, SHIFT+up/down 22 rows. TAB toggles between
 \ hex-entry and direct-ASCII editing modes. In hex mode, typing two hex
 \ digits modifies one byte (high nibble shifted in first, then OR with low).
 
@@ -18,7 +18,8 @@
         LDA zp_src_hi : STA mem_edit_hi
 }
 \ Set up the Mode 7 display: switch video mode, align the start address
-\ to an 8-byte boundary, and initialise the column cursor position.
+\ to an 8-byte boundary, initialise the column cursor position, and turn
+\ off the MOS's cursor editing and speed up auto-repeat until exit.
 .mem_setup_display
 {
         LDA mem_edit_lo : STA zp_ptr_lo
@@ -39,9 +40,9 @@
         LDA mem_header,X : STA mode7_screen,X
         DEX
         BPL loop
-        LDA os_cursor_edit_type : STA mem_mode
+        LDA os_cursor_edit_type : STA mem_saved_cursor_edit
         LDA #&01 : STA os_cursor_edit_type
-        LDA os_key_repeat_rate : STA mem_page_size
+        LDA os_key_repeat_rate : STA mem_saved_repeat_rate
         LDA #&02 : STA os_key_repeat_rate
         LDA #&50 : STA zp_tmp_lo
         LDA #&7c : STA zp_tmp_hi
@@ -70,11 +71,11 @@
         DEX
         BNE mem_draw_row
 }
-\ Main event loop: redraw the screen from a position one row above the
-\ cursor, poll for a keypress, then dispatch to the appropriate handler.
+\ Main event loop: redraw the screen starting ten rows above the cursor's
+\ row, poll for a keypress, then dispatch to the appropriate handler.
 \ Escape exits; cursor/page keys are dispatched via a lookup table;
 \ other keys are treated as data entry (hex digit or raw ASCII byte).
-.mem_adjust_ptr
+.mem_main_loop
 {
         SEC
         LDA zp_ptr_lo
@@ -83,14 +84,14 @@
         LDA zp_ptr_hi
         SBC #&00
         STA zp_src_hi
-        JSR dis_setup
+        JSR mem_draw_screen
         LDA #&81
         LDX #&02
         LDY #&00
         JSR osbyte
         CPY #&1b
-        BEQ mem_set_mode
-        BCS mem_adjust_ptr
+        BEQ mem_exit
+        BCS mem_main_loop
         TXA
         LDX #&04
 .check_key
@@ -105,8 +106,8 @@
         PLA
         LDY mem_column
         STA (zp_ptr_lo),Y
-        JSR mem_cursor_down
-        JMP mem_adjust_ptr
+        JSR mem_cursor_right
+        JMP mem_main_loop
 }
 \ Hex editing mode: parse the keypress as a hex digit (0-F), then rotate
 \ it into the current byte. Each keypress shifts the existing value left
@@ -116,14 +117,14 @@
 {
         PLA
         JSR parse_hex_digit
-        BCS mem_adjust_ptr
+        BCS mem_main_loop
         STA alias_file_handle
         LDY mem_column
         LDA (zp_ptr_lo),Y
         ASL A : ASL A : ASL A : ASL A  \ shift to high nibble
         ORA alias_file_handle
         STA (zp_ptr_lo),Y
-        JMP mem_adjust_ptr
+        JMP mem_main_loop
 }
 \ Jump to the handler for a recognised special key (cursor/page/tab)
 \ via the mem_routine_table dispatch table.
@@ -135,13 +136,14 @@
         LDA mem_routine_table,X : STA cmd_dispatch_addr + 1
         LDA mem_routine_table + 1,X : STA cmd_dispatch_addr + 2
         JSR cmd_dispatch
-        JMP mem_adjust_ptr
+        JMP mem_main_loop
 }
-\ Exit the memory editor: restore the original VDU state and cursor position.
-.mem_set_mode
+\ Exit the memory editor: restore cursor editing, auto-repeat and the cursor
+\ shape, move the text cursor to the bottom line, and clear the Escape flag.
+.mem_exit
 {
-        LDA mem_mode : STA os_cursor_edit_type
-        LDA mem_page_size : STA os_key_repeat_rate
+        LDA mem_saved_cursor_edit : STA os_cursor_edit_type
+        LDA mem_saved_repeat_rate : STA os_key_repeat_rate
         LDA #&0a : STA crtc_addr
         LDA #&72 : STA crtc_data
         LDA #&1f
@@ -150,12 +152,12 @@
         JSR oswrch
         LDA #&18
         JSR oswrch
-        LDA #&00 : STA os_escape_effect
+        LDA #&00 : STA os_escape_flag
         RTS
 }
 \ Move cursor one byte backward. If already at column 0, wrap to column 7
 \ of the previous row (subtract 8 from the base pointer).
-.mem_cursor_up
+.mem_cursor_left
 {
         DEC mem_column
         BPL mem_cursor_rts
@@ -172,7 +174,7 @@
     RTS
 \ Move cursor one byte forward. If past column 7, wrap to column 0
 \ of the next row (add 8 to the base pointer).
-.mem_cursor_down
+.mem_cursor_right
 {
         LDA mem_column
         INC A
@@ -189,9 +191,9 @@
         STA zp_ptr_hi
         RTS
 }
-\ Page up: if SHIFT is held, jump back by a full page (&B0 bytes = 22 rows);
+\ Cursor up: if SHIFT is held, jump back by a full page (&B0 bytes = 22 rows);
 \ otherwise move back one row (8 bytes).
-.mem_page_up
+.mem_row_up
 {
         LDA #&81
         LDX #&ff
@@ -217,9 +219,9 @@
         STA zp_ptr_hi
         RTS
 }
-\ Page down: if SHIFT is held, jump forward by a full page (&B0 bytes);
+\ Cursor down: if SHIFT is held, jump forward by a full page (&B0 bytes);
 \ otherwise move forward one row (8 bytes).
-.mem_page_down
+.mem_row_down
 {
         LDA #&81
         LDX #&ff
@@ -257,16 +259,16 @@
 \ Render the entire memory display into the Mode 7 screen RAM.
 \ Writes 22 rows, each showing: 4-digit address, 8 hex bytes, 8 ASCII chars.
 \ Also draws bracket markers around the currently selected column.
-.dis_setup
+.mem_draw_screen
 {
         LDA #&16 : STA counter
         LDA #&51 : STA zp_tmp_lo
         LDA #&7c : STA zp_tmp_hi
 .line_loop
         LDA zp_src_hi
-        JSR dis_print_hex_byte
+        JSR mem_poke_hex_byte
         LDA zp_src_lo
-        JSR dis_print_hex_byte
+        JSR mem_poke_hex_byte
         CLC
         LDA zp_tmp_lo
         ADC #&02
@@ -277,7 +279,7 @@
         LDY #&00
 .hex_byte_loop
         LDA (zp_src_lo),Y
-        JSR dis_print_hex_byte
+        JSR mem_poke_hex_byte
         INC zp_tmp_lo
         BNE hex_next
         INC zp_tmp_hi
@@ -340,16 +342,16 @@
 }
 \ Write a byte as two hex digits directly into screen memory (via indirect
 \ store). Uses self-modifying code to save the value for the low nibble.
-.dis_print_hex_byte
+.mem_poke_hex_byte
 {
-        STA dis_print_lo_nibble + 1
+        STA mem_poke_lo_nibble + 1
         LSR A : LSR A : LSR A : LSR A  \ high nibble
         TAX : LDA hex_digits,X
         STA (zp_tmp_lo)
         INC zp_tmp_lo
-        BNE dis_print_lo_nibble
+        BNE mem_poke_lo_nibble
         INC zp_tmp_hi
-.*dis_print_lo_nibble
+.*mem_poke_lo_nibble
         LDA #&88
         AND #&0f
         TAX
@@ -362,13 +364,13 @@
 }
 \ Print a byte as two hex digits via OSWRCH (used by the disassembler).
 \ Uses self-modifying code to stash the value for the low nibble pass.
-.dis_print_hex_word
+.print_hex_byte
 {
-        STA dis_hex_word_lda + 1
+        STA print_hex_lo_nibble + 1
         LSR A : LSR A : LSR A : LSR A  \ high nibble
         TAX : LDA hex_digits,X
         JSR oswrch
-.*dis_hex_word_lda
+.*print_hex_lo_nibble
         LDA #'b'
         AND #&0f
         TAX

@@ -181,11 +181,11 @@ describe("*XON / *XOFF — extended input", () => {
 });
 
 describe("ROMSEL shadow with XON off", () => {
-    it("XON-off KEYV path should not hang or crash", async () => {
+    it("XON-off WORDV path should not hang or crash", async () => {
         const machine = await restoreOrBoot();
         await runCommand(machine, "*XOFF");
 
-        // Exercise the XON-off KEYV path — each keystroke goes through
+        // Exercise the XON-off WORDV path — each keystroke goes through
         // xi_check_xon which must preserve A=0 and restore rom_number.
         // If the fix is broken, the machine will hang or crash.
         await runCommand(machine, "REM one");

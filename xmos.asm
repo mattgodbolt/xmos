@@ -31,7 +31,7 @@ GUARD &C000
 \   svc_command      — intercept unrecognised * commands
 \   svc_help         — respond to *HELP requests
 \   svc_post_reset   — reinitialise state after a break/reset
-\   svc_claim_static — reserve one byte of static workspace
+\   svc_private_workspace — take a page of hidden RAM as private workspace
 \ ============================================================================
 .service_entry
     CMP #svc_command
@@ -44,17 +44,17 @@ GUARD &C000
     BNE not_reset
     JMP handle_reset
 .not_reset
-    CMP #svc_claim_static
-    BEQ handle_claim_static
+    CMP #svc_private_workspace
+    BEQ handle_private_workspace
     RTS
 
-\ Claim one byte of static workspace (Y is decremented to allocate)
-\ and record its address in the ROM workspace table for later use.
-.handle_claim_static
+\ Record the page below the one offered (Y-1) as this ROM's private
+\ workspace page, and pass the call on with Y decremented.
+.handle_private_workspace
     DEY
     TYA
     STA rom_workspace_table,X
-    LDA #svc_claim_static
+    LDA #svc_private_workspace
     RTS
 \ ============================================================================
 \ *HELP handler (service call &09)
@@ -199,7 +199,7 @@ GUARD &C000
         LDA (zp_ptr_lo)
         CMP #&FF                \ End of table?
         BNE help_try_next_cmd
-        LDA #&0F                \ Print mode 0 (reset double height)
+        LDA #&0F                \ VDU 15: paged mode off
         JSR osasci
         PLY : PLX : PLA
         RTS
@@ -223,7 +223,7 @@ GUARD &C000
         LDA #' ' : JSR osasci
         DEX
         BNE pad_loop_2
-        INY : INY : INY         \ skip handler address + offset
+        INY : INY : INY         \ skip null + handler address
 .print_help_text                \ Print the help description
         LDA (zp_ptr_lo),Y
         BEQ done_3
@@ -332,23 +332,24 @@ GUARD &C000
     EQUS "XMOS", 0
 \ ============================================================================
 \ *XON — Enable extended input (line-editing enhancements).
-\ Sets the XON flag and switches cursor keys to editing mode via OSBYTE 4.
+\ Sets the XON flag and turns off the MOS's cursor editing (OSBYTE 4) so the
+\ cursor keys and COPY reach the line editor as codes &87-&8B.
 \ ============================================================================
 .cmd_xon
     LDA #&FF : STA xon_flag
     LDA #&04                    \ OSBYTE 4: set cursor key status
-    LDX #&01                    \ X=1: cursor editing mode
+    LDX #&01                    \ X=1: cursor keys return codes
     LDY #&00
     JMP osbyte
 
 \ ============================================================================
 \ *XOFF — Disable extended input, restoring normal cursor key behaviour.
-\ Clears the XON flag and resets cursor keys to normal mode via OSBYTE 4.
+\ Clears the XON flag and turns the MOS's cursor editing back on via OSBYTE 4.
 \ ============================================================================
 .cmd_xoff
     LDA #&00 : STA xon_flag
     LDA #&04                    \ OSBYTE 4: set cursor key status
-    LDX #&00                    \ X=0: normal cursor keys
+    LDX #&00                    \ X=0: MOS cursor editing
     LDY #&00
     JMP osbyte
 
@@ -368,7 +369,7 @@ GUARD &C000
 .xi_char
     EQUB &0D                    \ last character read during input processing
 .xi_temp
-    EQUB &08                    \ scratch byte used during number parsing
+    EQUB &08                    \ high byte of the line number that TAB parses
 
 INCLUDE "input.asm"
 INCLUDE "util.asm"

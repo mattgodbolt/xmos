@@ -30,8 +30,9 @@
 
 \ ============================================================================
 \ copy_inline_to_stack — Copy inline code/data after the JSR to the stack
-\ page (&0100) and jump to it. Used to generate BRK-based error messages,
-\ since BRK requires the error block to sit at the current PC.
+\ page (&0100) and jump to it. Used to generate BRK-based error messages:
+\ the MOS pages the language ROM back in before calling BRKV, so an error
+\ block left in this ROM would be read from the wrong bank.
 \ ============================================================================
 .copy_inline_to_stack
 {

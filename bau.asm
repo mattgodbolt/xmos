@@ -1,9 +1,10 @@
 \ bau.asm — BASIC utilities: *BAU (split lines), *SPACE (insert spaces)
 
 \ *BAU — splits multi-statement BASIC lines at colons into separate lines.
-\ Walks the BASIC program in memory, finds colons outside strings/REM/DATA,
-\ and inserts new line headers at each split point. Skips lines whose first
-\ token is "." (assembler directive). After splitting, falls through to *SPACE.
+\ Walks the BASIC program in memory, finds colons outside strings, and
+\ inserts new line headers at each split point; the rest of a line is left
+\ alone from IF, DATA, ON or REM on. A line starting with "." (an assembler
+\ label) is split after the label. Then renumbers via f9.
 .cmd_bau
 {
         LDA saved_language_rom
@@ -22,14 +23,14 @@
         LDA (zp_ptr_lo),Y
         CMP #&ff                \ end-of-program marker
         BNE get_length
-        JMP start_space
+        JMP renumber
 .get_length
         LDY #&04
         LDA (zp_ptr_lo),Y : STA os_rs423_buf
         DEY
-        CMP #'.'                \ "." — assembler directive, skip entire line
+        CMP #'.'                \ "." — assembler label
         BNE skip_token
-\ Assembler-directive line: scan for colon (split point) or space runs
+\ Assembler label line: split at the first colon or after the label
 .scan_loop
         INY
         LDA (zp_ptr_lo),Y
@@ -49,8 +50,8 @@
         DEY
 .split_here
         JMP check_end
-\ Non-assembler line: scan for colon to split at, but never split after
-\ THEN, DATA, ELSE, or REM (the rest of those lines belongs together).
+\ Other lines: scan for colon to split at, but never split after
+\ IF, DATA, ON, or REM (the rest of those lines belongs together).
 \ Also skips over quoted strings so colons inside strings are ignored.
 .skip_token
         INY
@@ -58,18 +59,18 @@
         CMP #':'
         BEQ check_end
         CMP #&0d
-        BNE check_then
+        BNE check_if
         JMP next_line
-.check_then
-        CMP #&e7                \ THEN — don't split
+.check_if
+        CMP #&e7                \ IF — don't split
         BNE check_data
         JMP next_line
 .check_data
         CMP #&dc                \ DATA — don't split
-        BNE check_else
+        BNE check_on
         JMP next_line
-.check_else
-        CMP #&ee                \ ELSE — don't split
+.check_on
+        CMP #&ee                \ ON — don't split
         BNE check_rem
         JMP next_line
 .check_rem
@@ -107,7 +108,7 @@
         CLC : ADC zp_ptr_lo : STA zp_ptr_lo
         LDA zp_ptr_hi : ADC #&00 : STA zp_ptr_hi
 \ Shift the program body upward by 3 bytes (room for new line header).
-\ Copies from TOP downward to avoid overwriting data.
+\ Copies from LOMEM (TOP, after editing) downward to avoid overwriting data.
         LDA basic_lomem_lo : CLC : ADC #&02 : STA zp_tmp_lo
         LDA basic_lomem_hi : ADC #&00 : STA zp_tmp_hi
         SEC
@@ -147,14 +148,14 @@
         LDA zp_ptr_hi : ADC #&00 : STA zp_ptr_hi
         JMP line_loop
 
-\ After BAU finishes, reset BASIC state: issue RENUMBER via *KEY9
-.start_space
+\ After splitting, renumber: define f9 as RENUMBER and press it
+.renumber
         JSR osnewl
         LDA #&15                \ VDU 21 — disable display output
         JSR oswrch
-        LDX #' '
-        LDY #&9a
-        JSR oscli               \ execute *KEY9 (RENUMBER) to fix line numbers
+        LDX #' '                \ BUG: &9A20 was key9_def in the 1992 build;
+        LDY #&9a                \ the code has moved, so this now points
+        JSR oscli               \ into the code above it
         LDA #&8a
         LDX #&00
         LDY #&89
@@ -167,9 +168,9 @@
 \ *SPACE — inserts spaces after BASIC keyword tokens so they are readable.
 \ Walks each line, identifies tokenised keywords, and inserts a space after
 \ each one unless already followed by space, CR, or colon. Some keywords
-\ (e.g. AND, OR, DIV, EOR, MOD, THEN, ELSE, LINE) get a space before AND
-\ after, since they are infix operators or statement separators. Skips over
-\ strings, line-number tokens, and REM (which consumes the rest of the line).
+\ (AND, OR, DIV, EOR, MOD, THEN, ELSE, TO, STEP) get a space before as well
+\ as after, since they sit between operands. Skips over strings,
+\ line-number tokens, and REM (which consumes the rest of the line).
 \ Also handles "[" brackets by dispatching to the assembler-block formatter.
 .cmd_space
 {
@@ -205,7 +206,7 @@
 .check_bracket
         CMP #'['
         BNE check_quote
-        JMP lvar_display_value
+        JMP space_asm_block
 .check_quote
         CMP #'"'
         BNE space_scan_loop
@@ -218,62 +219,61 @@
         BNE skip_string
         JMP next_line
 \ Token classifier: decides which tokens need a space inserted after them.
-\ Tokens that are part of expressions or take arguments directly (ELSE as
-\ function, AND/OR/EOR/MOD bitwise, LINE, PROC, FN, and various groups)
-\ are skipped — they don't need extra spacing.
+\ Tokens that end in "(" or are followed directly by a name (PROC, FN),
+\ and the pseudo-variables, are skipped — they don't need extra spacing.
 .check_token
         CMP #&8d                \ pseudo line-number token (3-byte encoding)
-        BNE check_else
+        BNE check_no_space
         INY : INY : INY         \ skip 3-byte token
         BNE space_scan_loop
-.check_else
-        CMP #&a7                \ ELSE (function form) — skip
+.check_no_space
+        CMP #&a7                \ INSTR( — skip
         BEQ space_scan_loop
-        CMP #&c0                \ AND — skip
+        CMP #&c0                \ LEFT$( — skip
         BEQ space_scan_loop
-        CMP #&c1                \ OR — skip
+        CMP #&c1                \ MID$( — skip
         BEQ space_scan_loop
-        CMP #&b0                \ AND (bitwise) — skip
+        CMP #&b0                \ POINT( — skip
         BEQ space_scan_loop
-        CMP #&c2                \ EOR — skip
+        CMP #&c2                \ RIGHT$( — skip
         BEQ space_scan_loop
-        CMP #&c4                \ MOD — skip
+        CMP #&c4                \ STRING$( — skip
         BEQ space_scan_loop
-        CMP #&8a                \ LINE — skip
+        CMP #&8a                \ TAB( — skip
         BEQ space_scan_loop
-        CMP #cmd_line_lo        \ PROC — skip
+        CMP #&f2                \ PROC — skip
         BEQ space_scan_loop
         CMP #&a4                \ FN — skip
         BEQ space_scan_loop
-        CMP #&cf                \ tokens &CF-&D3 (SGN..TAN range) — skip
+        CMP #&cf                \ tokens &CF-&D3 (PTR= .. HIMEM=) — skip
         BCC check_range
         CMP #&d4
         BCS check_range
         JMP space_scan_loop
 .check_range
-        CMP #&8f                \ tokens &8F-&93 (COLOUR..SOUND range) — skip
-        BCC check_next
+        CMP #&8f                \ tokens &8F-&93 (PTR .. HIMEM) — skip
+        BCC check_to
         CMP #&94
-        BCS check_next
+        BCS check_to
         JMP space_scan_loop
-.check_next
-        CMP #&b8                \ TAB — skip if followed by "(" (TAB function)
-        BNE check_lomem
+.check_to
+        CMP #&b8                \ TO — skip if followed by "P" (TOP)
+        BNE check_rnd
         INY
         LDA (zp_ptr_lo),Y
         CMP #&50
         BEQ space_scan_loop
         DEY
         LDA #&b8
-.check_lomem
-        CMP #&b3                \ LEFT$ — skip if followed by "(" (function call)
+.check_rnd
+        CMP #&b3                \ RND — skip if followed by "("
         BNE check_rem
         INY
         LDA (zp_ptr_lo),Y
         CMP #'('
-        BNE insert_lomem
+        BNE rnd_not_call
         JMP space_scan_loop
-.insert_lomem
+.rnd_not_call
         DEY
         LDA #&b3
 .check_rem
@@ -314,9 +314,9 @@
         STA (zp_ptr_lo),Y       \ write space byte
         DEY
 \ Check if this token is an infix keyword that also needs a space BEFORE it.
-\ These are: TAB, AND, DIV, ELSE, EOR, MOD, OR, THEN, LINE
+\ These are: TO, AND, DIV, ELSE, EOR, MOD, OR, THEN, STEP
         LDA (zp_ptr_lo),Y
-        CMP #&b8                \ TAB
+        CMP #&b8                \ TO
         BEQ space_insert_byte
         CMP #&80                \ AND
         BEQ space_insert_byte
@@ -332,7 +332,7 @@
         BEQ space_insert_byte
         CMP #&8c                \ THEN
         BEQ space_insert_byte
-        CMP #&88                \ LINE
+        CMP #&88                \ STEP
         BEQ space_insert_byte
         INY
         JMP space_scan_loop
