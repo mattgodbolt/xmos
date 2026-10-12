@@ -11,7 +11,7 @@
 ## Named constants
 - **Every address must have a name.** No raw hex addresses in instructions.
 - Zero page locations: use constants from `constants.asm` (`zp_ptr_lo`, `cmd_line_lo`, `rom_number`)
-- OS workspace: use constants (`keyv_lo`, `saved_language_rom`, `os_escape_flag`)
+- OS workspace: use constants (`keyv_lo`, `saved_language_rom`, `os_vdu_queue_count`)
 - ROM workspace variables: use labels at their actual location in the assembly
 - **Address low/high bytes must use `LO(label)` / `HI(label)`**, never raw hex.
   Write `LDA #LO(alias_buffer)` not `LDA #&65`.

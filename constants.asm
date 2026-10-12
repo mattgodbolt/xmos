@@ -78,11 +78,11 @@ zp_src_hi    = &AF              \ Source pointer high
 keyv_lo      = &020A            \ Keyboard vector low byte
 keyv_hi      = &020B            \ Keyboard vector high byte
 saved_language_rom = &0230      \ Saved ROM number of the active language (e.g. &0C = BASIC)
-os_escape_flag = &026A          \ Escape flag (bit 7 set = escape pressed)
-os_wrch_dest = &027D            \ VDU driver destination
+os_vdu_queue_count = &026A      \ Minus the bytes the VDU queue still wants (0 when empty)
+os_cursor_edit_type = &027D     \ Cursor key behaviour, as *FX4 sets it (0 = normal cursor editing)
 os_win_left  = &0308            \ Text window left column
 os_win_right = &030A            \ Text window right column
-os_screen_pages = &0255         \ Number of pages of screen memory
+os_key_repeat_rate = &0255      \ Keyboard auto-repeat rate, in centiseconds
 
 \ --- Hardware registers ---
 crtc_addr    = &FE00            \ 6845 CRTC address register

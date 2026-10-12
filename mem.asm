@@ -39,10 +39,10 @@
         LDA mem_header,X : STA mode7_screen,X
         DEX
         BPL loop
-        LDA os_wrch_dest : STA mem_mode
-        LDA #&01 : STA os_wrch_dest
-        LDA os_screen_pages : STA mem_page_size
-        LDA #&02 : STA os_screen_pages
+        LDA os_cursor_edit_type : STA mem_mode
+        LDA #&01 : STA os_cursor_edit_type
+        LDA os_key_repeat_rate : STA mem_page_size
+        LDA #&02 : STA os_key_repeat_rate
         LDA #&50 : STA zp_tmp_lo
         LDA #&7c : STA zp_tmp_hi
         LDX #&16
@@ -140,8 +140,8 @@
 \ Exit the memory editor: restore the original VDU state and cursor position.
 .mem_set_mode
 {
-        LDA mem_mode : STA os_wrch_dest
-        LDA mem_page_size : STA os_screen_pages
+        LDA mem_mode : STA os_cursor_edit_type
+        LDA mem_page_size : STA os_key_repeat_rate
         LDA #&0a : STA crtc_addr
         LDA #&72 : STA crtc_data
         LDA #&1f
