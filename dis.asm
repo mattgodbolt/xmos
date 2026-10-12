@@ -50,31 +50,31 @@
 .dis_operand_sizes
     EQUB 1, 2, 3, 2, 1, 1, 2, 2, 2, 2, 3, 3, 2, 3, 3, 2
 \ Entry point for *DIS [address]. If no address given, continues from
-\ the last position (saved across invocations in mem_vdu_1/2).
+\ the last position (saved across invocations in dis_resume_lo/2).
 .cmd_dis
 {
         JSR parse_cmdline
         CMP #&0d
         BEQ dis_display_line
         JSR parse_hex_word
-        BRA dis_print_header
+        BRA dis_print_line
 }
 .dis_display_line
 {
-        LDA mem_vdu_1 : STA zp_src_lo
-        LDA mem_vdu_2 : STA zp_src_hi
+        LDA dis_resume_lo : STA zp_src_lo
+        LDA dis_resume_hi : STA zp_src_hi
 }
 \ Print one disassembled line: address, mnemonic, operand, raw bytes, ASCII.
 \ The opcode is multiplied by 4 to index into a 1024-byte lookup table that
 \ holds {3-char mnemonic, addressing mode index} for each of the 256 opcodes.
-.dis_print_header
+.dis_print_line
     LDA #&82
     JSR oswrch
     JSR oswrch
     LDA zp_src_hi
-    JSR dis_print_hex_word
+    JSR print_hex_byte
     LDA zp_src_lo
-    JSR dis_print_hex_word
+    JSR print_hex_byte
     LDA #' '
     JSR oswrch
     LDY #&00 : STY zp_tmp_hi
@@ -116,28 +116,28 @@
 .dis_format_loop
     INY
     LDA (zp_tmp_lo),Y
-    BEQ dis_print_addr
+    BEQ dis_print_bytes
     CMP #'h'                    \ 'h' — print high byte of operand
     BNE dis_check_lo
-    JMP dis_check_up
+    JMP dis_fmt_high
 .dis_check_lo
     CMP #'l'                    \ 'l' — print low byte of operand
     BNE dis_check_branch
-    JMP dis_check_down
+    JMP dis_fmt_low
 .dis_check_branch
     CMP #'b'                    \ 'b' — resolve and print branch target
     BNE dis_print_char
-    JMP dis_check_right
+    JMP dis_fmt_branch
 .dis_print_char
     JSR oswrch
     BRA dis_format_loop
 \ Tab to a fixed column, then print the raw instruction bytes in hex.
-.dis_print_addr
+.dis_print_bytes
     LDA #&86
     JSR oswrch
     LDA os_vdu_x
     CMP #&16
-    BNE dis_print_addr
+    BNE dis_print_bytes
     PLX
     LDA dis_operand_sizes,X
     PHA
@@ -146,7 +146,7 @@
 .dis_print_byte
     LDA (zp_src_lo),Y
     PHX
-    JSR dis_print_hex_word
+    JSR print_hex_byte
     PLX
     LDA #' '
     JSR oswrch
@@ -191,34 +191,34 @@
 {
         JSR osrdch
         BCS save_state
-        JMP dis_print_header
+        JMP dis_print_line
 \ Save current address so *DIS with no argument can resume here.
 .save_state
-        LDA zp_src_lo : STA mem_vdu_1
-        LDA zp_src_hi : STA mem_vdu_2
-        LDA #&00 : STA os_escape_effect
+        LDA zp_src_lo : STA dis_resume_lo
+        LDA zp_src_hi : STA dis_resume_hi
+        LDA #&00 : STA os_escape_flag
         RTS
 }
 \ Print the high byte of a two-byte operand (byte at PC+2).
-.dis_check_up
+.dis_fmt_high
     PHY
     LDY #&02
     LDA (zp_src_lo),Y
-    JSR dis_print_hex_word
+    JSR print_hex_byte
     PLY
     JMP dis_format_loop
 \ Print the low byte of the operand (byte at PC+1).
-.dis_check_down
+.dis_fmt_low
     PHY
     LDY #&01
     LDA (zp_src_lo),Y
-    JSR dis_print_hex_word
+    JSR print_hex_byte
     PLY
     JMP dis_format_loop
 \ Resolve a relative branch offset to an absolute target address.
 \ Computes target = (PC + 2) + signed_offset, handling both forward
 \ (positive) and backward (negative) branches.
-.dis_check_right
+.dis_fmt_branch
     PHY
     LDY #&01
     CLC
@@ -229,28 +229,28 @@
     ADC #&00
     STA zp_ptr_hi
     LDA (zp_src_lo),Y
-    BMI dis_advance
+    BMI dis_fmt_branch_back
     CLC : ADC zp_ptr_lo
     STA zp_ptr_lo
     LDA zp_ptr_hi
     ADC #&00
     STA zp_ptr_hi
-    JSR dis_print_hex_word
+    JSR print_hex_byte
     LDA zp_ptr_lo
-    JSR dis_print_hex_word
+    JSR print_hex_byte
     PLY
     JMP dis_format_loop
 \ Backward branch: offset is negative, so add &FF to the high byte
 \ (sign-extend the 8-bit negative offset to 16 bits).
-.dis_advance
+.dis_fmt_branch_back
     CLC : ADC zp_ptr_lo
     STA zp_ptr_lo
     LDA zp_ptr_hi
     ADC #&ff
     STA zp_ptr_hi
-    JSR dis_print_hex_word
+    JSR print_hex_byte
     LDA zp_ptr_lo
-    JSR dis_print_hex_word
+    JSR print_hex_byte
     PLY
     JMP dis_format_loop
 \ Print 5 backspaces then overwrite with the current BASIC line number

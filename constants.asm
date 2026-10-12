@@ -28,8 +28,8 @@ andy         = &8000            \ 4K private RAM (ROMSEL bit 7)
 \ --- Service call numbers ---
 svc_command  = &04              \ Unrecognised * command
 svc_help     = &09              \ *HELP request
-svc_claim_static = &22          \ Claim static workspace
-svc_post_reset = &27            \ Post-reset (soft break)
+svc_private_workspace = &22     \ Offer private workspace in hidden RAM (Y = page offered)
+svc_post_reset = &27            \ Issued after every reset, soft or hard
 
 \ --- OS workspace ---
 rom_workspace_table = &0DF0     \ Per-ROM private workspace (&0DF0+rom_number)
@@ -40,8 +40,8 @@ romtype_6502 = &02              \ 6502 CPU type
 
 \ --- BASIC zero page locations ---
 \ These are valid when BASIC is the current language
-basic_str_lo = &B2              \ BASIC string pointer low
-basic_str_hi = &B3              \ BASIC string pointer high
+prog_ptr_lo  = &B2              \ Pointer into the BASIC program; filing system scratch, so OSFILE may corrupt it
+prog_ptr_hi  = &B3
 basic_page_hi = &18             \ PAGE high byte (start of BASIC program)
 basic_top_lo = &12              \ TOP low byte (end of BASIC program)
 basic_top_hi = &13              \ TOP high byte
@@ -52,7 +52,7 @@ basic_vartop_hi = &03           \ VARTOP high
 basic_listo  = &1F              \ LISTO option (LIST formatting control)
 
 os_last_key  = &EC              \ OS copy of last key pressed
-os_escape_effect = &FF          \ Escape key effect flag (0 = normal escape)
+os_escape_flag = &FF            \ Bit 7 set while an Escape condition is pending
 
 \ --- OS zero page ---
 cmd_line_lo  = &F2              \ Command line pointer low (set by MOS)
@@ -75,9 +75,9 @@ zp_src_hi    = &AF              \ Source pointer high
 
 
 \ --- OS workspace addresses ---
-keyv_lo      = &020A            \ Keyboard vector low byte
-keyv_hi      = &020B            \ Keyboard vector high byte
-saved_language_rom = &0230      \ Saved ROM number of the active language (e.g. &0C = BASIC)
+bytev_lo     = &020A            \ OSBYTE vector low byte
+bytev_hi     = &020B            \ OSBYTE vector high byte
+saved_language_rom = &0230      \ Low byte of the unused IND1V; XMOS keeps the ROM paged in at the last OSWORD 0 here
 os_vdu_queue_count = &026A      \ Minus the bytes the VDU queue still wants (0 when empty)
 os_cursor_edit_type = &027D     \ Cursor key behaviour, as *FX4 sets it (0 = normal cursor editing)
 os_win_left  = &0308            \ Text window left column
@@ -89,15 +89,15 @@ crtc_addr    = &FE00            \ 6845 CRTC address register
 crtc_data    = &FE01            \ 6845 CRTC data register
 
 \ --- Default vectors ---
-default_keyv = &EF39            \ Default KEYV handler address
+default_wordv = &EF39           \ MOS 3.20's own OSWORD handler, the power-on contents of WORDV
 
 \ --- More OS page 2 workspace ---
-os_himem_lo  = &020C            \ OS high water mark low byte
-os_himem_hi  = &020D            \ OS high water mark high byte
+wordv_lo     = &020C            \ OSWORD vector low byte
+wordv_hi     = &020D            \ OSWORD vector high byte
 os_key_trans = &023C            \ Key translation table address low
 os_key_trans_hi = &023D         \ Key translation table address high
 os_vdu_x     = &0318            \ VDU text cursor X position
-os_fkey_buf  = &0480            \ Function key buffer start
+basic_var_lists = &0480         \ BASIC's heads of the variable, PROC and FN lists, two bytes per initial character from '@'
 os_rs423_buf = &0900            \ RS423 output buffer
 
 \ --- BASIC zero page ---

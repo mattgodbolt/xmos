@@ -101,6 +101,14 @@ describe("*ALIAS / *ALIASES / *ALICLR", () => {
         const output = await runCommand(machine, "*foo");
         expect(output).toContain("*CAT");
     });
+
+    it("a built-in command wins over an alias of the same name", async () => {
+        const machine = await restoreOrBoot();
+        await runCommand(machine, "*ALIAS L *LOAD %0");
+        const output = await runCommand(machine, "*L myfile");
+        expect(output).not.toContain("*LOAD");
+        expect(output).toContain("MO.128");
+    });
 });
 
 describe("*ALISV / *ALILD — save and load alias files", () => {

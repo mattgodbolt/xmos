@@ -12,9 +12,9 @@
     EQUB 0
 
 \ Remaining ROM data
-.lvar_indent
+.space_mnemonic_len
     EQUB &00                    \ LVAR indentation counter
-.xi_alias_count
+.xi_hist_count
     EQUB &ff
 \ ============================================================================
 \ DIS opcode decode table — 256 entries × 4 bytes (1024 bytes)

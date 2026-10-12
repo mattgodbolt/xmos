@@ -31,6 +31,15 @@ describe("*LVAR", () => {
         expect(output).toBe("\nD(\n>");
     });
 
+    it("should list dynamic integers and PROC names", async () => {
+        const machine = await restoreOrBoot();
+        await runCommand(machine, "10 PROCfoo:END");
+        await runCommand(machine, "20 DEFPROCfoo:count%=5:ENDPROC");
+        await runCommand(machine, "RUN");
+        const output = await runCommand(machine, "*LVAR", { raw: true });
+        expect(output).toBe("\ncount%\n{foo\n>");
+    });
+
     it("should still work after an alias is defined", async () => {
         const machine = await restoreOrBoot();
         await runCommand(machine, "*ALIAS LS *CAT");

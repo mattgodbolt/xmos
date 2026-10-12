@@ -1,10 +1,10 @@
 \ alias.asm — Alias system: ALIAS, ALIASES, ALICLR, ALILD, ALISV, STORE, alias init, hex parsing
 \
-\ Alias table format (stored in private workspace starting at &B165):
+\ Alias table format (stored in this ROM's own sideways RAM, at alias_table):
 \   Each entry: <name>\0 <length-byte> <expansion>\0D
 \   Table terminated by &FF sentinel byte.
-\   The length byte after the name gives the total entry size from that point,
-\   used to walk to the next entry.
+\   The length byte after the name gives the offset from the start of the
+\   entry to the next one.
 
 \ *ALIAS <name> <expansion> — Define, redefine, or delete an alias.
 \ If only a name is given (no expansion), the existing alias is deleted.
@@ -205,8 +205,9 @@
 \ check_alias — Called during command dispatch to intercept * commands.
 \ Scans the alias table for a match against the current command line.
 \ If a match is found, expands the alias (with %0-%9 parameter substitution
-\ and %% for literal %) into a buffer, then executes it via OSCLI.
-\ If no match, returns to let normal command processing continue.
+\ and %% for literal %) into a buffer and has the MOS type it at the prompt
+\ (see .open below). If no match, returns to let normal command processing
+\ continue.
 .check_alias
 {
         LDA #LO(alias_table) : STA zp_ptr_lo
@@ -237,7 +238,7 @@
         PLY : PLX : PLA
         RTS
 \ Alias matched — expand it with parameter substitution into alias_expand_buf.
-\ The expanded text becomes the argument to *KEY 0, which is then triggered
+\ The expanded text becomes the argument to *KEY 9, which is then triggered
 \ to type it at the prompt (see .open below).
 .exec_entry
         PLY
@@ -277,7 +278,7 @@
         DEX
         CMP #'U'
         BNE get_param_num
-        JMP write_header
+        JMP percent_u
 \ %0-%9: Find the Nth space-delimited parameter from the original command line
 .get_param_num
         SEC : SBC #'0'
@@ -330,7 +331,7 @@
         LDA #&00
         RTS
 \ %U substitution — emit VDU 11 (cursor up) and VDU 21 (disable display)
-.write_header
+.percent_u
         LDA #&0b
         JSR osasci
         LDA #&15
@@ -422,10 +423,9 @@
         LDA #&ff : STA alias_table
         RTS
 }
-\ *STORE — Save the first 1K of the current sideways ROM slot to a buffer.
-\ Selects the shadow copy of the ROM bank (bit 7 of ROMSEL) and copies
-\ pages &80-&83 into the store buffers. Sets store_flag to indicate
-\ that a ROM image has been saved, so alias_init can restore it later.
+\ *STORE — Save the soft key definitions, the first 1K of ANDY, to a buffer.
+\ Pages in ANDY (bit 7 of ROMSEL) and copies &8000-&83FF into store_buf.
+\ Sets store_flag so alias_init restores them after every reset.
 .cmd_store
 {
         LDA sheila_romsel
@@ -443,10 +443,9 @@
         LDA #&ff : STA store_flag
         RTS
 }
-\ alias_init — Called on ROM service reset. If a ROM was previously saved
-\ with *STORE (store_flag != 0), restore the 1K soft key buffer from
-\ the store buffers. This preserves function key definitions across
-\ soft resets.
+\ alias_init — Called on ROM service reset. If *STORE has been used
+\ (store_flag != 0), restore the 1K soft key buffer from store_buf. This
+\ preserves function key definitions across CTRL+BREAK, which clears them.
 .alias_init
 {
         LDA store_flag

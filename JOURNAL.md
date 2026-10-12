@@ -633,3 +633,22 @@ entry), but the outer byte counter prevents visible damage.
 - [x] Migrated xmos-test-machine.js to built-in capture API
 - [x] restoreOrBoot(): boot once per file, snapshot/restore per test
 - Test suite: 84s → 41s (capture API + snapshot/restore)
+
+## Accuracy review (October 2026)
+
+Checked names and comments against MOS 3.20 running in jsbeeb. Corrections:
+- &020A/&020C are BYTEV and WORDV, not KEYV and OSHWM. The XON line editor
+  hooks WORDV (OSWORD 0, read line); WORDV's power-on value &EF39 is the MOS
+  OSWORD handler. KEYON hooks BYTEV and rewrites OSBYTE &81 (INKEY) and &79
+  (keyboard scan) so five chosen keys stand in for Z, X, :, / and RETURN.
+- Service &22 offers private workspace in hidden RAM; XMOS takes Y-1, the
+  page below the one offered, which MOS 3.20 has already given to DFS.
+- OSBYTE &16 increments the ROM polling semaphore, so with XON on the MOS
+  issues service &15 to every ROM 100 times a second; XMOS ignores it.
+- With *FX4,1 the editing keys arrive as COPY &87, left &88, right &89,
+  down &8A, up &8B; the handlers were named one key off.
+- The BASIC token comments in BAU/SPACE were wrong for most tokens (&E7 is
+  IF, &EE ON, &B8 TO, &88 STEP, &B3 RND).
+- Hard-coded addresses from the 1992 build went stale when main moved code:
+  *BAU's OSCLI of &9A20 (key9_def is now elsewhere), and the history
+  buffer bounds &AA54/&AE55. Marked BUG in the source.

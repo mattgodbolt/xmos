@@ -15,7 +15,7 @@ Load the ROM into sideways RAM:
 Then press CTRL+BREAK to activate it. Type `*HELP XMOS` to verify
 it's working.
 
-Use `*STORE` to preserve the ROM state across soft resets (BREAK).
+Use `*STORE` to keep function key definitions across CTRL+BREAK.
 
 ## Extended Input Mode
 
@@ -29,8 +29,9 @@ line gains cursor-based editing features:
 - **SHIFT-Up/Down** scroll through input history
 - **TAB** after a line number recalls that BASIC program line for
   editing (e.g. type `10` then TAB to edit line 10)
-- **Pressing a cursor key on a blank line** exits extended input mode
-  and returns to normal BBC cursor editing
+- **Up/Down** without SHIFT move the cursor a screen line within a long line
+- **Pressing a cursor key on a blank line** switches to normal BBC
+  cursor editing for the rest of that line
 - **Typing SAVE** in BASIC executes `*S` (save with incore name)
 
 Type `*HELP FEATURES` for the built-in feature summary.
@@ -50,9 +51,12 @@ executing. Aliases support parameter substitution:
 
 Example:
 ```
-*ALIAS L *LOAD %0
-*L myfile        → types "*LOAD myfile" at the prompt
+*ALIAS LD *LOAD %0
+*LD myfile       → types "*LOAD myfile" at the prompt
 ```
+
+Built-in XMOS commands are matched first, so an alias with the same name
+as one (such as `L`) never runs.
 
 **`*ALIASES`** — List all defined aliases in `name = expansion`
 format. Produces no output if no aliases are defined.
@@ -66,12 +70,12 @@ format. Produces no output if no aliases are defined.
 
 ### Key Redefinition
 
-Replaces the cursor keys and COPY key with different physical keys.
-When active, pressing the remapped key (e.g. CAPS LOCK) acts as if
-you pressed the corresponding cursor key (e.g. cursor-left). The
-original cursor keys stop working. This is useful for games that use
-cursor keys for movement — you can remap them to keys in a more
-comfortable position.
+Lets five keys of your choice stand in for the usual game keys: Z
+(left), X (right), : (up), / (down) and RETURN (fire). While active, a
+program that tests the keyboard with negative `INKEY` (OSBYTE &81) or
+OSBYTE &79 sees the chosen key (e.g. CAPS LOCK) as the game key it
+replaces (e.g. Z), and testing for the game key itself no longer finds
+it.
 
 **`*DEFKEYS`** — Enter interactive mode to choose which physical key
 maps to each of the five labels. Follow the on-screen prompts to
@@ -111,23 +115,25 @@ Program saved as 'MyProg'
 
 **`*BAU`** — Break Apart Utility. Splits multi-statement BASIC lines
 (separated by colons) into individual lines, then renumbers. Colons
-inside quoted strings and after `REM` are preserved. Must be called
-from BASIC.
+inside quoted strings, and anywhere after `IF`, `DATA`, `ON` or `REM`,
+are preserved. A line starting with an assembler label (`.name`) is split
+after the label. Must be called from BASIC.
 
 **`*SPACE`** — Insert spaces around tokenised BASIC keywords to
 improve readability. Must be called from BASIC.
 
-**`*LVAR`** — List the names of all BASIC variables currently
-defined on the heap (real numbers and strings). Does not list static
-integer variables (`A%` to `Z%`) or their values. Must be called
+**`*LVAR`** — List the names of everything on BASIC's heap: variables
+(real, string and integer), arrays, and PROC and FN names, which show
+with a `{` or `|` in front (`{foo` for `PROCfoo`). Does not list static
+integer variables (`A%` to `Z%`) or any values. Must be called
 from BASIC — produces the error `VAR works only in BASIC` otherwise.
 
-**`*L`** — Set up MODE 128 (shadow screen mode) with function key
-definitions for the editing environment.
+**`*L`** — Define f0 to run `LISTO 1`, `OLD` and `MODE 128` (shadow
+screen mode) and set the colours and cursor, then press it.
 
 **`*STORE`** — Save function key definitions so they survive
 CTRL+BREAK (hard reset). The MOS clears function key storage (ANDY)
-on any reset, so without `*STORE` your `*KEY` definitions are lost.
+on CTRL+BREAK, so without `*STORE` your `*KEY` definitions are lost.
 The typical workflow is: set up your function keys, then `*STORE` to
 keep them across resets.
 
@@ -142,13 +148,14 @@ mnemonic, hex bytes, and ASCII representation:
 802B CMP #&04C9 04 I.
 ```
 
-Press SPACE to show the next instruction, or any other key to exit.
+Press any key to show the next instruction, or ESCAPE to exit. `*DIS`
+with no address carries on from where the last one stopped.
 
 **`*MEM <addr>`** — Interactive hex/ASCII memory editor. Opens a
 full-screen Mode 7 display showing memory contents. Navigation:
 
-- **Cursor keys** move byte by byte
-- **SHIFT+cursor** scrolls by page
+- **Left/Right** move a byte at a time
+- **Up/Down** move a row (8 bytes); with SHIFT, 22 rows
 - **TAB** toggles between hex entry and ASCII entry mode
 - **ESCAPE** exits the editor
 

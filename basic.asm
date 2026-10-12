@@ -15,9 +15,9 @@
         CPY #&12
         BNE copy_template
         JSR find_incore_name    \ Find and validate the incore filename
-        LDA basic_str_lo        \ Save BASIC string pointer
+        LDA prog_ptr_lo         \ Save the filename pointer across OSFILE
         PHA
-        LDA basic_str_hi
+        LDA prog_ptr_hi
         PHA
         LDA basic_page_hi : STA osfile_block + 3 : STA osfile_block + 11  \ Start address high byte
         LDA basic_top_lo : STA osfile_block + 14  \ End address low byte
@@ -27,18 +27,18 @@
         LDY #HI(osfile_block)
         JSR osfile
         STROUT saved_msg
-        PLA                     \ Restore BASIC string pointer
-        STA basic_str_hi
+        PLA                     \ Restore the filename pointer
+        STA prog_ptr_hi
         PLA
-        STA basic_str_lo
+        STA prog_ptr_lo
         LDY #&FF                \ Skip leading spaces in filename
 .skip_spaces
         INY
-        LDA (basic_str_lo),Y
+        LDA (prog_ptr_lo),Y
         CMP #' '
         BEQ skip_spaces
 .print_name                     \ Print the filename
-        LDA (basic_str_lo),Y
+        LDA (prog_ptr_lo),Y
         CMP #' '
         BEQ name_done
         CMP #&0D
@@ -76,37 +76,37 @@
 \ Validates that a program exists (byte at PAGE+1 != &FF), checks the first
 \ line is well-formed (terminated by &0D), then scans for a REM token (&F4)
 \ followed by '>'. On success, sets the OSFILE filename pointer and
-\ basic_str_lo/hi to the character after '>'. Raises an error if no program
+\ prog_ptr_lo/hi to the character after '>'. Raises an error if no program
 \ is loaded, the first line is corrupt, or no "> name" marker is found.
 \ ============================================================================
 .find_incore_name
 {
-        LDA basic_page_hi : STA basic_str_hi
-        LDA #&01 : STA basic_str_lo  \ Check byte at PAGE+1 (program present?)
+        LDA basic_page_hi : STA prog_ptr_hi
+        LDA #&01 : STA prog_ptr_lo  \ Check byte at PAGE+1 (program present?)
         LDY #&00
-        LDA (basic_str_lo),Y
+        LDA (prog_ptr_lo),Y
         CMP #&ff
         BEQ error_no_basic
-        LDA basic_page_hi : STA basic_str_hi
-        LDA #&00 : STA basic_str_lo  \ Point to PAGE+0
+        LDA basic_page_hi : STA prog_ptr_hi
+        LDA #&00 : STA prog_ptr_lo  \ Point to PAGE+0
         LDY #&03                \ Offset 3 = line length in first line
-        LDA (basic_str_lo),Y
+        LDA (prog_ptr_lo),Y
         TAY                     \ Y = end of first line
-        LDA (basic_str_lo),Y
+        LDA (prog_ptr_lo),Y
         CMP #&0d
         BNE error_bad_program
         LDY #&03                \ Search first line for '>' marker
 .skip_spaces
         INY
-        LDA (basic_str_lo),Y
+        LDA (prog_ptr_lo),Y
         CMP #' '
         BEQ skip_spaces
-        LDA (basic_str_lo),Y
+        LDA (prog_ptr_lo),Y
         CMP #&f4                \ REM token
         BNE error_no_incore_name
 .find_marker                    \ Find '>' character
         INY
-        LDA (basic_str_lo),Y
+        LDA (prog_ptr_lo),Y
         CMP #'>'
         BEQ set_filename_and_return
         CMP #&0d
@@ -125,8 +125,8 @@
 .set_filename_and_return
     INY                         \ Skip past '>'
     STY osfile_block            \ Set filename offset in parameter block
-    STY basic_str_lo
-    LDA basic_str_hi : STA osfile_block + 1  \ Set filename pointer high byte
+    STY prog_ptr_lo
+    LDA prog_ptr_hi : STA osfile_block + 1  \ Set filename pointer high byte
     RTS
 
 .saved_msg
@@ -136,22 +136,18 @@
 
 \ ============================================================================
 \ cmd_l — *L command: configure the editing environment by programming
-\ function key 0 with a sequence of commands (shadow MODE 128, colours,
-\ etc.) via *KEY, then calls OSBYTE &8A to select the language ROM.
+\ function key 0 with a sequence of commands (LISTO 1, OLD, MODE 128,
+\ colours, cursor) via *KEY, then presses it by putting f0 in the keyboard
+\ buffer.
 \ ============================================================================
 .cmd_l
     LDX #LO(cmd_l_oscli)
     LDY #HI(cmd_l_oscli)
     JSR oscli                   \ Execute the *KEY command string
-    LDA #&8A                    \ OSBYTE &8A: read/write ROM pointer table
-    LDY #&80
+    LDA #&8A                    \ OSBYTE &8A: insert into buffer X
+    LDY #&80                    \ f0
     LDX #&00
     JMP osbyte
 .cmd_l_oscli
     EQUS "KEY0|UL.O1|MO.|MMO.128|M|S07000|S70000|W|@|J@|@|@|@|@|@|@", 13
 
-\ ============================================================================
-\ Key remapping interceptor — hooked into KEYV
-\ Called when a key event occurs. Remaps certain key codes.
-\ Self-modifying: JMP &FFFF targets are patched to the original KEYV address.
-\ ============================================================================

@@ -1,11 +1,11 @@
 \ lvar.asm — Variable lister: *LVAR, token classify, print_decimal
 
-\ *LVAR — lists all BASIC variables currently defined.
-\ BASIC stores variables in 64 hash-chain buckets (A-Z pairs), each a
-\ linked list. This walks all 64 buckets, printing each variable's name
-\ prefixed with a letter derived from the bucket index (X/2 + &40 = 'A'..).
-\ Each variable entry has a forward-link pointer at offset 0-1 and a
-\ null-terminated name starting at offset 2.
+\ *LVAR — lists everything on BASIC's heap: variables, arrays, and PROC and
+\ FN names. BASIC keeps one linked list per initial character, &40-&7F; PROC
+\ and FN names sit in the lists for '{' and '|', so they print that way.
+\ Each name is printed as the list's character (X/2 + '@') followed by the
+\ entry's own null-terminated name, which starts at offset 2 after the
+\ forward link.
 .cmd_lvar
 {
         LDA saved_language_rom
@@ -16,17 +16,17 @@
 .start
         LDX #&00
 .var_loop
-        LDA os_fkey_buf,X : STA zp_ptr_lo
+        LDA basic_var_lists,X : STA zp_ptr_lo
         INX
-        LDA os_fkey_buf,X
+        LDA basic_var_lists,X
         DEX
         STA zp_ptr_hi
-        CMP #&00                \ null hi-byte means empty bucket
+        CMP #&00                \ null hi-byte means empty list
         BEQ next_var
 .check_type
         TXA
-        LSR A                   \ bucket index / 2
-        CLC : ADC #'@'          \ convert to ASCII letter ('A' onwards)
+        LSR A                   \ list number
+        CLC : ADC #'@'          \ the name's initial character
         JSR oswrch
         LDY #&01
 .skip_name
@@ -46,9 +46,9 @@
         LDA zp_tmp_lo : STA zp_ptr_hi
         BRA check_type
 .next_var
-        INX                     \ advance to next bucket (2 bytes per entry)
+        INX                     \ advance to next list head (2 bytes each)
         INX
-        CPX #&80                \ 64 buckets * 2 = &80
+        CPX #&80                \ 64 lists * 2 = &80
         BNE var_loop
         RTS
 }
@@ -56,19 +56,19 @@
 .mem_workspace  SKIP 2
 .mem_edit_lo    SKIP 1          \ MEM current address low byte
 .mem_edit_hi    SKIP 1          \ MEM current address high byte
-.mem_vdu_1      SKIP 1          \ DIS resume address low byte
-.mem_vdu_2      SKIP 1          \ DIS resume address high byte
-.mem_mode       SKIP 1          \ Saved WRCH destination during MEM
-.mem_page_size  SKIP 1          \ Saved screen pages during MEM
+.dis_resume_lo  SKIP 1          \ DIS resume address low byte
+.dis_resume_hi  SKIP 1          \ DIS resume address high byte
+.mem_saved_cursor_edit SKIP 1   \ Cursor editing type to restore when MEM exits
+.mem_saved_repeat_rate SKIP 1   \ Auto-repeat rate to restore when MEM exits
 .mem_column     SKIP 1          \ MEM column counter (0-7)
 .mem_key_codes
     EQUB &88, &89, &8A, &8B     \ Key codes: left, right, down, up
     EQUB &09                    \ TAB key
 .mem_routine_table
-    EQUW mem_cursor_up          \ Address of cursor-up routine
-    EQUW mem_cursor_down        \ Address of cursor-down routine
-    EQUW mem_page_down          \ Address of page-down routine
-    EQUW mem_page_up            \ Address of page-up routine
+    EQUW mem_cursor_left
+    EQUW mem_cursor_right
+    EQUW mem_row_down
+    EQUW mem_row_up
     EQUW mem_toggle_mode        \ Address of hex/ascii toggle
 \ --- MEM editor header display (uses VDU control codes) ---
 .mem_header
@@ -84,12 +84,12 @@
 \ Assembler block formatter: called from *SPACE when "[" is encountered.
 \ Parses assembler directives inside [...] blocks, inserting spaces where
 \ needed. Handles "." labels (skip to next space/colon), quoted strings,
-\ backslash comments, and tokenised opcodes via token_classify.
-.lvar_display_value
+\ backslash comments, and mnemonics that BASIC tokenised via token_classify.
+.space_asm_block
 {
         INY
 .parse_token
-        LDA #&00 : STA lvar_indent
+        LDA #&00 : STA space_mnemonic_len
         LDA (zp_ptr_lo),Y
         CMP #&0d
         BNE check_dot
@@ -123,11 +123,12 @@
         BNE string_loop
         INY
         BRA parse_token
-\ Classify the current byte via token_classify. If recognised, skip past
-\ a number of characters determined by the indent value (operand width).
+\ Classify the current byte via token_classify, which gives the length in
+\ program bytes of a mnemonic that BASIC tokenised; anything else is taken
+\ to be a 3-letter mnemonic. Skip the mnemonic, then make sure a space follows.
 .lookup_token
         JSR token_classify
-        BCS skip_operand        \ carry set = known token, skip its operand
+        BCS skip_mnemonic       \ carry set = known token
         CMP #':'                \ ":" statement separator
         BNE check_close
         INY
@@ -151,18 +152,16 @@
         INY
         BRA parse_token
 .set_indent
-        LDA #&03 : STA lvar_indent  \ default: skip 3 chars (opcode + operand)
-\ Skip past the operand bytes (counted by lvar_indent), then insert a
-\ space before the next item if one isn't already there.
-.skip_operand
+        LDA #&03 : STA space_mnemonic_len  \ default: a 3-letter mnemonic
+.skip_mnemonic
         INY
         LDA (zp_ptr_lo),Y
         CMP #']'
         BEQ done
         CMP #&0d
         BEQ end_of_line
-        DEC lvar_indent
-        BNE skip_operand        \ keep skipping until indent reaches 0
+        DEC space_mnemonic_len
+        BNE skip_mnemonic
         CMP #':'
         BEQ parse_token
         CMP #' '
@@ -212,16 +211,16 @@
 .done
         JMP space_scan_loop     \ return to *SPACE main scan loop
 }
-\ XI alias history support: copies the current command line into the alias
-\ buffer and shifts the existing alias history down to make room.
+\ Save the current input line at the front of the history buffer, shifting
+\ the older entries along to make room.
 .xi_history_save
 {
         LDA #LO(xi_hist_flag) : STA zp_tmp_lo
         LDA #HI(xi_hist_flag) : STA zp_tmp_hi
-        INC xi_alias_count
-        LDA xi_alias_count
+        INC xi_hist_count
+        LDA xi_hist_count
         BNE inc_cursor
-        LDA #&ff : STA xi_alias_count
+        LDA #&ff : STA xi_hist_count
 .inc_cursor
         INC xi_line_len
         SEC
@@ -250,11 +249,11 @@
         LDA zp_src_hi
         SBC #&00
         STA zp_src_hi
-        LDA zp_src_lo
-        CMP #&54
-        BNE copy_loop
+        LDA zp_src_lo           \ BUG: &AA54 was xi_hist_buffer - 1 in the 1992
+        CMP #&54                \ build; the buffer has since moved, so this
+        BNE copy_loop           \ bound is stale
         LDA zp_src_hi
-        CMP #zp_work_lo
+        CMP #&aa
         BNE copy_loop
         LDY xi_line_len
         BEQ save_cr
@@ -268,27 +267,26 @@
         LDA #&0d : STA xi_hist_buffer,Y
         RTS
 }
-.xi_scroll_count
+.xi_hist_index
     EQUB &A6
-\ XI alias restore: retrieves a previously stored command line from the
-\ alias history buffer, scrolling through entries by index.
+\ Replace the input line with history entry xi_hist_index.
 .xi_history_recall
 {
         LDA #&0D : STA xi_hist_flag
-        LDA xi_scroll_count
+        LDA xi_hist_index
         CMP #&FF
         BNE check_count
-        LDA #&00 : STA xi_scroll_count
+        LDA #&00 : STA xi_hist_index
 .check_count
-        CMP xi_alias_count
+        CMP xi_hist_count
         BCC set_ptr
-        LDA xi_alias_count
+        LDA xi_hist_count
         DEC A
-        STA xi_scroll_count
+        STA xi_hist_index
 .set_ptr
         LDA #LO(xi_hist_buffer) : STA zp_src_lo
         LDA #HI(xi_hist_buffer) : STA zp_src_hi
-        LDX xi_scroll_count
+        LDX xi_hist_index
         BNE check_end
 .clear_and_load
         JSR xi_do_clear
@@ -317,7 +315,7 @@
         BEQ advance
         INY
         BNE check_loop
-        LDA #&00 : STA xi_scroll_count
+        LDA #&00 : STA xi_hist_index
         JMP xi_history_recall
 .advance
         INY
@@ -329,41 +327,41 @@
         STA zp_src_hi
         DEX
         BEQ clear_and_load
-        CMP #zp_src_lo
-        BCC check_end
+        CMP #&ae                \ BUG: &AE55, the end of the history buffer in
+        BCC check_end           \ the 1992 build; stale since the buffer moved
         LDA zp_src_lo
         CMP #&55
         BCC check_end
-        LDA #&00 : STA xi_scroll_count
+        LDA #&00 : STA xi_hist_index
         JMP xi_history_recall
 }
-\ token_classify — identifies assembler-context tokens and sets lvar_indent
-\ to indicate how many operand bytes to skip past.
-\ Returns: carry set if recognised (indent set), carry clear if not.
-\   &45 ("E" — EQUB/EQUW/EQUS) -> skip 4 bytes
-\   &80 (AND) -> skip 1 byte
-\   &82 (EOR) -> skip 1 byte
-\   &84 (OR)  -> skip 2 bytes
+\ token_classify — sets space_mnemonic_len to the length in program bytes
+\ of a mnemonic BASIC stores specially.
+\ Returns: carry set if recognised, carry clear if not.
+\   &45 ("E" — EQUB/EQUW/EQUD/EQUS) -> 4 bytes
+\   &80 (AND token)                 -> 1 byte
+\   &82 (EOR token)                 -> 1 byte
+\   &84 (OR token, then "A" of ORA) -> 2 bytes
 .token_classify
 {
         CMP #&45
         BNE check_80
-        LDA #&04 : STA lvar_indent
+        LDA #&04 : STA space_mnemonic_len
         BRA found
 .check_80
         CMP #&80
         BNE check_82
-        LDA #&01 : STA lvar_indent
+        LDA #&01 : STA space_mnemonic_len
         BRA found
 .check_82
         CMP #&82
         BNE check_84
-        LDA #&01 : STA lvar_indent
+        LDA #&01 : STA space_mnemonic_len
         BRA found
 .check_84
         CMP #&84
         BNE not_found
-        LDA #&02 : STA lvar_indent
+        LDA #&02 : STA space_mnemonic_len
         BRA found
 .not_found
         CLC                     \ not recognised

@@ -15,7 +15,8 @@ commands and an extended line editing mode:
   input history via SHIFT-Up/Down, and TAB to recall BASIC lines by number
 - **Command aliases** (`*ALIAS`) — define shorthand names that type out their
   expansion at the prompt, with `%0`-`%9` parameter substitution
-- **Key redefinition** (`*KEYON`/`*DEFKEYS`) — remap cursor and fire keys
+- **Key redefinition** (`*KEYON`/`*DEFKEYS`) — choose keys to stand in for
+  the usual game keys Z, X, :, / and RETURN
 - **BASIC utilities** — `*S` saves with an incore filename from `REM >`,
   `*BAU` splits multi-statement lines, `*SPACE` adds keyword spacing,
   `*LVAR` lists variable names
@@ -55,7 +56,7 @@ the original ROM — correctness is verified by the automated test suite.
 | File | Description |
 |------|-------------|
 | `xmos.asm` | Main: ROM header, service dispatch, help, command table, XON/XOFF |
-| `input.asm` | Extended input: handle_reset, keyboard intercept, cursor editing |
+| `input.asm` | Extended input: handle_reset, OSWORD 0 intercept, cursor editing |
 | `util.asm` | Utilities: print_inline, copy_inline_to_stack, compare_string |
 | `basic.asm` | BASIC save: *S (save with incore name), *L (mode setup) |
 | `keys.asm` | Key system: remap handler, *KEYON/OFF, *KSTATUS, *DEFKEYS |
