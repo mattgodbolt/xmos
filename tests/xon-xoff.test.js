@@ -247,6 +247,9 @@ describe("*KEYON / *KEYOFF / *KSTATUS", () => {
 });
 
 describe("XON history", () => {
+    const SHIFT = 16;
+    const UP = 38;
+
     let machine;
 
     beforeEach(async () => {
@@ -254,9 +257,9 @@ describe("XON history", () => {
         await runCommand(machine, "*XON");
     });
 
-    it("saving a line leaves *STORE's buffer alone", async () => {
-        const storeEnd = label("xi_hist_buffer");
-        const tail = Array.from({ length: 32 }, (_, i) => storeEnd - 32 + i);
+    it("saving a line leaves the bytes below the history buffer alone", async () => {
+        const below = label("xi_hist_buffer");
+        const tail = Array.from({ length: 32 }, (_, i) => below - 32 + i);
         tail.forEach((address, i) => machine.writebyte(address, i + 1));
 
         await runCommand(machine, "P.1");
@@ -265,25 +268,26 @@ describe("XON history", () => {
         expect(tail.map((address) => machine.readbyte(address))).toEqual(tail.map((_, i) => i + 1));
     });
 
-    it("SHIFT-up reaches the oldest whole lines when the buffer is full", { timeout: 60000 }, async () => {
-        // Line numbers alone are harmless to BASIC and take five bytes each with their CR, so
-        // the buffer's last whole entries start in the last 17 bytes before its terminator.
+    it("SHIFT-up steps back to the oldest whole line in a full buffer, then wraps to the newest", async () => {
+        // Line numbers alone are harmless to BASIC.
         const lines = Array.from({ length: 210 }, (_, i) => String(1000 + i));
+        const entrySize = lines[0].length + 1;
         for (const line of lines) await runCommand(machine, line);
 
-        const recalled = new Set();
+        const shown = [];
         machine.drainText();
-        machine.keyDown(16); // SHIFT
+        machine.keyDown(SHIFT);
         for (let press = 0; press < lines.length; press++) {
-            machine.keyDown(38); // up
+            machine.keyDown(UP);
             await machine.runFor(80000);
-            machine.keyUp(38);
+            machine.keyUp(UP);
             await machine.runFor(80000);
-            for (const [line] of machine.drainText().matchAll(/\b1\d{3}\b/g)) recalled.add(line);
+            shown.push(machine.drainText().match(/\b1\d{3}\b/g)?.at(-1));
         }
-        machine.keyUp(16);
+        machine.keyUp(SHIFT);
 
-        const oldestWhole = Math.floor((label("xi_hist_term") - label("xi_hist_buffer")) / 5) - 1;
-        expect(recalled).toContain(lines.at(-1 - oldestWhole));
+        const whole = Math.floor((label("xi_hist_term") - label("xi_hist_buffer")) / entrySize);
+        expect(shown.slice(0, whole)).toEqual(lines.slice(-whole).reverse());
+        expect(shown.slice(whole)).toContain(lines.at(-1));
     });
 });

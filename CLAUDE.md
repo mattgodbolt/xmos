@@ -21,7 +21,7 @@ along, or for future reference in other BBC Micro reverse engineering projects.
 - `JOURNAL.md` — reverse engineering notes and discoveries
 
 ## Building and verifying
-Run `beebasm -i xmos.asm -o build.rom` to assemble. Requires `beebasm` on PATH.
+Run `npm run build` to assemble (`build.rom`, and `build.labels`, which the tests read). Requires `beebasm` on PATH.
 Run `npm test` to run the automated test suite (requires Node.js).
 The original byte-identical ROM is preserved at git tag `original`.
 

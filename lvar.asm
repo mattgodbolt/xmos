@@ -323,14 +323,16 @@
         LDA zp_src_hi
         ADC #&00
         STA zp_src_hi
-        DEX
-        BEQ clear_and_load
         CMP #HI(xi_hist_flag + 1)
-        BCC check_end
+        BCC in_buffer
         LDA zp_src_lo : CMP #LO(xi_hist_flag + 1)
-        BCC check_end
+        BCC in_buffer
         LDA #&00 : STA xi_hist_index
         JMP xi_history_recall
+.in_buffer
+        DEX
+        BEQ clear_and_load
+        BRA check_end
 }
 \ token_classify — sets space_mnemonic_len to the length in program bytes
 \ of a mnemonic BASIC stores specially.

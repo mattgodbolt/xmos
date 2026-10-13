@@ -660,11 +660,17 @@ xi_hist_buffer - 1 and &AE55 was xi_hist_flag + 1, in the `original` build.
 What they did on main, seen in jsbeeb:
 - *BAU's OSCLI ran the renumber code as a command: "Bad name", the split
   lines left numbered 0, and VDU 21 left the screen off.
-- Each history save copied the 19 bytes below the buffer, the end of *STORE's
-  buffer, along with it, scrambling them.
+- Each history save also copied the 19 bytes below the buffer, the end of
+  *STORE's buffer, up by the line's length plus one. A line shorter than 18
+  characters overwrote the top of *STORE's buffer with its own lower bytes.
 - Recall's walk wrapped once it passed &AE55, so in a full buffer the oldest
   whole lines (starting in its last 17 bytes) couldn't be reached. The check
   only runs after stepping past an entry, so the first entry past the bound
   was still reachable.
 The build now exports its labels (build.labels) so tests can find buffers by
 name.
+- Pinning the far end of the recall turned up one more, in the 1992 code too:
+  the walk loaded an entry as soon as its count ran out, before checking the
+  bound. One SHIFT-up past the oldest (partial) entry loaded from past the
+  buffer, filling the line with BASIC's keyword table, and the index stuck
+  there. The bound is now checked first, so it wraps to the newest line.
