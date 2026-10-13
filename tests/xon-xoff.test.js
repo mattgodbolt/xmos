@@ -284,7 +284,7 @@ describe("XON history", () => {
 
         await machine.type("P.5678\r");
         await machine.runFor(4_000_000);
-        expect(machine.drainText()).toContain("5678");
+        expect(machine.drainText().match(/5678/g)).toHaveLength(2); // the echo, then the result
     });
 
     it("SHIFT-up steps back to the oldest whole line in a full buffer, then wraps to the newest", async () => {
