@@ -41,7 +41,7 @@ extended input mode.
 Requires [beebasm](https://github.com/stardot/beebasm) on your PATH.
 
 ```bash
-beebasm -i xmos.asm -o build.rom   # Assemble the ROM
+npm run build                      # Assemble the ROM, and the labels the tests read
 npm test                            # Run automated tests (requires Node.js)
 ```
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { restoreOrBoot, runCommand, captureOutput } from "./xmos-test-machine.js";
+import { restoreOrBoot, runCommand, captureOutput, label } from "./xmos-test-machine.js";
 
 describe("*XON / *XOFF — extended input", () => {
     let machine;
@@ -243,5 +243,71 @@ describe("*KEYON / *KEYOFF / *KSTATUS", () => {
         expect(output).toContain("Up : :");
         expect(output).toContain("Down : /");
         expect(output).toContain("Jump/fire : RETURN");
+    });
+});
+
+describe("XON history", () => {
+    const SHIFT = 16;
+    const UP = 38;
+
+    let machine;
+
+    beforeEach(async () => {
+        machine = await restoreOrBoot();
+        await runCommand(machine, "*XON");
+    });
+
+    it("saving a line leaves the bytes below the history buffer alone", async () => {
+        const below = label("xi_hist_buffer");
+        const tail = Array.from({ length: 32 }, (_, i) => below - 32 + i);
+        tail.forEach((address, i) => machine.writebyte(address, i + 1));
+
+        await runCommand(machine, "P.1");
+        await runCommand(machine, "P.2");
+
+        expect(tail.map((address) => machine.readbyte(address))).toEqual(tail.map((_, i) => i + 1));
+    });
+
+    it("SHIFT-up past the oldest line of a history that isn't full doesn't hang", async () => {
+        await runCommand(machine, "P.1234");
+        machine.drainText();
+        machine.keyDown(SHIFT);
+        for (let press = 0; press < 3; press++) {
+            machine.keyDown(UP);
+            await machine.runFor(80000);
+            machine.keyUp(UP);
+            await machine.runFor(80000);
+        }
+        machine.keyUp(SHIFT);
+        await machine.runFor(400000);
+        machine.drainText();
+
+        await machine.type("P.5678\r");
+        await machine.runFor(4_000_000);
+        expect(machine.drainText().match(/5678/g)).toHaveLength(2); // the echo, then the result
+    });
+
+    it("SHIFT-up steps back to the oldest whole line in a full buffer, then wraps to the newest", async () => {
+        // Line numbers alone are harmless to BASIC.
+        const lines = Array.from({ length: 210 }, (_, i) => String(1000 + i));
+        const entrySize = lines[0].length + 1;
+        for (const line of lines) await runCommand(machine, line);
+
+        const shown = [];
+        machine.drainText();
+        machine.keyDown(SHIFT);
+        for (let press = 0; press < lines.length; press++) {
+            machine.keyDown(UP);
+            await machine.runFor(80000);
+            machine.keyUp(UP);
+            await machine.runFor(80000);
+            shown.push(machine.drainText().match(/\b1\d{3}\b/g)?.at(-1));
+        }
+        machine.keyUp(SHIFT);
+
+        const whole = Math.floor((label("xi_hist_term") - label("xi_hist_buffer")) / entrySize);
+        expect(shown.slice(0, whole)).toEqual(lines.slice(-whole).reverse());
+        expect(shown[whole]).toBeUndefined(); // the oldest entry, cut short by the buffer's end
+        expect(shown[whole + 1]).toBe(lines.at(-1));
     });
 });

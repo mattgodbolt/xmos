@@ -652,3 +652,30 @@ Checked names and comments against MOS 3.20 running in jsbeeb. Corrections:
 - Hard-coded addresses from the 1992 build went stale when main moved code:
   *BAU's OSCLI of &9A20 (key9_def is now elsewhere), and the history
   buffer bounds &AA54/&AE55. Marked BUG in the source.
+
+## Stale 1992 addresses fixed (October 2026)
+
+The three marked BUG are now labels: &9A20 was key9_def, &AA54 was
+xi_hist_buffer - 1 and &AE55 was xi_hist_flag + 1, in the `original` build.
+What they did on main, seen in jsbeeb, and two more the tests turned up:
+- *BAU's OSCLI ran the renumber code as a command: "Bad name", the split
+  lines left numbered 0, and VDU 21 left the screen off.
+- Each history save also copied the 19 bytes below the buffer, the end of
+  *STORE's buffer, up by the line's length plus one. A line shorter than 18
+  characters overwrote the top of *STORE's buffer with its own lower bytes.
+- Recall's walk wrapped once it passed &AE55, so in a full buffer the oldest
+  whole lines (starting in its last 17 bytes) couldn't be reached. The check
+  only runs after stepping past an entry, so the first entry past the bound
+  was still reachable.
+- Pinning the far end of the recall turned up one more, in the 1992 code too:
+  the walk loaded an entry as soon as its count ran out, before checking the
+  bound. One SHIFT-up past the oldest (partial) entry loaded from past the
+  buffer, filling the line with BASIC's keyword table, and the index stuck
+  there. The bound is now checked first, so it wraps to the newest line.
+- And one from the reconstruction: the 1992 image's history buffer held real
+  history, full of CRs, but the source declared it as zeros. In a history
+  that wasn't full, SHIFT-up past the oldest line found no CR and inserted
+  NULs forever. The buffer is now assembled as empty lines (CRs).
+
+The build now exports its labels (build.labels) so tests can find buffers by
+name.

@@ -20,6 +20,17 @@ setNodeBasePath(jsbeebBase);
 
 const romData = new Uint8Array(fs.readFileSync(path.join(__dirname, "..", "build.rom")));
 const ssdData = fs.readFileSync(path.join(__dirname, "..", "original.ssd"));
+const labels = new Map(
+    [...fs.readFileSync(path.join(__dirname, "..", "build.labels"), "utf8").matchAll(/'(\w+)':(\d+)L/g)].map(
+        ([, name, value]) => [name, Number(value)],
+    ),
+);
+
+/** The address the build gave one of the source's global labels. */
+export function label(name) {
+    if (!labels.has(name)) throw new Error(`build.labels has no ${name}`);
+    return labels.get(name);
+}
 
 /**
  * Boot a BBC Master with XMOS loaded and active.

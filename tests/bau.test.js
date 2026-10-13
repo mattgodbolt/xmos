@@ -1,6 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { restoreOrBoot, runCommand } from "./xmos-test-machine.js";
 
+const VduStatus = 0xd0;
+const VduDisabled = 0x80;
+
 describe("*BAU — break apart utility", () => {
     it("should split multi-statement lines", async () => {
         const machine = await restoreOrBoot();
@@ -35,6 +38,20 @@ describe("*BAU — break apart utility", () => {
         const output = await runCommand(machine, "LIST");
 
         expect(output).toContain('PRINT "HELLO"');
+    });
+
+    it("should renumber the split lines and leave the screen on", async () => {
+        const machine = await restoreOrBoot();
+        await runCommand(machine, '10 PRINT "A":PRINT "B"');
+        await runCommand(machine, '20 PRINT "C"');
+
+        const bau = await runCommand(machine, "*BAU");
+        await machine.runUntilInput();
+        const output = await runCommand(machine, "LIST");
+
+        expect(bau).not.toContain("Bad");
+        expect(output).toMatch(/10 PRINT "A"\s+20 ?PRINT "B"\s+30 PRINT "C"/);
+        expect(machine.readbyte(VduStatus) & VduDisabled).toBe(0);
     });
 
     it("should not split after REM", async () => {

@@ -304,7 +304,8 @@
 .alias_oscli_buf EQUS "KEY9 "   \ Required: *KEY 9 prefix for alias expansion
 .alias_expand_buf SKIP 250      \ Alias expansion text (follows alias_oscli_buf for OSCLI)
 .store_buf      SKIP 1024       \ *STORE: saves ANDY &8000-&83FF (soft key buffer)
-.xi_hist_buffer SKIP 1022       \ Command history buffer
+.xi_hist_buffer                 \ Required: empty lines, so recall finds a CR past the oldest
+    FOR n, 1, 1022 : EQUB &0d : NEXT
 .xi_hist_term   SKIP 1          \ Set to &0D at runtime
 .xi_hist_flag   SKIP 1          \ Set to &FF at runtime
 .basic_keyword_table
