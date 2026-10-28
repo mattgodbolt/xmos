@@ -17,6 +17,10 @@ it's working.
 
 Use `*STORE` to keep function key definitions across CTRL+BREAK.
 
+To try it without a real Master,
+[this link](https://bbc.xania.org/?model=Master&rom.7=github:mattgodbolt/xmos@build/xmos.rom&autotype=*HELP%20XMOS%0a)
+boots the latest build in jsbeeb, already loaded into sideways RAM.
+
 ## Extended Input Mode
 
 Enable with `*XON`, disable with `*XOFF`. When enabled, the command

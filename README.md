@@ -6,6 +6,12 @@ By Richard Talbot-Watkins and Matt Godbolt, circa 1992.
 Found on an old disc by Rich, now being reverse engineered back to health by
 Matt (and Claude).
 
+**[Try it in jsbeeb](https://bbc.xania.org/?model=Master&rom.7=github:mattgodbolt/xmos@build/xmos.rom&autotype=*HELP%20XMOS%0a)**:
+boots an emulated BBC Master with the latest build of XMOS in sideways RAM
+bank 7 and types `*HELP XMOS`. CI publishes each build of main that passes
+its tests to the [`build`](https://github.com/mattgodbolt/xmos/tree/build)
+branch, which is where the link loads it from.
+
 ## What is XMOS?
 
 XMOS is a sideways ROM for the BBC Master that adds a collection of utility
